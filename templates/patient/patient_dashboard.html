@@ -1,0 +1,210 @@
+{% extends 'base/layout.html' %}
+{% block title %} Patient Dashboard {% endblock %}
+{% block content %}
+<body class="bg-gray-50 font-sans">
+  <div class="flex min-h-screen">
+    
+    <!-- Sidebar -->
+    {% include 'patient/patient_sidebar.html' %}
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col">
+      
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b sticky top-0 z-40">
+            <div class="flex items-center justify-between px-6 py-4">
+                
+                <!-- Left Side (Logo or Menu Button) -->
+                <div class="flex items-center">
+                <!-- Mobile Menu Button -->
+                <button class="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100" id="menuToggle">
+                    <i class="fas fa-bars text-lg"></i>
+                </button>
+                </div>
+
+                <!-- Right Side (User Info) -->
+                <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span class="text-white font-medium text-sm">
+                    {{ profile.firstname[0] if profile.firstname else 'U' }}
+                    </span>
+                </div>
+                <div class="hidden sm:block text-right">
+                    <p class="text-sm font-medium text-gray-800">{{ profile.firstname }} {{ profile.lastname }}</p>
+                    <p class="text-xs text-gray-500">Patient</p>
+                </div>
+                </div>
+
+            </div>
+        </header>
+
+
+      <!-- Dashboard Content -->
+      <main class="flex-1 p-6 lg:p-10">
+        <!-- Greeting -->
+        <h2 class="text-2xl lg:text-3xl font-bold text-gray-800">Hello, {{ profile.firstname }} 👋</h2>
+        <p class="text-gray-500 mt-1">Here’s your health information at a glance.</p>
+
+        <!-- Quick Info Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <div class="bg-white shadow-sm rounded-2xl p-6 hover:shadow-md transition">
+            <h3 class="text-lg font-semibold text-blue-600">Upcoming Appointment</h3>
+            <p class="text-gray-600 mt-2">You have 2 appointments scheduled this week.</p>
+          </div>
+          <div class="bg-white shadow-sm rounded-2xl p-6 hover:shadow-md transition">
+            <h3 class="text-lg font-semibold text-green-600">Doctors Available</h3>
+            <p class="text-gray-600 mt-2">5 doctors are online for booking today.</p>
+          </div>
+          <div class="bg-white shadow-sm rounded-2xl p-6 hover:shadow-md transition">
+            <h3 class="text-lg font-semibold text-purple-600">Profile Status</h3>
+            <p class="text-gray-600 mt-2">Your profile is 90% complete.</p>
+          </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-10">
+          
+          <!-- Left Column -->
+          <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Upcoming Appointments -->
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+              <div class="p-6 border-b">
+                <h2 class="text-lg font-semibold text-gray-800">Upcoming Appointments</h2>
+                <p class="text-sm text-gray-500">Your scheduled appointments</p>
+              </div>
+              <div class="p-6 space-y-4">
+                <!-- Example Appointment -->
+                <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-100 hover:shadow-sm transition">
+                  <div class="flex items-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                      <i class="fas fa-calendar-check text-blue-600"></i>
+                    </div>
+                    <div>
+                      <h3 class="font-medium text-gray-800">General Checkup</h3>
+                      <p class="text-sm text-gray-600">Dr. Sarah Johnson - Family Medicine</p>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <p class="flex items-center text-blue-600 text-sm mb-2">
+                      <i class="far fa-clock mr-1"></i> Apr 28, 10:00 AM
+                    </p>
+                    <div class="space-x-2">
+                      <button class="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200">Reschedule</button>
+                      <button class="px-3 py-1 text-xs text-red-600 hover:bg-red-50 rounded">Cancel</button>
+                    </div>
+                  </div>
+                </div>
+
+                <button class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                  Book New Appointment
+                </button>
+              </div>
+            </div>
+
+            <!-- Prescriptions -->
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+              <div class="p-6 border-b">
+                <h2 class="text-lg font-semibold text-gray-800">Recent Prescriptions</h2>
+                <p class="text-sm text-gray-500">Your current medications</p>
+              </div>
+              <div class="p-6 space-y-4">
+                <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-100">
+                  <div class="flex items-center">
+                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                      <i class="fas fa-pills text-green-600"></i>
+                    </div>
+                    <div>
+                      <h3 class="font-medium text-gray-800">Amoxicillin 500mg</h3>
+                      <p class="text-sm text-gray-600">Take 1 capsule 3 times daily</p>
+                      <p class="text-xs text-gray-500">Prescribed by Dr. Johnson</p>
+                    </div>
+                  </div>
+                  <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>
+                </div>
+                <div class="text-center pt-2">
+                  <a href="#" class="text-blue-600 hover:underline text-sm">View All Prescriptions</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column -->
+          <div class="space-y-6">
+            
+            <!-- Health Metrics -->
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+              <div class="p-6 border-b">
+                <h2 class="text-lg font-semibold text-gray-800">Health Metrics</h2>
+                <p class="text-sm text-gray-500">Your recent health measurements</p>
+              </div>
+              <div class="p-6 space-y-5">
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm text-gray-600">Blood Pressure</span>
+                    <span class="text-sm font-semibold">120/80</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-green-500 h-2 rounded-full" style="width: 75%"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between mb-1">
+                    <span class="text-sm text-gray-600">Heart Rate</span>
+                    <span class="text-sm font-semibold">72 bpm</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-green-500 h-2 rounded-full" style="width: 70%"></div>
+                  </div>
+                </div>
+                <div class="text-center pt-2">
+                  <a href="#" class="text-blue-600 hover:underline text-sm">View All Metrics</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Billing Summary -->
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+              <div class="p-6 border-b">
+                <h2 class="text-lg font-semibold text-gray-800">Billing Summary</h2>
+                <p class="text-sm text-gray-500">Your recent payments and invoices</p>
+              </div>
+              <div class="p-6 space-y-3">
+                <div class="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                  <div>
+                    <h3 class="font-medium text-gray-800">General Checkup</h3>
+                    <p class="text-xs text-gray-500">Apr 10, 2023</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="font-semibold">&#8369 1,000.00</p>
+                    <span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">Pending</span>
+                  </div>
+                </div>
+                <div class="text-center pt-2">
+                  <a href="#" class="text-blue-600 hover:underline text-sm">View All Invoices</a>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Mobile Menu Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggle = document.getElementById('menuToggle');
+      const sidebar = document.querySelector('.w-64');
+      if (toggle && sidebar) {
+        toggle.addEventListener('click', () => {
+          sidebar.classList.toggle('-translate-x-full');
+          sidebar.classList.toggle('fixed');
+          sidebar.classList.toggle('z-50');
+        });
+      }
+    });
+  </script>
+</body>
+{% endblock %}

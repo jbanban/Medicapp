@@ -1,0 +1,58 @@
+{% extends 'base/layout.html' %}
+{% block title %}Doctors | Fernandez Clinic{% endblock %}
+{% block content %}
+<div class="flex h-screen">
+    
+{% include 'admin/admin_sidebar.html' %}
+    <div class="flex-1 p-6 ">
+        <div class="flex justify-end gap-2 mb-12">
+                <span class="font-medium">Admin User</span>
+                <img src="{{ url_for('static', filename='img/profile.jpg')}}" alt="profile" class="rounded-full w-8 h-8">
+            </div>
+        <div class="flex justify-between mb-4 align-center">
+            <h1 class="text-2xl font-bold text-blue-700">Patients</h1>
+        </div>
+        <div class="flex flex-col">
+            <div class="overflow-x-auto">
+                <div class="p-1.5 w-full inline-block align-middle">
+                    <div class="overflow-hidden border rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-xs font-bold text-left text-gray-500 uppercase ">Name</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-bold text-left text-gray-500 uppercase ">Email</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-bold text-left text-gray-500 uppercase ">Phone</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-bold text-left text-gray-500 uppercase ">Address</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-bold text-left text-gray-500 uppercase ">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for patient in patients %}
+                                <tr class="bg-white">
+                                    <td class="px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">
+                                        {{ patient.firstname }} {{ patient.lastname }}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-800 whitespace-nowrap">
+                                        {{ patient.email }}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-800 whitespace-nowrap">
+                                        {{ patient.phone }}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-800 whitespace-nowrap">
+                                        {{ patient.address }}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-800 whitespace-nowrap">
+                                        <a href="#" class="text-blue-600 m-4">View</a>
+                                        <a href="#" class="text-red-600 m-4">Delete</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

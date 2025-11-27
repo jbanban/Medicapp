@@ -1,0 +1,46 @@
+{% extends 'base/layout.html' %}
+{% block title %}Doctors | Fernandez Clinic{% endblock %}
+{% block content %}
+<div class="flex h-screen">
+    {% include 'admin/admin_sidebar.html' %}
+
+    <!-- Main Appointments Content -->
+    <div class="flex-1 p-6">
+        <div class="flex justify-end gap-2 mb-12">
+                <span class="font-medium">Admin User</span>
+                <img src="{{ url_for('static', filename='img/profile.jpg')}}" alt="profile" class="rounded-full w-8 h-8 ">
+            </div>
+        <div class="flex justify-between mb-4 align-center">
+            <h1 class="text-2xl font-bold text-blue-700">Appointments</h1>
+        </div>
+        <div class="flex flex-col">
+            <div class="overflow-x-auto">
+                <div class="p-1.5 w-full inline-block align-middle">
+                    <div class="overflow-hidden border rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50 text-center align-center">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-xs font-bold text-center text-gray-500 uppercase ">Doctor</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-bold text-center text-gray-500 uppercase ">Date & Time</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-bold text-center text-gray-500 uppercase ">Patient</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-bold text-center text-gray-500 uppercase ">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody  class="bg-white divide-y divide-gray-200">
+                                {% for appointment in appointments %}
+                                <tr>
+                                    <td class="px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">{{ appointment.doctor.firstname }} {{ appointment.doctor.lastname }}</th>
+                                    <th class="px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">{{ appointment.appointment_date }}, {{ appointment.appointment_time }}</th>
+                                    <th class="px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">{{ appointment.patient.firstname }} {{ appointment.patient.lastname }}</th>
+                                    <th class="px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">{{ appointment.status }}</th>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
