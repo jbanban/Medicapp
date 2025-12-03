@@ -1,0 +1,50 @@
+{% extends 'base/layout.html' %}
+{% block title %}Patient Profile{% endblock %}
+{% block content %}
+
+<!-- MEDICAL DETAILS CARD -->
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Medical Details</h2>
+    </div>
+
+    <div class="bg-white shadow rounded-lg px-6" x-data>
+
+        <!-- REUSABLE MEDICAL FIELD -->
+        {% macro field(label, value) %}
+        <div class="border-l-4 border-blue-500 pl-4 mt-2" x-data="{ blur: false }">
+
+            <p class="text-sm text-gray-500 border-t-1 border-gray-200">{{ label }}</p>
+
+            <div class="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-4 items-center">
+                <p 
+                    class="text-lg font-semibold text-gray-800 transition"
+                    :class="blur ? 'blur-sm select-none' : 'blur-none'"
+                >
+                    {{ value or 'None' }}
+                </p>
+
+                <!-- Blur Toggle Button -->
+                <button 
+                    @click="blur = !blur"
+                    class="mt-2 p-2 rounded-lg bg-white text-gray-800 transition flex items-center gap-2 hover:text-blue-500"
+                >
+                    <i :class="blur ? 'ri-eye-line' : 'ri-eye-off-line'"></i>
+                    <span x-text="blur ? '' : ''"></span>
+                </button>
+            </div>
+
+        </div>
+        {% endmacro %}
+
+        <!-- RENDER FIELDS -->
+        {{ field("Past Medical History", history.pastMedicalHistory) }}
+        {{ field("Been Hospitalized?", history.beenHospitalized) }}
+        {{ field("Had Surgery?", history.hadSurgery) }}
+        {{ field("Allergies", history.allergies) }}
+        {{ field("Ongoing Medications", history.ongoingMedications) }}
+        {{ field("Family History", history.familyHistory) }}
+
+    </div>
+</div>
+
+{% endblock %}

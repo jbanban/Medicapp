@@ -1,173 +1,159 @@
 {% extends 'base/layout.html' %}
 {% block title %}Patient Profile{% endblock %}
 {% block content %}
-<body class="bg-gray-100 p-4">
-    <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-6">
-        <a class="fixed top-0 right-0 m-4" href="{{ url_for('patient_dashboard') }}">x</a>
-        <!-- Left Panel -->
-        <div class="w-full md:w-64">
-            <!-- Profile Section -->
+
+<body class="bg-gray-50 py-8 px-4">
+
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row gap-8" x-data="{ tab: 'personal' }">
+
+    <!-- Close Button -->
+    <a class="fixed top-4 right-4 text-gray-500 hover:text-gray-800 transition"
+       href="{{ url_for('patient_dashboard') }}">
+        ✕
+    </a>
+
+    <!-- LEFT SIDEBAR -->
+    <div class="w-full md:w-72 md:sticky md:top-6 h-fit">
+        <div class="bg-white shadow-md rounded-2xl p-6 border border-gray-100">
+
+            <!-- Avatar -->
             <div class="flex flex-col items-center">
-                <div class="w-20 h-20 bg-gray-200 rounded-full mb-4"></div>
-                <h3 class="font-semibold text-gray-800">{{ profile.firstname }} {{ profile.lastname }}</h3>
+                <div class="w-24 h-24 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 
+                            shadow-inner flex items-center justify-center text-4xl font-semibold 
+                            text-gray-600 mb-3">
+                    {{ profile.firstname[0] }}{{ profile.lastname[0] }}
+                </div>
+
+                <!-- Name -->
+                <h3 class="text-xl font-semibold text-gray-800">
+                    {{ profile.firstname }} {{ profile.lastname }}
+                </h3>
                 <p class="text-gray-500 text-sm">Patient</p>
             </div>
-            
+
             <!-- Contact Info -->
-            <div class="mt-6">
-                <div class="flex items-center py-2 text-sm text-gray-700">
-                    <span class="w-5 mr-2 text-gray-500">✉️</span>
-                    <span>{{ profile.account.email }}</span>
+            <div class="mt-6 space-y-3">
+                <div class="flex items-center text-sm text-gray-600">
+                    <i class="ri-mail-line text-gray-400 mr-3 text-lg"></i>
+                    {{ profile.email }}
                 </div>
-                <div class="flex items-center py-2 text-sm text-gray-700">
-                    <span class="w-5 mr-2 text-gray-500">📞</span>
-                    <span>{{ profile.phone }}</span>
+                <div class="flex items-center text-sm text-gray-600">
+                    <i class="ri-phone-line text-gray-400 mr-3 text-lg"></i>
+                    {{ profile.phone }}
                 </div>
-                <!-- <div class="flex items-center py-2 text-sm text-gray-700">
-                    <span class="w-5 mr-2 text-gray-500">✓</span>
-                    <span>Account verified</span>
-                </div> -->
             </div>
-            
-            <!-- Profile Button -->
-            <div class="flex items-center mt-4 text-sm text-gray-600 cursor-pointer">
-                <span class="mr-2">👤</span>
-                <span>View Public Profile</span>
+
+            <!-- Actions -->
+            <div class="mt-6 space-y-3">
+                <button class="w-full py-3 text-sm flex items-center justify-center
+                               bg-gray-100 hover:bg-gray-200 font-medium rounded-xl transition">
+                    <i class="ri-user-line mr-2 text-lg"></i>
+                    View Public Profile
+                </button>
+
+                <button class="w-full py-3 text-sm flex items-center justify-center
+                               bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition">
+                    <i class="ri-download-2-line mr-2 text-lg"></i>
+                    Download Account
+                </button>
             </div>
-            
-            <!-- Download Button -->
-            <button class="w-full mt-5 bg-red-500 text-white py-2 px-4 rounded flex items-center justify-center">
-                <span class="mr-2">⬇️</span>
-                <span class="text-sm">Download Account</span>
-            </button>
-            
+
             <!-- Account Status -->
-            <div class="mt-10">
-                <h4 class="font-semibold text-gray-800 mb-4">Account Status</h4>
-                
-                <div class="flex justify-between items-center py-1.5">
-                    <span class="text-sm text-gray-600">Email verified</span>
-                    <span class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">Incomplete</span>
+            <div class="mt-8">
+                <h4 class="text-gray-800 font-semibold mb-3 text-sm uppercase tracking-wide">
+                    Account Status
+                </h4>
+
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Email verified</span>
+                        <span class="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded-full">
+                            Incomplete
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Phone verified</span>
+                        <span class="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded-full">
+                            Incomplete
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Medical history</span>
+                        <span class="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded-full">
+                            Incomplete
+                        </span>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center py-1.5">
-                    <span class="text-sm text-gray-600">Phone verified</span>
-                    <span class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">Incomplete</span>
-                </div>
-                <div class="flex justify-between items-center py-1.5">
-                    <span class="text-sm text-gray-600">Insurance linked</span>
-                    <span class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">Incomplete</span>
-                </div>
-                <div class="flex justify-between items-center py-1.5">
-                    <span class="text-sm text-gray-600">Medical history</span>
-                    <span class="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">Incomplete</span>
-                </div>
-                
-                <div class="text-center text-red-500 text-sm mt-5">Complete Your Profile</div>
+
+                <p class="text-center text-red-500 text-xs mt-4 font-medium">
+                    Complete your profile to enhance your experience.
+                </p>
             </div>
-        </div>
-        
-        <!-- Right Panel -->
-        <div class="flex-1 bg-white rounded-lg shadow-sm overflow-hidden">
-            <!-- Tabs -->
-            <div class="flex border-b border-gray-200">
-                <div class="px-4 py-3 text-sm text-gray-800 border-b-2 border-red-500 font-medium">Personal Info</div>
-                <div class="px-4 py-3 text-sm text-gray-500">Medical Details</div>
-                <div class="px-4 py-3 text-sm text-gray-500">Security</div>
-                <div class="px-4 py-3 text-sm text-gray-500">Documents</div>
-            </div>
-            
-            <!-- Content -->
-            <div class="p-6">
-                <h2 class="text-lg font-semibold text-gray-800">Personal Information</h2>
-                <p class="text-sm text-gray-600 mb-6">Update your personal details and contact information.</p>
-                
-                <!-- Form -->
-                <div class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-1">First name</label>
-                            <input type="text" value="{{ profile.firstname }}" class="w-full border border-gray-300 rounded p-2 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-1">Last name</label>
-                            <input type="text" value="{{ profile.lastname }}" class="w-full border border-gray-300 rounded p-2 text-sm">
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-1">Email</label>
-                            <input type="email" value="{{ profile.account.email }}" class="w-full border border-gray-300 rounded p-2 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-1">Phone number</label>
-                            <input type="tel" value="{{ profile.phone }}" class="w-full border border-gray-300 rounded p-2 text-sm">
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-1">Date of birth</label>
-                            <input type="text" value="{{ profile.birthdate }}" class="w-full border border-gray-300 rounded p-2 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-1">Gender</label>
-                            <input type="text" value="{{ profile.gender }}" class="w-full border border-gray-300 rounded p-2 text-sm">
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">Address</label>
-                        <input type="text" value="{{ profile.address }}" class="w-full border border-gray-300 rounded p-2 text-sm">
-                    </div>
-                </div>
-                
-                <!-- Preferences -->
-                <div class="mt-8 pt-6 border-t border-gray-200">
-                    <h2 class="text-lg font-semibold text-gray-800">Contact Preferences</h2>
-                    <p class="text-sm text-gray-600 mb-4">Manage how we contact you.</p>
-                    
-                    <div class="border-b border-gray-100 py-3 flex justify-between items-center">
-                        <div>
-                            <h4 class="font-medium text-gray-800">Email notifications</h4>
-                            <p class="text-xs text-gray-500">Receive emails about your appointments and treatments.</p>
-                        </div>
-                        <!-- Toggle -->
-                        <div class="relative inline-block w-12 align-middle">
-                            <input type="checkbox" id="toggle1" checked class="sr-only peer">
-                            <div class="block h-6 w-11 rounded-full bg-gray-300 peer-checked:bg-blue-500"></div>
-                            <div class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition-all peer-checked:translate-x-5"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="border-b border-gray-100 py-3 flex justify-between items-center">
-                        <div>
-                            <h4 class="font-medium text-gray-800">SMS notifications</h4>
-                            <p class="text-xs text-gray-500">Receive text messages for appointment reminders.</p>
-                        </div>
-                        <!-- Toggle -->
-                        <div class="relative inline-block w-12 align-middle">
-                            <input type="checkbox" id="toggle2" checked class="sr-only peer">
-                            <div class="block h-6 w-11 rounded-full bg-gray-300 peer-checked:bg-blue-500"></div>
-                            <div class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition-all peer-checked:translate-x-5"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="py-3 flex justify-between items-center">
-                        <div>
-                            <h4 class="font-medium text-gray-800">Mobile app notifications</h4>
-                            <p class="text-xs text-gray-500">Receive updates about new services and health tips.</p>
-                        </div>
-                        <!-- Toggle -->
-                        <div class="relative inline-block w-12 align-middle">
-                            <input type="checkbox" id="toggle3" class="sr-only peer">
-                            <div class="block h-6 w-11 rounded-full bg-gray-300 peer-checked:bg-blue-500"></div>
-                            <div class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition-all peer-checked:translate-x-5"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
         </div>
     </div>
+
+    <!-- RIGHT CONTENT PANEL -->
+    <div class="flex-1 bg-white shadow-md rounded-2xl overflow-hidden border border-gray-100">
+
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-200 text-sm font-medium">
+            <button 
+                @click="tab = 'personal'"
+                :class="tab === 'personal' 
+                    ? 'border-red-500 text-red-600' 
+                    : 'text-gray-600 hover:text-gray-800'"
+                class="px-6 py-3 border-b-2 transition">
+                Personal Info
+            </button>
+
+            <button 
+                @click="tab = 'medical'"
+                :class="tab === 'medical' 
+                    ? 'border-red-500 text-red-600' 
+                    : 'text-gray-600 hover:text-gray-800'"
+                class="px-6 py-3 border-b-2 transition">
+                Medical Details
+            </button>
+
+            <button 
+                @click="tab = 'document'"
+                :class="tab === 'document'
+                    ? 'border-red-500 text-red-600' 
+                    : 'text-gray-600 hover:text-gray-800'"
+                class="px-6 py-3 border-b-2 transition">
+                Documents
+            </button>
+        </div>
+
+        <!-- TAB CONTENT -->
+        <div class="p-8">
+
+            <!-- Personal Info Tab -->
+            <div x-show="tab === 'personal'" x-transition>
+                {% include 'patient/tabs/personal_info.html' %}
+            </div>
+
+            <!-- Medical Details Tab -->
+            <div x-show="tab === 'medical'" x-transition>
+                {% include 'patient/tabs/medical_details.html' %}
+            </div>
+
+            <!-- Document Tab -->
+            <div x-show="tab === 'document'" x-transition>
+                {% include 'patient/tabs/document.html' %}
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<!-- Alpine.js -->
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
 </body>
+
 {% endblock %}

@@ -71,17 +71,17 @@
               <span class="font-medium">Profile</span>
             </a>
           </li>
+          <!-- Logout -->
+          <div class="mt-8">
+            <a href="{{ url_for('logout') }}" 
+              class="flex items-center p-3 rounded-xl text-red-600 hover:bg-red-50 transition">
+              <img src="{{ url_for('static', filename='img/logout.jpg')}}" alt="logout" class="w-6 h-6 mr-3">
+              <span class="font-medium">Logout</span>
+            </a>
+          </div>
         </ul>
       </nav>
 
-      <!-- Logout -->
-      <div class="mt-8">
-        <a href="{{ url_for('logout') }}" 
-          class="flex items-center p-3 rounded-xl text-red-600 hover:bg-red-50 transition">
-          <img src="{{ url_for('static', filename='img/logout.jpg')}}" alt="logout" class="w-6 h-6 mr-3">
-          <span class="font-medium">Logout</span>
-        </a>
-      </div>
     </aside>
   </div>
 </body>

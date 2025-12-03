@@ -3,7 +3,8 @@ import numpy as np
 from datetime import datetime
 from collections import Counter
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Integer, String, ForeignKey, TIMESTAMP
+from datetime import datetime, date
+from sqlalchemy import Integer, String, ForeignKey, TIMESTAMP, Date, DateTime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -21,18 +22,56 @@ class Patient(db.Model):
     __tablename__ = "patient"
 
     patient_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    account_id: Mapped[int] = mapped_column(
+        ForeignKey("account.account_id"), unique=True, nullable=False
+    )
+
     firstname: Mapped[str] = mapped_column(String(50))
+    middlename: Mapped[str] = mapped_column(String(50), nullable=True)
     lastname: Mapped[str] = mapped_column(String(50))
-    birthdate: Mapped[str] = mapped_column(String(10))
     gender: Mapped[str] = mapped_column(String(10))
-    address: Mapped[str] = mapped_column(String(100))
+    birthdate: Mapped[date] = mapped_column(Date)
+    age: Mapped[int] = mapped_column(Integer)
+    blood_type: Mapped[str] = mapped_column(String(5), nullable=True)
+    civil_status: Mapped[str] = mapped_column(String(20), nullable=True)
+    current_address: Mapped[str] = mapped_column(String(200))
+    permanent_address: Mapped[str] = mapped_column(String(200))
+    zipcode: Mapped[str] = mapped_column(String(10), nullable=True)
     phone: Mapped[str] = mapped_column(String(20))
-    account_id: Mapped[int] = mapped_column(ForeignKey("account.account_id"), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(100), nullable=True)
+
+    ec_name: Mapped[str] = mapped_column(String(100), nullable=True)
+    ec_phone: Mapped[str] = mapped_column(String(20), nullable=True)
+    ec_relation: Mapped[str] = mapped_column(String(50), nullable=True)
+    ec_address: Mapped[str] = mapped_column(String(200), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow
+    )
 
     account: Mapped["Account"] = relationship(back_populates="patient")
     appointments: Mapped[list["Appointment"]] = relationship(back_populates="patient")
     records: Mapped[list["MedicalRecord"]] = relationship(back_populates="patient")
 
+    history: Mapped["PatientHistoryBackground"] = relationship(
+        back_populates="patient", uselist=False
+    )
+
+class PatientHistoryBackground(db.Model):
+    __tablename__ = "patient_history_background"
+
+    phb_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    patient_id: Mapped[int] = mapped_column(
+        ForeignKey("patient.patient_id"), nullable=False
+    )
+    pastMedicalHistory: Mapped[str] = mapped_column(String(500), nullable=True)
+    beenHospitalized: Mapped[str] = mapped_column(String(10), nullable=True)
+    hadSurgery: Mapped[str] = mapped_column(String(10), nullable=True)
+    allergies: Mapped[str] = mapped_column(String(500), nullable=True)
+    ongoingMedications: Mapped[str] = mapped_column(String(500), nullable=True)
+    familyHistory: Mapped[str] = mapped_column(String(500), nullable=True)
+
+    patient: Mapped["Patient"] = relationship(back_populates="history")
 
 class Doctor(db.Model):
     __tablename__ = "doctor"
@@ -290,105 +329,85 @@ def admin_dashboard():
     statistics = calculate_appointment_statistics()
     return render_template('admin/admin_dashboard.html', statistics=statistics)
 
-@app.route('/admin_doctors')
-def admin_doctors():
-    doctors = Doctor.query.all()
-    return render_template('admin/admin_doctors.html', doctors=doctors)
-
 @app.route('/patients_list')
 def patients_list():
     patients = Patient.query.all()
     return render_template('admin/patients_list.html', patients=patients)
 
-@app.route('/add_doctor', methods=['GET', 'POST'])
-def add_doctor():
+@app.route('/view_doctor', methods=['GET', 'POST'])
+def view_doctor():
+    account_id = request.args.get('account_id', type=int)
+    selected_account = None
+
+    if account_id:
+        selected_account = Account.query.get(account_id)
+        
     accounts = (
-    db.session.query(Account)
-    .outerjoin(Doctor, Doctor.account_id == Account.account_id)
-    .filter(Account.role == 'doctor', Doctor.account_id.is_(None))
-    .all()
+        db.session.query(Account)
+        .outerjoin(Doctor, Doctor.account_id == Account.account_id)
+        .filter(Account.role == 'doctor', Doctor.account_id.is_(None))
+        .all()
     )
+    selected_account = None
 
     if request.method == 'POST':
-        firstname = request.form['firstname']
-        middlename = request.form['middlename']
-        lastname = request.form['lastname']
-        age = request.form['age']
-        bloodtype = request.form['bloodtype']
-        height = request.form['height']
-        weight = request.form['weight']
-        specialization = request.form['specialization']
-        gender = request.form['gender']
-        dob = request.form['dob']
-        pob = request.form['pob']
-        civilstatus = request.form.get('civilstatus')
-        degree = request.form.get('degree')
-        nationality = request.form['nationality']
-        religion = request.form['religion']
-        phone = request.form['phone']
-        email = request.form['email']
         account_id = request.form['account_id']
+        selected_account = Account.query.get(account_id)
 
-        new_doctor = Doctor(firstname=firstname, 
-                            middlename=middlename, 
-                            lastname=lastname, 
-                            age=age, 
-                            bloodtype=bloodtype, 
-                            height=height, 
-                            weight=weight, 
-                            specialization=specialization,
-                            gender=gender, 
-                            dob=dob, 
-                            pob=pob, 
-                            civilstatus=civilstatus, 
-                            degree=degree, 
-                            nationality=nationality, 
-                            religion=religion, 
-                            phone=phone, 
-                            email=email,
-                            account_id=account_id
-                        )
+        new_doctor = Doctor(
+            firstname=request.form['firstname'],
+            middlename=request.form['middlename'],
+            lastname=request.form['lastname'],
+            age=request.form['age'],
+            bloodtype=request.form['bloodtype'],
+            height=request.form['height'],
+            weight=request.form['weight'],
+            specialization=request.form['specialization'],
+            gender=request.form['gender'],
+            dob=request.form['dob'],
+            pob=request.form['pob'],
+            civilstatus=request.form.get('civilstatus'),
+            degree=request.form.get('degree'),
+            nationality=request.form['nationality'],
+            religion=request.form['religion'],
+            phone=request.form['phone'],
+            email=request.form['email'],
+            account_id=account_id
+        )
+
         db.session.add(new_doctor)
         db.session.commit()
 
         return redirect(url_for('admin_doctors'))
-    return render_template('admin/add_doctor.html', accounts=accounts)
-
-@app.route('/admin_appointments')
-def admin_appointments():
-    appointments = Appointment.query.all()
-    return render_template('admin/admin_appointments.html', appointments=appointments)  
+    return render_template('admin/view_doctor.html', 
+                           accounts=accounts, 
+                           selected_account=selected_account)
 
 @app.route('/admin_reports')
 def admin_reports():
     return render_template('admin/admin_reports.html')
 
-@app.route('/admin_settings')
-def admin_settings():
-    return render_template('admin/admin_settings.html')
-
-@app.route('/settings/doctor/create_account', methods=['GET', 'POST'])
-def create_doctor_account():
-    doctors = Doctor.query.all()
-
+@app.route('/admin_doctors', methods=['GET', 'POST'])
+def admin_doctors():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        role = request.form.get('role', 'doctor')
+        role = 'doctor'
 
-        existing_user = Account.query.filter_by(email=email).first()
-        if existing_user:
+        if Account.query.filter_by(email=email).first():
             flash("Email already exists!", "danger")
-            return redirect(url_for('register'))
+            return redirect(url_for('admin_doctors'))
 
         hashed_pw = generate_password_hash(password)
         new_account = Account(email=email, password=hashed_pw, role=role)
-
         db.session.add(new_account)
         db.session.commit()
 
-        return redirect(url_for('create_doctor_account'))
-    return render_template('admin/create_doctor_account.html',doctors=doctors)
+        flash("Doctor account created!", "success")
+        return redirect(url_for('admin_doctors'))
+
+    doctors = Account.query.filter_by(role='doctor').all()
+    return render_template('admin/admin_doctors.html', doctors=doctors)
 
 @app.route('/doctor/dashboard')
 def doctor_dashboard():
@@ -518,58 +537,141 @@ def create_profile():
     if not user_id:
         return redirect(url_for('login'))
 
-    # Check if user already has a patient profile
+    # Check if user already has patient profile
     existing = Patient.query.filter_by(account_id=user_id).first()
     if existing:
         flash("You already created your profile.", "warning")
         return redirect(url_for('patient_profile'))
 
     if request.method == 'POST':
+        # ------------ BASIC PATIENT INFO ------------
         firstname = request.form.get('firstname', "").strip()
+        middlename = request.form.get('middlename', "").strip()
         lastname = request.form.get('lastname', "").strip()
-        phone = request.form.get('phone', "").strip()
-        birthdate = request.form.get('birthdate', "").strip()
         gender = request.form.get('gender', "").strip()
-        address = request.form.get('address', "").strip()
+        birthdate_str = request.form.get('birthdate', "").strip()
+        age = request.form.get('age', "").strip()
+        blood_type = request.form.get('blood_type', "").strip()
+        civil_status = request.form.get('civil_status', "").strip()
+        current_address = request.form.get('current_address', "").strip()
+        permanent_address = request.form.get('permanent_address', "").strip()
+        zipcode = request.form.get('zipcode', "").strip()
+        phone = request.form.get('phone', "").strip()
+        email = request.form.get('email', "").strip()
+        
+        # ------------ EMERGENCY CONTACT INFO ------------
+        ec_name = request.form.get('ec_name', "").strip()
+        ec_relation = request.form.get('ec_relation', "").strip()
+        ec_phone = request.form.get('ec_phone', "").strip()
+        ec_address = request.form.get('ec_address', "").strip()
 
-        # --- VALIDATION ---
+        # ------------ PATIENT HISTORY QUESTIONS ------------
+        pastMedicalHistory = request.form.get('pastMedicalHistory', "").strip()
+        beenHospitalized = request.form.get('beenHospitalized', "").strip()
+        hadSurgery = request.form.get('hadSurgery', "").strip()
+        allergies = request.form.get('allergies', "").strip()
+        ongoingMedications = request.form.get('ongoingMedications', "").strip()
+        familyHistory = request.form.get('familyHistory', "").strip()
+
+        # Convert birthdate string to date object
+        if not birthdate_str:
+            flash("Birthdate is required.", "warning")
+            return redirect(url_for('create_profile'))
+
+        try:
+            birthdate = datetime.strptime(birthdate_str, "%Y-%m-%d").date()
+        except ValueError:
+            flash("Invalid birthdate format.", "warning")
+
+        # ------------ REQUIRED FIELD VALIDATION ------------
         missing_fields = []
-        if not firstname: missing_fields.append("First Name")
-        if not lastname: missing_fields.append("Last Name")
-        if not phone: missing_fields.append("Phone Number")
-        if not birthdate: missing_fields.append("Birthdate")
-        if not gender: missing_fields.append("Gender")
-        if not address: missing_fields.append("Address")
+
+        required_fields = {
+            "First Name": firstname,
+            "Last Name": lastname,
+            "Phone Number": phone,
+            "Birthdate": birthdate,
+            "Email": email,
+            "Gender": gender,
+            "Permanent Address": permanent_address,
+            "Past Medical History": pastMedicalHistory,
+            "Hospitalized Before": beenHospitalized,
+            "Had Surgery": hadSurgery,
+            "Allergies": allergies,
+            "Ongoing Medications": ongoingMedications,
+            "Family History": familyHistory
+        }
+
+        for label, value in required_fields.items():
+            if not value:
+                missing_fields.append(label)
 
         if missing_fields:
-            flash(f"Please complete all required fields: {', '.join(missing_fields)}", "error")
+            flash(f"Please complete all required fields: /n. {', '.join(missing_fields)}", "warning")
             return redirect(url_for('create_profile'))
 
-        # Mobile number validation
+        # ------------ PHONE VALIDATION ------------
         if len(phone) < 10:
-            flash("Phone number is too short.", "error")
-        elif len(phone) > 13:
-            flash("Phone number is too long.", "error")
-        
+            flash("Phone number is too short.", "warning")
             return redirect(url_for('create_profile'))
 
-        patient = Patient(
-            firstname=firstname,
-            lastname=lastname,
-            phone=phone,
-            birthdate=birthdate,
-            gender=gender,
-            address=address,
-            account_id=user_id
-        )
+        if len(phone) > 13:
+            flash("Phone number is too long.", "warning")
+            return redirect(url_for('create_profile'))
 
-        db.session.add(patient)
-        db.session.commit()
+        # ------------ CREATE PATIENT & HISTORY RECORDS ------------
+        try:
+            patient = Patient(
+                firstname=firstname,
+                middlename=middlename,
+                lastname=lastname,
+                gender=gender,
+                birthdate=birthdate,
+                age=age,
+                blood_type=blood_type,
+                civil_status=civil_status,
+                current_address=current_address,
+                permanent_address=permanent_address,
+                zipcode=zipcode,
+                phone=phone,
+                email=email,
+                ec_name=ec_name,
+                ec_relation=ec_relation,
+                ec_phone=ec_phone,
+                ec_address=ec_address,
+                account_id=user_id
+            )
 
-        flash("Profile created successfully!", "success")
-        return redirect(url_for('patient_profile'))
+            db.session.add(patient)
+            db.session.flush()  # ensures patient_id is available
 
-    return render_template('patient/create_profile.html')
+            history = PatientHistoryBackground(
+                patient_id=patient.patient_id,
+                pastMedicalHistory=pastMedicalHistory,
+                beenHospitalized=beenHospitalized,
+                hadSurgery=hadSurgery,
+                allergies=allergies,
+                ongoingMedications=ongoingMedications,
+                familyHistory=familyHistory
+            )
+
+            db.session.add(history)
+            db.session.commit()
+
+            flash("Profile successfully created!", "success")
+            return redirect(url_for('patient_profile'))
+
+        except Exception as e:
+            db.session.rollback()
+            flash("An error occurred while creating your profile.", "danger")
+            print("Error:", e)
+            return redirect(url_for('create_profile'))
+
+    return render_template(
+        'patient/create_profile.html',
+        data=request.form
+    )
+
 
 
 @app.route('/patient_profile')
@@ -582,7 +684,12 @@ def patient_profile():
     if not profile:
         return redirect(url_for('create_profile'))
     
-    return render_template('patient/patient_profile.html', profile=profile)
+    history = PatientHistoryBackground.query.filter_by(patient_id=Patient.patient_id).first()
+
+    return render_template('patient/patient_profile.html', 
+                           profile=profile, 
+                           history=history
+    )
 
 @app.route('/patient/appointment', methods=['GET', 'POST'])
 def patient_appointment():

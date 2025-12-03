@@ -3,33 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top Left Notification</title>
-    <!-- Include Tailwind CSS from CDN (for simplicity) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Include Alpine.js for interactivity (optional, but makes JS simpler) -->
-    <script defer src="cdn.jsdelivr.net"></script>
-</head>
-<body class="p-8">
+    <title>Notification</title>
 
-    <!-- Notification Container (fixed position) -->
-    <div id="notification-container" class="fixed top-4 right-4 z-50">
-        <!-- Notification Item (initially hidden using JS/Alpine.js) -->
-        <div id="notification-1" class="bg-blue-500 p-4 rounded-lg shadow-xl flex items-center justify-between space-x-4">
-            <span>
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        <div class="mb-4">
-                            {% for category, message in messages %}
-                                <p class="text-red-500 text-sm text-center">{{ message }}</p>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                {% endwith %}
-            </span>
-            <button onclick="document.getElementById('notification-1').style.display='none';" class="text-white hover:text-blue-100 focus:outline-none">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="www.w3.org"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        </div>
-    </div>
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-gray-100">
+
+<!-- Notification Container -->
+<div class="fixed top-4 right-4 z-50 space-y-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            
+                <!-- Alpine notification box -->
+                <div 
+                    x-data="{show: true}" 
+                    x-show="show" 
+                    x-transition 
+                    x-init="setTimeout(() => show = false, 4000)" 
+                    class="
+                        px-4 py-3 rounded-lg shadow-xl flex items-center justify-between w-80 text-white
+                        {% if category == 'success' %} bg-green-500 
+                        {% elif category == 'warning' %} bg-yellow-500 
+                        {% elif category == 'danger' %} bg-red-500 
+                        {% else %} bg-red-500 
+                        {% endif %}
+                    "
+                >
+                    <span class="text-sm font-medium">{{ message }}</span>
+
+                    <button 
+                        @click="show = false" 
+                        class="text-white hover:text-gray-200"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
 </body>
 </html>
