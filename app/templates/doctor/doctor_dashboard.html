@@ -1,0 +1,97 @@
+{% extends 'base/layout.html' %}
+{% block title %}Dashboard | Fernandez Clinic{% endblock %}
+{% block content %}
+
+<div class="flex h-screen bg-gray-100">
+
+    {% include 'doctor/doctor_sidebar.html' %}
+    {% include 'base/notification.html' %}
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto">
+
+        <header class="bg-white shadow-sm border-b sticky top-0 z-40">
+            <div class="flex items-center justify-between px-6 py-4">
+                
+                <!-- Left Side (Logo or Menu Button) -->
+                <div class="flex items-center">
+                <!-- Mobile Menu Button -->
+                  <button class="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100" id="menuToggle">
+                      <i class="fas fa-bars text-lg"></i>
+                  </button>
+                </div>
+
+                <!-- Right Side (User Info) -->
+                <div class="flex items-center space-x-3">
+                  <div class="hidden sm:block text-right">
+                      <p class="text-sm font-medium text-gray-800">{{ doctor.firstname }} {{ doctor.lastname }}</p>
+                      <p class="text-xs text-gray-500">Patient</p>
+                  </div>
+                  <div class="w-24 h-24 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 
+                            shadow-inner flex items-center justify-center text-4xl font-semibold 
+                            text-gray-600 mb-3">
+                        {{ doctor.firstname[0] }}{{ doctor.lastname[0] }}
+                    </div>
+                </div>
+
+            </div>
+        </header>
+
+        <div class="content">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-4 gap-6 mb-8">
+
+                <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
+                    <p class="text-sm text-gray-500">Total Patients</p>
+                    <p class="text-3xl font-bold text-gray-800 mt-1">1,248</p>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
+                    <p class="text-sm text-gray-500">Total Doctors</p>
+                    <p class="text-3xl font-bold text-gray-800 mt-1">24</p>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
+                    <p class="text-sm text-gray-500">Appointments</p>
+                    <p class="text-3xl font-bold text-gray-800 mt-1">432</p>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
+                    <p class="text-sm text-gray-500">Revenue</p>
+                    <p class="text-3xl font-bold text-gray-800 mt-1">$45,231.89</p>
+                </div>
+
+            </div>
+
+            <!-- Main Panels -->
+            <div class="grid grid-cols-2 gap-6">
+
+                <!-- Appointment Stats -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-700">Appointment Statistics</h3>
+
+                    <div class="h-52 flex items-center justify-center border border-dashed border-gray-300 rounded-lg text-gray-400">
+                        <span>[Chart Placeholder]</span>
+                    </div>
+                </div>
+
+                <!-- Recent Activities -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-700">Recent Activities</h3>
+
+                    <ul class="space-y-3 text-sm text-gray-700">
+                        <li>🟢 New patient registered — <span class="text-gray-500">10 mins ago</span></li>
+                        <li>🟢 Doctor completed appointment — <span class="text-gray-500">25 mins ago</span></li>
+                        <li>🟢 New appointment scheduled — <span class="text-gray-500">1 hour ago</span></li>
+                        <li>🟢 Lab results uploaded — <span class="text-gray-500">2 hours ago</span></li>
+                        <li>🟢 Billing invoice generated — <span class="text-gray-500">3 hours ago</span></li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+</div>
+
+{% endblock %}

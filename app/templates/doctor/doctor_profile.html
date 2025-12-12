@@ -1,0 +1,550 @@
+{% extends 'base/layout.html' %}
+{% block title %}{{ doctor.firstname if doctor else 'Doctor' }} Profile | MEDICAPP {% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 p-6">
+  <div class="max-w-7xl mx-auto">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">
+          {{ (doctor.firstname ~ ' ' ~ doctor.lastname) if doctor else 'Doctor Profile' }}
+        </h1>
+        <p class="text-sm text-gray-500 mt-1">Manage your profile, credentials and clinic information</p>
+      </div>
+
+      <!-- Action area: upload photo, profile initials -->
+      <div class="flex items-center gap-4">
+        <div class="text-right mr-2 hidden sm:block">
+          <div class="text-sm font-medium text-gray-800">
+            {{ doctor.firstname ~ ' ' ~ doctor.lastname if doctor and doctor.firstname else 'Doctor' }}
+          </div>
+          <div class="text-xs text-gray-500">Doctor</div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          {% if doctor and doctor.profile_image %}
+            <img src="{{ url_for('static', filename=doctor.profile_image) }}" alt="profile"
+                 class="w-12 h-12 rounded-full object-cover border">
+          {% else %}
+            <div class="w-12 h-12 rounded-full bg-blue-600 text-white grid place-items-center font-semibold">
+              {{ (doctor.firstname[0] if doctor and doctor.firstname else 'D') ~ (doctor.lastname[0] if doctor and doctor.lastname else '') }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left column: basic card -->
+      <aside class="lg:col-span-1">
+        <div class="bg-white rounded-xl shadow p-6">
+          <div class="flex flex-col items-center gap-4">
+            {% if doctor and doctor.profile_image %}
+              <img src="{{ url_for('static', filename=doctor.profile_image) }}" alt="photo" class="w-28 h-28 rounded-full object-cover border">
+            {% else %}
+              <div class="w-28 h-28 rounded-full bg-gray-200 grid place-items-center text-3xl font-semibold text-gray-700">
+                {{ (doctor.firstname[0] if doctor and doctor.firstname else 'D') ~ (doctor.lastname[0] if doctor and doctor.lastname else '') }}
+              </div>
+            {% endif %}
+
+            <div class="text-center">
+              <h2 class="text-lg font-semibold text-gray-900">
+                {{ (doctor.firstname ~ ' ' ~ doctor.lastname) if doctor else 'Doctor Name' }}
+              </h2>
+              <div class="text-sm text-blue-600 font-medium">
+                {{ doctor.specialization if doctor and doctor.specialization else 'Specialization' }}
+              </div>
+              <div class="text-xs text-gray-500 mt-1">Rating: ★ {{ doctor.rating if doctor and doctor.rating else '—' }}</div>
+            </div>
+          </div>
+
+          <!-- Quick info -->
+          <div class="mt-6 space-y-3 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-500">Phone</span>
+              <a href="tel:{{ doctor.phone }}" class="text-gray-700">{{ doctor.phone if doctor and doctor.phone else '—' }}</a>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Email</span>
+              <a href="mailto:{{ doctor.email }}" class="text-gray-700">{{ doctor.email if doctor and doctor.email else '—' }}</a>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Clinic</span>
+              <span class="text-gray-700">{{ doctor.clinic_name if doctor and doctor.clinic_name else '—' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Location</span>
+              <span class="text-gray-700">{{ doctor.clinic_address if doctor and doctor.clinic_address else '—' }}</span>
+            </div>
+          </div>
+
+          <!-- Languages -->
+          <div class="mt-6">
+            <h3 class="text-sm text-gray-600 mb-2">Languages</h3>
+            <div class="flex flex-wrap gap-2">
+              {% if doctor and doctor.languages %}
+                {% for lang in doctor.languages.split(',') %}
+                  <span class="px-2 py-1 bg-gray-100 rounded text-sm text-gray-700">{{ lang.strip() }}</span>
+                {% endfor %}
+              {% else %}
+                <span class="text-sm text-gray-500">No languages set</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Clinic hours / small stats -->
+        <div class="bg-white rounded-xl shadow p-6 mt-6">
+          <h4 class="text-sm font-semibold text-gray-700 mb-3">Clinic Schedule</h4>
+          <div class="text-sm text-gray-600">
+            <div class="flex justify-between">
+              <span>Days</span>
+              <span>{{ doctor.clinic_days if doctor and doctor.clinic_days else '—' }}</span>
+            </div>
+            <div class="flex justify-between mt-1">
+              <span>Hours</span>
+              <span>{{ doctor.clinic_time_start if doctor and doctor.clinic_time_start else '—' }} — {{ doctor.clinic_time_end if doctor and doctor.clinic_time_end else '—' }}</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right column: main content (tabs) -->
+      <main class="lg:col-span-2">
+        <div class="bg-white rounded-xl shadow p-6">
+          <!-- Tabs -->
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div class="flex gap-1 overflow-x-auto">
+              <button data-tab="overview" class="tab-btn px-4 py-2 text-sm rounded-t-lg border-b-2 border-transparent text-gray-700 hover:text-gray-900">Overview</button>
+              <button data-tab="details" class="tab-btn px-4 py-2 text-sm rounded-t-lg border-b-2 border-transparent text-gray-700 hover:text-gray-900">Personal Info</button>
+              <button data-tab="credentials" class="tab-btn px-4 py-2 text-sm rounded-t-lg border-b-2 border-transparent text-gray-700 hover:text-gray-900">Qualifications</button>
+              <button data-tab="experience" class="tab-btn px-4 py-2 text-sm rounded-t-lg border-b-2 border-transparent text-gray-700 hover:text-gray-900">Experience</button>
+              <button data-tab="awards" class="tab-btn px-4 py-2 text-sm rounded-t-lg border-b-2 border-transparent text-gray-700 hover:text-gray-900">Awards</button>
+              <button data-tab="clinic" class="tab-btn px-4 py-2 text-sm rounded-t-lg border-b-2 border-transparent text-gray-700 hover:text-gray-900">Clinic Info</button>
+              <button data-tab="settings" class="tab-btn px-4 py-2 text-sm rounded-t-lg border-b-2 border-transparent text-gray-700 hover:text-gray-900">Settings</button>
+            </div>
+
+            <!-- Edit controls (top-right) -->
+            <div class="flex items-center gap-3">
+              <button id="editProfileBtn" class="px-3 py-2 bg-blue-600 text-white rounded-md text-sm">Edit</button>
+              <form action="{{ url_for('doctor_profile', doctor_id=doctor.doctor_id) }}" method="POST" enctype="multipart/form-data" class="hidden" id="photoForm">
+                <input type="file" name="photo" accept="image/*" class="text-sm">
+                <button type="submit" class="mt-2 px-3 py-1 bg-gray-800 text-white rounded text-sm">Upload</button>
+              </form>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <!-- Tab Contents -->
+          <!-- Overview -->
+          <section data-panel="overview" class="tab-panel">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div class="lg:col-span-2">
+                <h3 class="text-lg font-semibold text-gray-800">Professional Bio</h3>
+                <p class="mt-2 text-gray-700">{{ doctor.bio if doctor and doctor.bio else 'No bio yet.' }}</p>
+
+                <div class="mt-6">
+                  <h4 class="text-sm font-medium text-gray-700">Specializations</h4>
+                  <div class="flex flex-wrap gap-2 mt-2">
+                    {% if doctor and doctor.specialization %}
+                      <span class="px-3 py-1 bg-blue-50 text-blue-700 rounded">{{ doctor.specialization }}</span>
+                    {% else %}
+                      <span class="text-sm text-gray-500">No specialization set</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <div class="lg:col-span-1 space-y-3">
+                <div class="border rounded p-4">
+                  <div class="text-sm text-gray-600">Years Experience</div>
+                  <div class="text-xl font-bold text-gray-900">{{ doctor.experience_years if doctor and doctor.experience_years else '—' }}</div>
+                </div>
+                <div class="border rounded p-4">
+                  <div class="text-sm text-gray-600">Total Patients</div>
+                  <div class="text-xl font-bold text-gray-900">{{ doctor.total_patients if doctor and doctor.total_patients else '—' }}</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Personal Info -->
+          <section data-panel="details" class="tab-panel hidden">
+            <form action="{{ url_for('create_doctor_profile', doctor_id=doctor.doctor_id) }}" method="POST" id="personalForm">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm text-gray-600">First name</label>
+                  <input name="firstname" class="w-full mt-1 p-2 border rounded" value="{{ doctor.firstname if doctor else '' }}" disabled>
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-600">Middle name</label>
+                  <input name="middlename" class="w-full mt-1 p-2 border rounded" value="{{ doctor.middlename if doctor else '' }}" disabled>
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-600">Last name</label>
+                  <input name="lastname" class="w-full mt-1 p-2 border rounded" value="{{ doctor.lastname if doctor else '' }}" disabled>
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-600">Gender</label>
+                  <input name="gender" class="w-full mt-1 p-2 border rounded" value="{{ doctor.gender if doctor else '' }}" disabled>
+                </div>
+
+                <div>
+                  <label class="block text-sm text-gray-600">Date of birth</label>
+                  <input name="dob" class="w-full mt-1 p-2 border rounded" value="{{ doctor.dob if doctor else '' }}" disabled>
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-600">Age</label>
+                  <input name="age" class="w-full mt-1 p-2 border rounded" value="{{ doctor.age if doctor else '' }}" disabled>
+                </div>
+
+                <div>
+                  <label class="block text-sm text-gray-600">Phone</label>
+                  <input name="phone" class="w-full mt-1 p-2 border rounded" value="{{ doctor.phone if doctor else '' }}" disabled>
+                </div>
+
+                <div>
+                  <label class="block text-sm text-gray-600">Email</label>
+                  <input name="email" class="w-full mt-1 p-2 border rounded" value="{{ doctor.email if doctor else '' }}" disabled>
+                </div>
+
+                <div>
+                  <label class="block text-sm text-gray-600">Blood Type</label>
+                  <input name="bloodtype" class="w-full mt-1 p-2 border rounded" value="{{ doctor.bloodtype if doctor else '' }}" disabled>
+                </div>
+
+                <div>
+                  <label class="block text-sm text-gray-600">Height</label>
+                  <input name="height" class="w-full mt-1 p-2 border rounded" value="{{ doctor.height if doctor else '' }}" disabled>
+                </div>
+
+                <div>
+                  <label class="block text-sm text-gray-600">Weight</label>
+                  <input name="weight" class="w-full mt-1 p-2 border rounded" value="{{ doctor.weight if doctor else '' }}" disabled>
+                </div>
+
+                <div>
+                  <label class="block text-sm text-gray-600">Civil Status</label>
+                  <input name="civilstatus" class="w-full mt-1 p-2 border rounded" value="{{ doctor.civilstatus if doctor else '' }}" disabled>
+                </div>
+
+                <div>
+                  <label class="block text-sm text-gray-600">Nationality</label>
+                  <input name="nationality" class="w-full mt-1 p-2 border rounded" value="{{ doctor.nationality if doctor else '' }}" disabled>
+                </div>
+
+                <div class="md:col-span-2">
+                  <label class="block text-sm text-gray-600">Place of Birth</label>
+                  <input name="pob" class="w-full mt-1 p-2 border rounded" value="{{ doctor.pob if doctor else '' }}" disabled>
+                </div>
+
+              </div>
+
+              <div class="mt-4 flex gap-3">
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hidden" id="savePersonal">Save</button>
+                <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hidden" id="cancelPersonal">Cancel</button>
+              </div>
+            </form>
+          </section>
+
+          <!-- Qualifications -->
+          <section data-panel="credentials" class="tab-panel hidden">
+            <div class="space-y-4">
+              <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Qualifications</h3>
+                <a href="#" id="addQualificationBtn" class="text-sm text-blue-600">+ Add</a>
+              </div>
+
+              <!-- list -->
+              <ul class="space-y-3">
+                {% for q in doctor.qualifications %}
+                <li class="border rounded p-3 flex justify-between items-start">
+                  <div>
+                    <div class="font-semibold text-gray-800">{{ q.degree }}</div>
+                    <div class="text-sm text-gray-600">{{ q.institution }} {% if q.year %}• {{ q.year }}{% endif %}</div>
+                  </div>
+                  <div class="flex gap-2">
+                    <form action="{{ url_for('delete_qualification', qual_id=q.id, doctor_id=doctor.doctor_id) }}" method="POST" onsubmit="return confirm('Delete qualification?')">
+                      <button type="submit" class="text-sm text-red-600">Delete</button>
+                    </form>
+                  </div>
+                </li>
+                {% else %}
+                <li class="text-sm text-gray-500">No qualifications added.</li>
+                {% endfor %}
+              </ul>
+
+              <!-- Add form (hidden initially) -->
+              <form action="{{ url_for('add_qualification', doctor_id=doctor.doctor_id) }}" method="POST" id="qualificationForm" class="hidden space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <input name="degree" placeholder="Degree (e.g. MD - Harvard)" class="p-2 border rounded">
+                  <input name="institution" placeholder="Institution" class="p-2 border rounded">
+                  <input name="year" placeholder="Year" class="p-2 border rounded">
+                </div>
+                <div class="flex gap-3">
+                  <button class="px-3 py-2 bg-blue-600 text-white rounded">Add</button>
+                  <button type="button" id="cancelQualification" class="px-3 py-2 bg-gray-200 rounded">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <!-- Experience -->
+          <section data-panel="experience" class="tab-panel hidden">
+            <div class="space-y-4">
+              <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Work Experience</h3>
+                <a href="#" id="addExperienceBtn" class="text-sm text-blue-600">+ Add</a>
+              </div>
+
+              <ul class="space-y-3">
+                {% for e in doctor.experiences %}
+                <li class="border rounded p-3 flex justify-between items-start">
+                  <div>
+                    <div class="font-semibold text-gray-800">{{ e.role }}</div>
+                    <div class="text-sm text-gray-600">{{ e.company }} • {{ e.duration }}</div>
+                  </div>
+                  <div class="flex gap-2">
+                    <form action="{{ url_for('delete_experience', exp_id=e.id, doctor_id=doctor.doctor_id) }}" method="POST" onsubmit="return confirm('Delete experience?')">
+                      <button type="submit" class="text-sm text-red-600">Delete</button>
+                    </form>
+                  </div>
+                </li>
+                {% else %}
+                <li class="text-sm text-gray-500">No work experience recorded.</li>
+                {% endfor %}
+              </ul>
+
+              <form action="{{ url_for('add_experience', doctor_id=doctor.doctor_id) }}" method="POST" id="experienceForm" class="hidden space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <input name="role" placeholder="Role/Position" class="p-2 border rounded">
+                  <input name="company" placeholder="Company / Hospital" class="p-2 border rounded">
+                  <input name="duration" placeholder="Duration (e.g. 2015-2019)" class="p-2 border rounded">
+                </div>
+                <div class="flex gap-3">
+                  <button class="px-3 py-2 bg-blue-600 text-white rounded">Add</button>
+                  <button type="button" id="cancelExperience" class="px-3 py-2 bg-gray-200 rounded">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <!-- Awards -->
+          <section data-panel="awards" class="tab-panel hidden">
+            <div class="space-y-4">
+              <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Awards & Certifications</h3>
+                <a href="#" id="addAwardBtn" class="text-sm text-blue-600">+ Add</a>
+              </div>
+
+              <ul class="space-y-3">
+                {% for a in doctor.awards %}
+                <li class="border rounded p-3 flex justify-between items-start">
+                  <div>
+                    <div class="font-semibold text-gray-800">{{ a.title }}</div>
+                  </div>
+                  <div class="flex gap-2">
+                    <form action="{{ url_for('delete_award', award_id=a.id, doctor_id=doctor.doctor_id) }}" method="POST" onsubmit="return confirm('Delete award?')">
+                      <button type="submit" class="text-sm text-red-600">Delete</button>
+                    </form>
+                  </div>
+                </li>
+                {% else %}
+                <li class="text-sm text-gray-500">No awards recorded.</li>
+                {% endfor %}
+              </ul>
+
+              <form action="{{ url_for('add_award', doctor_id=doctor.doctor_id) }}" method="POST" id="awardForm" class="hidden space-y-3">
+                <input name="title" placeholder="Award or Certification title" class="p-2 border rounded w-full">
+                <div class="flex gap-3">
+                  <button class="px-3 py-2 bg-blue-600 text-white rounded">Add</button>
+                  <button type="button" id="cancelAward" class="px-3 py-2 bg-gray-200 rounded">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <!-- Clinic Info -->
+          <section data-panel="clinic" class="tab-panel hidden">
+            <form action="{{ url_for('update_clinic_info', doctor_id=doctor.doctor_id) }}" method="POST">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm text-gray-600">Clinic Name</label>
+                  <input name="clinic_name" class="w-full mt-1 p-2 border rounded" value="{{ doctor.clinic_name if doctor else '' }}">
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-600">Clinic Address</label>
+                  <input name="clinic_address" class="w-full mt-1 p-2 border rounded" value="{{ doctor.clinic_address if doctor else '' }}">
+                </div>
+
+                <div>
+                  <label class="block text-sm text-gray-600">Clinic Days</label>
+                  <input name="clinic_days" class="w-full mt-1 p-2 border rounded" value="{{ doctor.clinic_days if doctor else '' }}" placeholder="e.g. Mon, Tue, Fri">
+                </div>
+
+                <div class="flex gap-2">
+                  <div class="flex-1">
+                    <label class="block text-sm text-gray-600">From</label>
+                    <input name="clinic_time_start" class="w-full mt-1 p-2 border rounded" value="{{ doctor.clinic_time_start if doctor else '' }}" placeholder="08:00">
+                  </div>
+                  <div class="flex-1">
+                    <label class="block text-sm text-gray-600">To</label>
+                    <input name="clinic_time_end" class="w-full mt-1 p-2 border rounded" value="{{ doctor.clinic_time_end if doctor else '' }}" placeholder="17:00">
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded">Save Clinic Info</button>
+              </div>
+            </form>
+          </section>
+
+          <!-- Settings -->
+          <section data-panel="settings" class="tab-panel hidden">
+            <div class="space-y-4">
+              <form action="{{ url_for('update_doctor_settings', doctor_id=doctor.doctor_id) }}" method="POST">
+                <div class="flex items-center justify-between p-4 border rounded">
+                  <div>
+                    <div class="font-medium">Public Profile</div>
+                    <div class="text-sm text-gray-500">Allow patients to view your public profile</div>
+                  </div>
+                  <input type="checkbox" name="public_profile" {% if doctor and doctor.public_profile %}checked{% endif %}>
+                </div>
+
+                <div class="flex items-center justify-between p-4 border rounded">
+                  <div>
+                    <div class="font-medium">Accept Appointments</div>
+                    <div class="text-sm text-gray-500">Open for online bookings</div>
+                  </div>
+                  <input type="checkbox" name="accept_appointments" {% if doctor and doctor.accept_appointments %}checked{% endif %}>
+                </div>
+
+                <div class="mt-4">
+                  <button class="px-4 py-2 bg-green-600 text-white rounded">Save Settings</button>
+                </div>
+              </form>
+
+              <div class="mt-6 border rounded p-4 bg-red-50">
+                <h4 class="font-semibold text-red-700">Danger Zone</h4>
+                <form action="{{ url_for('deactivate_doctor', doctor_id=doctor.doctor_id) }}" method="POST" onsubmit="return confirm('Deactivate profile?')">
+                  <button class="mt-3 px-3 py-2 bg-red-600 text-white rounded">Deactivate Profile</button>
+                </form>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </main>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts: tabs + toggles -->
+<script>
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.getAttribute('data-tab');
+
+      // style active
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('text-blue-600','border-b-2','border-blue-600');
+        b.classList.add('text-gray-700');
+      });
+      btn.classList.add('text-blue-600','border-b-2','border-blue-600');
+
+      // show panels
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.add('hidden');
+      });
+      const activePanel = document.querySelector(`[data-panel="${tab}"]`);
+      if (activePanel) activePanel.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
+  // initialize first tab as Overview
+  (function() {
+    const first = document.querySelector('.tab-btn[data-tab="overview"]');
+    if (first) first.click();
+  })();
+
+  // Toggle edit mode for personal form (simple enable/disable)
+  const editBtn = document.getElementById('editProfileBtn');
+  const personalForm = document.getElementById('personalForm');
+  const savePersonal = document.getElementById('savePersonal');
+  const cancelPersonal = document.getElementById('cancelPersonal');
+  const photoForm = document.getElementById('photoForm');
+
+  let editing = false;
+  if (editBtn) {
+    editBtn.addEventListener('click', () => {
+      editing = !editing;
+
+      // toggle inputs in personal form
+      if (personalForm) {
+        personalForm.querySelectorAll('input').forEach(i => i.disabled = !editing);
+      }
+
+      // show/hide save/cancel buttons
+      if (savePersonal && cancelPersonal) {
+        savePersonal.classList.toggle('hidden', !editing);
+        cancelPersonal.classList.toggle('hidden', !editing);
+      }
+
+      // toggle photo upload visibility
+      if (photoForm) photoForm.classList.toggle('hidden', !editing);
+
+      // change edit button text
+      editBtn.textContent = editing ? 'Close Edit' : 'Edit';
+      editBtn.classList.toggle('bg-red-600', editing);
+      editBtn.classList.toggle('bg-blue-600', !editing);
+    });
+  }
+
+  // Cancel personal edit: revert (client-side only, server will enforce)
+  if (cancelPersonal) {
+    cancelPersonal.addEventListener('click', () => {
+      // reload to reset values (simplest)
+      location.reload();
+    });
+  }
+
+  // Qualifications add toggle
+  document.getElementById('addQualificationBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('qualificationForm').classList.remove('hidden');
+    document.getElementById('addQualificationBtn').classList.add('hidden');
+  });
+  document.getElementById('cancelQualification')?.addEventListener('click', () => {
+    document.getElementById('qualificationForm').classList.add('hidden');
+    document.getElementById('addQualificationBtn').classList.remove('hidden');
+  });
+
+  // Experience add toggle
+  document.getElementById('addExperienceBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('experienceForm').classList.remove('hidden');
+    document.getElementById('addExperienceBtn').classList.add('hidden');
+  });
+  document.getElementById('cancelExperience')?.addEventListener('click', () => {
+    document.getElementById('experienceForm').classList.add('hidden');
+    document.getElementById('addExperienceBtn').classList.remove('hidden');
+  });
+
+  // Awards add toggle
+  document.getElementById('addAwardBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('awardForm').classList.remove('hidden');
+    document.getElementById('addAwardBtn').classList.add('hidden');
+  });
+  document.getElementById('cancelAward')?.addEventListener('click', () => {
+    document.getElementById('awardForm').classList.add('hidden');
+    document.getElementById('addAwardBtn').classList.remove('hidden');
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,120 @@
+<aside class="w-64 bg-white shadow-xl flex flex-col p-4">
+
+    <!-- Logo -->
+    <div class="flex justify-center mb-8">
+        <img src="/static/img/logo-name-removebg-preview.png" 
+             class="w-40" 
+             alt="logo">
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1">
+        <ul class="space-y-2 text-gray-700 p-2">
+
+            <!-- Dashboard -->
+            <li>
+                <a href="{{ url_for('patient_dashboard') }}"
+                   class="flex items-center gap-3 px-3 py-3 rounded-xl transition
+                   {% if request.endpoint == 'patient_dashboard' %}
+                        bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
+                   {% else %}
+                        hover:bg-blue-100 hover:text-blue-700
+                   {% endif %}">
+                    
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 22 21">
+                        <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z"/>
+                        <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z"/>
+                    </svg>
+
+                    <span class="font-medium">Dashboard</span>
+                </a>
+            </li>
+
+            <!-- Doctors -->
+            <li>
+                <a href="{{ url_for('available_doctors') }}"
+                   class="flex items-center gap-3 px-3 py-3 rounded-xl transition
+                   {% if request.endpoint == 'available_doctors' %}
+                        bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
+                   {% else %}
+                        hover:bg-blue-100 hover:text-blue-700
+                   {% endif %}">
+
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 18">
+                        <path d="M14 2a3.963 3.963 0 0 0-1.4.267 6.439 6.439 0 0 1-1.331 6.638A4 4 0 1 0 14 2Z"/>
+                        <path d="M15 11h-1.264A6.957 6.957 0 0 1 15 15v2h4a1 1 0 0 0 1-1v-1a5 5 0 0 0-5-5Z"/>
+                    </svg>
+
+                    <span class="font-medium">Doctors</span>
+                </a>
+            </li>
+
+            <!-- Appointments -->
+            <li>
+                <a href="{{ url_for('patient_appointment') }}"
+                   class="flex items-center gap-3 px-3 py-3 rounded-xl transition
+                   {% if request.endpoint == 'patient_appointment' %}
+                        bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
+                   {% else %}
+                        hover:bg-blue-100 hover:text-blue-700
+                   {% endif %}">
+
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 16 20">
+                        <path d="M16 14V2a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2v15a3 3 0 0 0 3 3h12a1 1 0 0 0 0-2h-1v-2a2 2 0 0 0 2-2Z"/>
+                    </svg>
+
+                    <span class="font-medium">Appointments</span>
+                </a>
+            </li>
+
+            <!-- Book Appointment -->
+            <li>
+                <a href="{{ url_for('create_appointment') }}"
+                   class="flex items-center gap-3 px-3 py-3 rounded-xl transition
+                   {% if request.endpoint == 'create_appointment' %}
+                        bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
+                   {% else %}
+                        hover:bg-blue-100 hover:text-blue-700
+                   {% endif %}">
+
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 18">
+                        <path d="M18 0H6a2 2 0 0 0-2 2h14v12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Z"/>
+                        <path d="M14 4H2a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12V6a2 2 0 0 0-2-2Z"/>
+                    </svg>
+
+                    <span class="font-medium">Book Appointment</span>
+                </a>
+            </li>
+
+            <!-- Profile -->
+            <li>
+                <a href="{{ url_for('patient_profile') }}"
+                   class="flex items-center gap-3 px-3 py-3 rounded-xl transition
+                   {% if request.endpoint == 'patient_profile' %}
+                        bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
+                   {% else %}
+                        hover:bg-blue-100 hover:text-blue-700
+                   {% endif %}">
+
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 21 21">
+                        <path d="M10 2a4 4 0 1 1-2 7.465A4 4 0 0 1 10 2ZM3 18a7 7 0 0 1 14 0v1H3v-1Z"/>
+                    </svg>
+
+                    <span class="font-medium">Profile</span>
+                </a>
+            </li>
+
+            <!-- Logout -->
+            <div class="mt-10">
+                <a href="{{ url_for('logout') }}"
+                   class="flex items-center gap-3 p-3 rounded-xl hover:bg-red-100 transition-all">
+                    <img src="{{ url_for('static', filename='img/logout.jpg')}}" 
+                         class="w-6 h-6" alt="logout">
+                    <span class="font-medium">Logout</span>
+                </a>
+            </div>
+
+        </ul>
+    </nav>
+
+</aside>

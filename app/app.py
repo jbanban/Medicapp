@@ -7,11 +7,19 @@ from datetime import datetime, date
 from sqlalchemy import Integer, String, ForeignKey, TIMESTAMP, Date, DateTime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
+import os
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'wowixczzzzz'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///fernandez_clinic.db'
 db = SQLAlchemy(app)
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+def allowed_image(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 class Base(DeclarativeBase):
@@ -100,7 +108,6 @@ class Doctor(db.Model):
     appointments: Mapped[list["Appointment"]] = relationship(back_populates="doctor")
     records: Mapped[list["MedicalRecord"]] = relationship(back_populates="doctor")
     doctor_schedule = relationship("Doctor_Schedule", back_populates="doctor")
-
 
 
 class Appointment(db.Model):
@@ -326,6 +333,10 @@ def register():
 
 @app.route('/admin/dashboard')
 def admin_dashboard():
+    if 'user_id' not in session:
+        return redirect(url_for('admin_login'))
+    user_id = session.get('user_id')
+
     statistics = calculate_appointment_statistics()
     return render_template('admin/admin_dashboard.html', statistics=statistics)
 
@@ -334,54 +345,113 @@ def patients_list():
     patients = Patient.query.all()
     return render_template('admin/patients_list.html', patients=patients)
 
-@app.route('/view_doctor', methods=['GET', 'POST'])
-def view_doctor():
+@app.route('/create_doctor_profile', methods=['GET', 'POST'])
+def create_doctor_profile():
     account_id = request.args.get('account_id', type=int)
-    selected_account = None
+    selected_account = Account.query.get(account_id) if account_id else None
 
-    if account_id:
-        selected_account = Account.query.get(account_id)
-        
     accounts = (
         db.session.query(Account)
         .outerjoin(Doctor, Doctor.account_id == Account.account_id)
         .filter(Account.role == 'doctor', Doctor.account_id.is_(None))
         .all()
     )
-    selected_account = None
 
     if request.method == 'POST':
-        account_id = request.form['account_id']
-        selected_account = Account.query.get(account_id)
+
+        if not account_id:
+            flash("No account selected.", "danger")
+            return redirect(url_for('admin_doctors'))
 
         new_doctor = Doctor(
             firstname=request.form['firstname'],
-            middlename=request.form['middlename'],
+            middlename=request.form.get('middlename'),
             lastname=request.form['lastname'],
-            age=request.form['age'],
-            bloodtype=request.form['bloodtype'],
-            height=request.form['height'],
-            weight=request.form['weight'],
-            specialization=request.form['specialization'],
+            age=request.form.get('age'),
+            bloodtype=request.form.get('bloodtype'),
+            height=request.form.get('height'),
+            weight=request.form.get('weight'),
+            specialization=request.form.get('specialization'),
             gender=request.form['gender'],
             dob=request.form['dob'],
             pob=request.form['pob'],
             civilstatus=request.form.get('civilstatus'),
             degree=request.form.get('degree'),
             nationality=request.form['nationality'],
-            religion=request.form['religion'],
-            phone=request.form['phone'],
-            email=request.form['email'],
+            religion=request.form.get('religion'),
+            phone=request.form.get('phone'),
+            email=request.form.get('email'),
             account_id=account_id
         )
 
         db.session.add(new_doctor)
         db.session.commit()
 
+        flash("Doctor profile created successfully!", "success")
         return redirect(url_for('admin_doctors'))
-    return render_template('admin/view_doctor.html', 
-                           accounts=accounts, 
-                           selected_account=selected_account)
+
+    return render_template(
+        'admin/create_doctor_profile.html',
+        accounts=accounts,
+        selected_account=selected_account
+    )
+
+@app.route('/edit_doctor/<int:doctor_id>', methods=['GET', 'POST'])
+def edit_doctor(doctor_id):
+
+    # Load doctor
+    doctor = Doctor.query.get_or_404(doctor_id)
+
+    # Load the account linked to this doctor
+    selected_account = Account.query.get(doctor.account_id)
+
+    # Admin can switch the doctor to another unused doctor account
+    accounts = (
+        db.session.query(Account)
+        .outerjoin(Doctor, Doctor.account_id == Account.account_id)
+        .filter(Account.role == 'doctor')
+        .all()
+    )
+
+    if request.method == 'POST':
+
+        # Update doctor fields
+        doctor.firstname = request.form['firstname']
+        doctor.middlename = request.form.get('middlename')
+        doctor.lastname = request.form['lastname']
+        doctor.age = request.form.get('age')
+        doctor.bloodtype = request.form.get('bloodtype')
+        doctor.height = request.form.get('height')
+        doctor.weight = request.form.get('weight')
+        doctor.specialization = request.form.get('specialization')
+        doctor.gender = request.form['gender']
+        doctor.dob = request.form.get('dob')
+        doctor.pob = request.form.get('pob')
+        doctor.civilstatus = request.form.get('civilstatus')
+        doctor.degree = request.form.get('degree')
+        doctor.nationality = request.form.get('nationality')
+        doctor.religion = request.form.get('religion')
+        doctor.phone = request.form.get('phone')
+        doctor.email = request.form.get('email')
+
+        # allow admin to reassign linked account
+        new_account_id = request.form.get('account_id')
+
+        if new_account_id:
+            doctor.account_id = new_account_id
+
+        db.session.commit()
+
+        flash("Doctor profile updated successfully!", "success")
+        return redirect(url_for('admin_doctors'))
+
+    return render_template(
+        'admin/edit_doctor.html',
+        doctor=doctor,
+        accounts=accounts,
+        selected_account=selected_account
+    )
+
 
 @app.route('/admin_reports')
 def admin_reports():
@@ -406,14 +476,32 @@ def admin_doctors():
         flash("Doctor account created!", "success")
         return redirect(url_for('admin_doctors'))
 
-    doctors = Account.query.filter_by(role='doctor').all()
-    return render_template('admin/admin_doctors.html', doctors=doctors)
+    accounts = (
+        db.session.query(Account)
+        .outerjoin(Doctor, Doctor.account_id == Account.account_id)
+        .filter(Account.role == 'doctor', Doctor.account_id.is_(None))
+        .all()
+    )
+    return render_template('admin/admin_doctors.html', accounts=accounts)
 
 @app.route('/doctor/dashboard')
 def doctor_dashboard():
     if 'role' not in session or session['role'] != 'doctor':
         return redirect(url_for('unauthorized'))
-    return render_template('doctor/doctor_dashboard.html')
+    user_id = session.get('user_id')
+
+    doctor = Doctor.query.filter_by(account_id=user_id).first()
+    if doctor is None:
+        flash("Please complete your doctor profile.", "warning")
+        return redirect(url_for('doctor_profile', doctor_id=doctor.doctor_id)
+)
+
+    appointments = Appointment.query.filter_by(doctor_id=user_id).all()
+    
+    return render_template('doctor/doctor_dashboard.html',
+                           doctor=doctor,
+                           appointments=appointments
+                           )
 
 @app.route('/doctors/patients')
 def doctors_patient():
@@ -466,15 +554,28 @@ def doctors_schedule():
 
 @app.route('/available_doctors')
 def available_doctors():
-    doctors = Doctor.query.all()
-    return render_template('patient/available_doctors.html', doctors=doctors)
-
-@app.route('/doctors/profile')
-def doctors_profile():
-    if 'role' not in session or session['role'] != 'doctor':
+    if 'role' not in session or session['role'] != 'patient':
         return redirect(url_for('unauthorized'))
     user_id = session.get('user_id')
+
+    profile = Patient.query.filter_by(account_id=user_id).first()
+    doctors = Doctor.query.all()
+    return render_template('patient/available_doctors.html', 
+                           doctors=doctors,
+                           profile=profile)
+
+@app.route('/doctor_profile/<int:doctor_id>', methods=['GET', 'POST'])
+def doctor_profile(doctor_id):
+    if 'role' not in session or session['role'] != 'doctor':
+        return redirect(url_for('unauthorized'))
+    
+    user_id = session.get('user_id')
     doctor = Doctor.query.filter_by(account_id=user_id).first()
+    
+    if not doctor:
+        flash("Doctor profile not found. Please contact support.", "danger")
+        return redirect(url_for('unauthorized'))
+    
     return render_template('doctor/doctor_profile.html', doctor=doctor)
 
 @app.route('/doctors/accept_appointment/<int:appointment_id>', methods=['POST'])
@@ -528,8 +629,13 @@ def patient_dashboard():
         return redirect(url_for('create_profile'))
     
     appointments = Appointment.query.filter_by(patient_id=user_id).all()
+    doctors = Account.query.filter_by(role='doctor').all()
 
-    return render_template('patient/patient_dashboard.html',profile=profile, appointments=appointments)
+    return render_template('patient/patient_dashboard.html',
+                           profile=profile, 
+                           appointments=appointments,
+                           doctors=doctors
+                           )
 
 @app.route('/create_profile', methods=['GET', 'POST'])
 def create_profile():
@@ -673,7 +779,6 @@ def create_profile():
     )
 
 
-
 @app.route('/patient_profile')
 def patient_profile():
     user_id = session.get('user_id')
@@ -695,22 +800,92 @@ def patient_profile():
 def patient_appointment():
     if 'role' not in session or session['role'] != 'patient':
         return redirect(url_for('unauthorized'))
+    user_id = session.get('user_id')
+
+    profile = Patient.query.filter_by(account_id=user_id).first()
     appointments = Appointment.query.filter_by(patient_id=session.get('user_id')).all()
 
-    return render_template('patient/patient_appointment.html', appointments=appointments)
+    return render_template('patient/patient_appointment.html', 
+                           appointments=appointments,
+                           profile=profile
+                           )
+
+@app.route('/doctor/<int:doctor_id>/upload-photo', methods=['POST'])
+def upload_doctor_photo(doctor_id):
+
+    user_id = session.get('user_id')
+
+    # Get doctor based on URL (doctor_id), not user_id
+    doctor = Doctor.query.get_or_404(doctor_id)
+
+    # Authorization check: ensure logged-in doctor owns this profile
+    if doctor.account_id != user_id:
+        return redirect(url_for('unauthorized'))
+
+    # -------- FILE VALIDATION --------
+    if "photo" not in request.files:
+        flash("No file part in request.", "danger")
+        return redirect(url_for('doctor_profile', doctor_id=doctor_id))
+
+    file = request.files["photo"]
+
+    if file.filename == '':
+        flash("No file selected.", "danger")
+        return redirect(url_for('doctor_profile', doctor_id=doctor_id))
+
+    if file and allowed_image(file.filename):
+
+        ext = file.filename.rsplit('.', 1)[1].lower()
+
+        new_filename = f"{doctor.lastname.lower()}_{doctor.firstname.lower()}.{ext}"
+        new_filename = secure_filename(new_filename)
+
+        upload_folder = os.path.join('static', 'uploads', 'doctors')
+        os.makedirs(upload_folder, exist_ok=True)
+
+        file_path = os.path.join(upload_folder, new_filename)
+
+        if doctor.profile_image:
+            old_path = os.path.join('static', doctor.profile_image)
+            if os.path.exists(old_path):
+                try:
+                    os.remove(old_path)
+                except:
+                    pass
+
+        file.save(file_path)
+
+        doctor.profile_image = f"uploads/doctors/{new_filename}"
+        db.session.commit()
+
+        flash("Profile picture updated!", "success")
+
+    else:
+        flash("Invalid file type. Only JPG and PNG allowed.", "danger")
+
+    return redirect(url_for('doctor_profile', doctor_id=doctor_id))
+
+
 
 @app.route('/doctors/view_available/time_for_<int:doctor_id>')
 def view_available_time(doctor_id):
     if 'role' not in session or session['role'] != 'patient':
         return redirect(url_for('unauthorized'))
+    user_id = session.get('user_id')
+
+    profile = Patient.query.filter_by(account_id=user_id).first()
     schedules = Doctor_Schedule.query.filter_by(doctor_id=doctor_id).all()
-    return render_template('patient/view_available_time.html', schedules=schedules)
+    return render_template('patient/view_available_time.html', 
+                           schedules=schedules,
+                           profile=profile
+                           )
 
 @app.route('/book_appointment/<int:doctor_schedule_id>', methods=['GET', 'POST'])
 def book_appointment(doctor_schedule_id):
     if 'role' not in session or session['role'] != 'patient':
         return redirect(url_for('unauthorized'))
     user_id = session.get('user_id')
+
     schedule = Doctor_Schedule.query.get(doctor_schedule_id)
 
     if not schedule:
@@ -739,9 +914,14 @@ def book_appointment(doctor_schedule_id):
         db.session.commit()
         print("Before Commit:", schedule.status)
         flash('Appointment booked successfully!', 'success')
+
         return redirect(url_for('patient_appointment'))
 
-    return render_template('patient/book_appointment.html')
+    profile = Patient.query.filter_by(account_id=user_id).first()
+
+    return render_template('patient/book_appointment.html', 
+                           profile=profile
+                           )
 
 @app.route('/patient/reschedule_appointment/<int:appointment_id>', methods=['GET', 'POST'])
 def reschedule_appointment(appointment_id):
@@ -782,9 +962,9 @@ def cancel_appointment(appointment_id):
 def create_appointment():
     if 'role' not in session or session['role'] != 'patient':
         return redirect(url_for('unauthorized'))
-    doctors = Doctor.query.all()
-
     user_id = session.get('user_id')
+
+    doctors = Doctor.query.all()
 
     if request.method == 'POST':
         appointment_date = request.form['preferred_date']
@@ -805,7 +985,12 @@ def create_appointment():
 
         return redirect(url_for('create_appointment'))
     
-    return render_template('patient/create_appointment.html', doctors=doctors)
+    profile = Patient.query.filter_by(account_id=user_id).first()
+
+    return render_template('patient/create_appointment.html', 
+                           doctors=doctors,
+                           profile=profile
+                           )
 
 @app.route('/reports')
 def reports():
@@ -818,11 +1003,6 @@ def settings():
 @app.route('/unauthorized')
 def unauthorized():
     return "Unauthorized access", 403
-
-@app.route('/profile/<int:user_id>', methods=['GET'])
-def profile(user_id):
-    user = User.query.get(user_id)
-    return render_template('profile.html',user=user)
 
 @app.route("/search")
 def search():

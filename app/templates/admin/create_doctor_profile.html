@@ -1,6 +1,6 @@
 {% extends 'base/layout.html' %}
 
-{% block title %}Add New Doctor{% endblock %}
+{% block title %}Update Doctor Profile{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-50 px-6 py-8">
@@ -28,7 +28,7 @@
           {% endif %}
 
 
-          <form action="/add_doctor" method="POST" class="space-y-6">
+          <form action="/create_doctor_profile" method="POST" class="space-y-6">
         
             <!-- Name Fields -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">

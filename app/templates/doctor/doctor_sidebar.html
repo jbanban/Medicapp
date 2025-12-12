@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Dashboard</title>
+</head>
+<body class="bg-gray-100">
+
+<div class="flex h-screen">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white/80 backdrop-blur-md border-r shadow-lg p-6 flex flex-col justify-between">
+
+        <div>
+            <div class="mb-8">
+                <img src="/static/img/logo-name-removebg-preview.png" class="p-2 w-100px" alt="logo">
+            </div>
+
+            <nav>
+                <ul class="space-y-2 text-gray-700">
+
+                    <!-- Dashboard -->
+                    <li>
+                        <a href="{{ url_for('doctor_dashboard')}}"
+                           class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition-all group">
+                            <i class="ri-dashboard-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                            <span class="font-medium">Dashboard</span>
+                        </a>
+                    </li>
+
+                    <!-- Patients -->
+                    <li>
+                        <a href="{{ url_for('doctors_patient')}}"
+                           class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition-all group">
+                            <i class="ri-team-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                            <span class="font-medium">My Patients</span>
+                        </a>
+                    </li>
+
+                    <!-- Appointments -->
+                    <li>
+                        <a href="{{ url_for('doctors_appointment') }}"
+                           class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition-all group">
+                            <i class="ri-calendar-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                            <span class="font-medium">Appointments</span>
+                        </a>
+                    </li>
+
+                    <!-- Open Schedules -->
+                    <li>
+                        <a href="{{ url_for('doctors_schedule', user_id=session['user_id']) }}"
+                           class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition-all group">
+                            <i class="ri-timer-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                            <span class="font-medium">Open Schedules</span>
+                        </a>
+                    </li>
+
+                    <!-- Profile -->
+                    <li>
+                        <a href="{{ url_for('doctors_profile', user_id=session['user_id']) }}"
+                           class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition-all group">
+                            <i class="ri-user-settings-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                            <span class="font-medium">Profile</span>
+                        </a>
+                    </li>
+
+                    <!-- Logout -->
+                    <div>
+                        <a href="{{ url_for('logout') }}"
+                           class="flex items-center gap-3 p-3 rounded-xl hover:bg-red-100 transition-all group">
+                           <i class="ri-logout-box-r-line text-xl text-gray-500 group-hover:text-red-600"></i>
+                           <span class="font-medium">Logout</span>
+                        </a>
+                    </div>
+                </ul>
+            </nav>
+        </div>
+        
+    </aside>
+
+</div>
+
+<!-- Icons -->
+<link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
+
+</body>
+</html>
