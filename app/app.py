@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import numpy as np
 from datetime import datetime
 from collections import Counter
@@ -8,6 +8,7 @@ from sqlalchemy import Integer, String, ForeignKey, TIMESTAMP, Date, DateTime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
+import json
 import os
 
 
@@ -122,7 +123,7 @@ class Appointment(db.Model):
 
     patient: Mapped["Patient"] = relationship(back_populates="appointments")
     doctor: Mapped["Doctor"] = relationship(back_populates="appointments")
-    invoices: Mapped[list["Invoice"]] = relationship(back_populates="appointment")
+    payments: Mapped[list["PaymentRecord"]] = relationship(back_populates="appointment")
 
 
 class MedicalRecord(db.Model):
@@ -141,6 +142,15 @@ class MedicalRecord(db.Model):
     doctor_schedule: Mapped["Doctor_Schedule"] = relationship(back_populates="record")
 
 
+class MedicalVisibility(db.Model):
+    __tablename__ = "medical_visibility"
+
+    id = db.Column(db.Integer, primary_key=True)
+    patient_id = db.Column(db.Integer, nullable=False, unique=True)
+    encrypted_state = db.Column(db.Text, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class Doctor_Schedule(db.Model):
     __tablename__ = "doctor_schedule"
 
@@ -154,26 +164,15 @@ class Doctor_Schedule(db.Model):
     record = relationship("MedicalRecord", back_populates="doctor_schedule")
 
 
-class Service(db.Model):
-    __tablename__ = "service"
+class PaymentRecord(db.Model):
+    __tablename__ = "payment_record"
 
-    service_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String(100))
-    description: Mapped[str] = mapped_column(String)
-    fee: Mapped[str] = mapped_column(String(20))
-
-
-class Invoice(db.Model):
-    __tablename__ = "invoice"
-
-    invoice_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    payment_record_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     appointment_id: Mapped[int] = mapped_column(ForeignKey("appointment.appointment_id"))
-    service_id: Mapped[int] = mapped_column(ForeignKey("service.service_id"))
     amount: Mapped[str] = mapped_column(String(20))
     payment_status: Mapped[str] = mapped_column(String(20))
 
-    appointment: Mapped["Appointment"] = relationship(back_populates="invoices")
-    service: Mapped["Service"] = relationship()
+    appointment: Mapped["Appointment"] = relationship(back_populates="payments")
 
 
 class Account(db.Model):
@@ -192,56 +191,179 @@ class User(db.Model):
     username: Mapped[str] = mapped_column(String(50), unique=True)
     password: Mapped[str] = mapped_column(String(100))
 
+# appointments = Appointment.query.all()
+
+# APPOINTMENTS_FILE = 'appointments.json'
+
+def load_appointments():
+    """Load appointments from file"""
+    global appointments
+    if os.path.exists(APPOINTMENTS_FILE):
+        try:
+            with open(APPOINTMENTS_FILE, 'r') as f:
+                appointments = json.load(f)
+        except:
+            appointments = []
+
+def save_appointments():
+    """Save appointments to file"""
+    with open(APPOINTMENTS_FILE, 'w') as f:
+        json.dump(appointments, f, indent=2)
+
 def calculate_appointment_statistics():
-    appointments = db.session.query(Appointment).all()
+    appointments = Appointment.query.all()
 
     if not appointments:
         return {
-            'total_appointments': 0,
-            'monthly_counts': {},
-            'status_counts': {},
-            'average_appointments_per_day': 0,
-            'busiest_day_of_week': None
+            "total_appointments": 0,
+            "monthly_counts": {},
+            "status_counts": {},
+            "average_appointments_per_day": 0,
+            "busiest_day_of_week": None
         }
 
-    appointment_datetimes = np.array([
-        datetime.strptime(f"{appt.appointment_date} {appt.appointment_time}", '%Y-%m-%d %H:%M')
-        for appt in appointments
-    ])
+    # Convert string date + time → datetime
+    appointment_datetimes = []
+    for appt in appointments:
+        try:
+            dt = datetime.strptime(
+                f"{appt.appointment_date} {appt.appointment_time}",
+                "%Y-%m-%d %H:%M"
+            )
+            appointment_datetimes.append(dt)
+        except ValueError:
+            continue  # skip malformed rows safely
 
-    # Total number of appointments
-    total_appointments = len(appointments)
+    if not appointment_datetimes:
+        return {
+            "total_appointments": 0,
+            "monthly_counts": {},
+            "status_counts": {},
+            "average_appointments_per_day": 0,
+            "busiest_day_of_week": None
+        }
 
-    # Monthly appointment counts
-    months = [date.strftime('%Y-%m') for date in appointment_datetimes]
-    monthly_counts = Counter(months)
+    total_appointments = len(appointment_datetimes)
 
-    # Appointment status counts
-    statuses = [appt.status for appt in appointments]
-    status_counts = Counter(statuses)
+    # 📅 Monthly counts
+    months = [dt.strftime("%Y-%m") for dt in appointment_datetimes]
+    monthly_counts = dict(Counter(months))
 
-    # Average appointments per day
-    if appointment_datetimes.size > 0:
-        unique_days = np.unique(appointment_datetimes.astype('datetime64[D]'))
-        average_appointments_per_day = total_appointments / len(unique_days)
-    else:
-        average_appointments_per_day = 0
+    # 📌 Status counts
+    statuses = [appt.status for appt in appointments if appt.status]
+    status_counts = dict(Counter(statuses))
 
-    # Busiest day of the week
-    if appointment_datetimes.size > 0:
-        days_of_week = [date.strftime('%A') for date in appointment_datetimes]
-        day_counts = Counter(days_of_week)
-        busiest_day = day_counts.most_common(1)[0][0]
-    else:
-        busiest_day = None
+    # 📊 Average per day
+    unique_days = set(dt.strftime("%Y-%m-%d") for dt in appointment_datetimes)
+    average_per_day = round(total_appointments / len(unique_days), 2)
+
+    # 🔥 Busiest weekday
+    weekdays = [dt.strftime("%A") for dt in appointment_datetimes]
+    busiest_day = Counter(weekdays).most_common(1)[0][0]
 
     return {
-        'total_appointments': total_appointments,
-        'monthly_counts': dict(monthly_counts),
-        'status_counts': dict(status_counts),
-        'average_appointments_per_day': round(average_appointments_per_day, 2),
-        'busiest_day_of_week': busiest_day
+        "total_appointments": total_appointments,
+        "monthly_counts": monthly_counts,
+        "status_counts": status_counts,
+        "average_appointments_per_day": average_per_day,
+        "busiest_day_of_week": busiest_day
     }
+
+
+@app.route("/api/appointments", methods=["GET"])
+def get_appointments():
+    appointments = Appointment.query.all()
+
+    return jsonify({
+        "success": True,
+        "appointments": [
+            {
+                "appointment_id": appt.appointment_id,
+                "patient_id": appt.patient_id,
+                "doctor_id": appt.doctor_id,
+                "date": appt.appointment_date,
+                "time": appt.appointment_time,
+                "status": appt.status
+            }
+            for appt in appointments
+        ]
+    })
+
+
+
+@app.route("/api/appointments", methods=["POST"])
+def create_appointment():
+    data = request.get_json()
+
+    required = ["patient_id", "doctor_id", "date", "time"]
+    for field in required:
+        if field not in data:
+            return jsonify({
+                "success": False,
+                "message": f"Missing field: {field}"
+            }), 400
+
+    # Conflict check (STRING SAFE)
+    conflict = Appointment.query.filter_by(
+        appointment_date=data["date"],
+        appointment_time=data["time"],
+        doctor_id=data["doctor_id"]
+    ).first()
+
+    if conflict:
+        return jsonify({
+            "success": False,
+            "message": "This time slot is already booked"
+        }), 409
+
+    appointment = Appointment(
+        patient_id=data["patient_id"],
+        doctor_id=data["doctor_id"],
+        appointment_date=data["date"],
+        appointment_time=data["time"],
+        status="Pending"
+    )
+
+    db.session.add(appointment)
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "message": "Appointment created successfully",
+        "appointment_id": appointment.appointment_id
+    }), 201
+
+
+
+@app.route('/api/appointments/<int:appointment_id>', methods=['DELETE'])
+def delete_appointment(appointment_id):
+    """Delete an appointment"""
+    global appointments
+    appointments = [apt for apt in appointments if apt['id'] != appointment_id]
+    save_appointments()
+    
+    return jsonify({
+        'success': True,
+        'message': 'Appointment deleted successfully'
+    })
+
+@app.route('/api/availability', methods=['GET'])
+def check_availability():
+    """Check availability for a specific date"""
+    date = request.args.get('date')
+    if not date:
+        return jsonify({
+            'success': False,
+            'message': 'Date parameter required'
+        }), 400
+    
+    # Get booked slots for the date
+    booked_slots = [apt['time'] for apt in appointments if apt['date'] == date]
+    
+    return jsonify({
+        'success': True,
+        'booked_slots': booked_slots
+    })
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -331,38 +453,25 @@ def register():
 
     return render_template('register.html')
 
-@app.route('/admin/dashboard')
+@app.route("/admin/dashboard")
 def admin_dashboard():
-    if 'user_id' not in session:
-        return redirect(url_for('admin_login'))
-    user_id = session.get('user_id')
-
     statistics = calculate_appointment_statistics()
-    return render_template('admin/admin_dashboard.html', statistics=statistics)
+    return render_template(
+        "admin/dashboard.html",
+        statistics=statistics
+    )
 
-@app.route('/patients_list')
+@app.route('/admin/patients_list')
 def patients_list():
     patients = Patient.query.all()
     return render_template('admin/patients_list.html', patients=patients)
 
-@app.route('/create_doctor_profile', methods=['GET', 'POST'])
-def create_doctor_profile():
-    account_id = request.args.get('account_id', type=int)
-    selected_account = Account.query.get(account_id) if account_id else None
+@app.route('/create_doctor_profile/<int:account_id>', methods=['GET', 'POST'])
+def create_doctor_profile(account_id):
+    selected_account = Account.query.get_or_404(account_id)
 
-    accounts = (
-        db.session.query(Account)
-        .outerjoin(Doctor, Doctor.account_id == Account.account_id)
-        .filter(Account.role == 'doctor', Doctor.account_id.is_(None))
-        .all()
-    )
 
     if request.method == 'POST':
-
-        if not account_id:
-            flash("No account selected.", "danger")
-            return redirect(url_for('admin_doctors'))
-
         new_doctor = Doctor(
             firstname=request.form['firstname'],
             middlename=request.form.get('middlename'),
@@ -392,26 +501,12 @@ def create_doctor_profile():
 
     return render_template(
         'admin/create_doctor_profile.html',
-        accounts=accounts,
         selected_account=selected_account
     )
 
 @app.route('/edit_doctor/<int:doctor_id>', methods=['GET', 'POST'])
 def edit_doctor(doctor_id):
-
-    # Load doctor
     doctor = Doctor.query.get_or_404(doctor_id)
-
-    # Load the account linked to this doctor
-    selected_account = Account.query.get(doctor.account_id)
-
-    # Admin can switch the doctor to another unused doctor account
-    accounts = (
-        db.session.query(Account)
-        .outerjoin(Doctor, Doctor.account_id == Account.account_id)
-        .filter(Account.role == 'doctor')
-        .all()
-    )
 
     if request.method == 'POST':
 
@@ -434,12 +529,6 @@ def edit_doctor(doctor_id):
         doctor.phone = request.form.get('phone')
         doctor.email = request.form.get('email')
 
-        # allow admin to reassign linked account
-        new_account_id = request.form.get('account_id')
-
-        if new_account_id:
-            doctor.account_id = new_account_id
-
         db.session.commit()
 
         flash("Doctor profile updated successfully!", "success")
@@ -448,8 +537,6 @@ def edit_doctor(doctor_id):
     return render_template(
         'admin/edit_doctor.html',
         doctor=doctor,
-        accounts=accounts,
-        selected_account=selected_account
     )
 
 
@@ -459,30 +546,54 @@ def admin_reports():
 
 @app.route('/admin_doctors', methods=['GET', 'POST'])
 def admin_doctors():
+    account_id = request.args.get('account_id', type=int)
+    edit_account = Account.query.get(account_id) if account_id else None
+
     if request.method == 'POST':
+        account_id = request.form.get('account_id')
         email = request.form['email']
-        password = request.form['password']
-        role = 'doctor'
+        password = request.form.get('password')
 
-        if Account.query.filter_by(email=email).first():
-            flash("Email already exists!", "danger")
-            return redirect(url_for('admin_doctors'))
+        # EDIT
+        if account_id:
+            account = Account.query.get(account_id)
+            account.email = email
+            if password:
+                account.password = generate_password_hash(password)
+            db.session.commit()
+            flash("Account updated successfully!", "success")
 
-        hashed_pw = generate_password_hash(password)
-        new_account = Account(email=email, password=hashed_pw, role=role)
-        db.session.add(new_account)
-        db.session.commit()
+        # CREATE
+        else:
+            if Account.query.filter_by(email=email).first():
+                flash("Email already exists!", "danger")
+                return redirect(url_for('admin_doctors'))
 
-        flash("Doctor account created!", "success")
+            new_account = Account(
+                email=email,
+                password=generate_password_hash(password),
+                role='doctor'
+            )
+            db.session.add(new_account)
+            db.session.commit()
+            flash("Doctor account created!", "success")
+
         return redirect(url_for('admin_doctors'))
 
     accounts = (
         db.session.query(Account)
         .outerjoin(Doctor, Doctor.account_id == Account.account_id)
-        .filter(Account.role == 'doctor', Doctor.account_id.is_(None))
+        .filter(Account.role == 'doctor')
         .all()
     )
-    return render_template('admin/admin_doctors.html', accounts=accounts)
+
+    doctors = Doctor.query.all()
+
+    return render_template('admin/admin_doctors.html', 
+                           accounts=accounts, 
+                           doctors=doctors,
+                           edit_account=edit_account
+                           )
 
 @app.route('/doctor/dashboard')
 def doctor_dashboard():
@@ -491,26 +602,42 @@ def doctor_dashboard():
     user_id = session.get('user_id')
 
     doctor = Doctor.query.filter_by(account_id=user_id).first()
-    if doctor is None:
+    if not doctor:
         flash("Please complete your doctor profile.", "warning")
-        return redirect(url_for('doctor_profile', doctor_id=doctor.doctor_id)
-)
+        return redirect(url_for('doctor_dashboard'))
 
-    appointments = Appointment.query.filter_by(doctor_id=user_id).all()
+    appointments = Appointment.query.filter_by(doctor_id=doctor.doctor_id).all()
     
     return render_template('doctor/doctor_dashboard.html',
                            doctor=doctor,
                            appointments=appointments
                            )
 
-@app.route('/doctors/patients')
-def doctors_patient():
-    if 'role' not in session or session['role'] != 'doctor':
+@app.route('/doctor/patients')
+def doctor_patients():
+    if session.get('role') != 'doctor':
         return redirect(url_for('unauthorized'))
+
     user_id = session.get('user_id')
-    
-    patients = db.session.query(Patient).join(Appointment).filter(Appointment.doctor_id == user_id,Appointment.status == 'Accepted').all()
-    return render_template('doctor/doctor_patients.html', patients=patients)
+    doctor = Doctor.query.filter_by(account_id=user_id).first()
+
+    if not doctor:
+        flash("Please complete your doctor profile.", "warning")
+        return redirect(url_for('create_doctor_profile'))
+
+    patients = (
+        Patient.query
+        .join(Appointment)
+        .filter(Appointment.doctor_id == doctor.doctor_id)
+        .distinct()
+        .all()
+    )
+
+    return render_template(
+        'doctor/doctor_patients.html',
+        doctor=doctor,
+        patients=patients
+    )
 
 @app.route('/doctors/appointment')  
 def doctors_appointment():
@@ -566,17 +693,21 @@ def available_doctors():
 
 @app.route('/doctor_profile/<int:doctor_id>', methods=['GET', 'POST'])
 def doctor_profile(doctor_id):
-    if 'role' not in session or session['role'] != 'doctor':
+    if session.get('role') != 'doctor':
         return redirect(url_for('unauthorized'))
-    
+
     user_id = session.get('user_id')
-    doctor = Doctor.query.filter_by(account_id=user_id).first()
-    
-    if not doctor:
-        flash("Doctor profile not found. Please contact support.", "danger")
+
+    doctor = Doctor.query.get_or_404(doctor_id)
+
+    # 🔒 SECURITY CHECK
+    if doctor.account_id != user_id:
         return redirect(url_for('unauthorized'))
-    
-    return render_template('doctor/doctor_profile.html', doctor=doctor)
+
+    return render_template(
+        'doctor/doctor_profile.html',
+        doctor=doctor
+    )
 
 @app.route('/doctors/accept_appointment/<int:appointment_id>', methods=['POST'])
 def accept_appointment(appointment_id):
@@ -789,11 +920,19 @@ def patient_profile():
     if not profile:
         return redirect(url_for('create_profile'))
     
-    history = PatientHistoryBackground.query.filter_by(patient_id=Patient.patient_id).first()
+    history = PatientHistoryBackground.query.filter_by(
+        patient_id=profile.patient_id
+    ).first()
 
-    return render_template('patient/patient_profile.html', 
-                           profile=profile, 
-                           history=history
+    visibility = MedicalVisibility.query.filter_by(
+        patient_id=profile.patient_id
+    ).first()
+
+    return render_template(
+        "patient/patient_profile.html",
+        profile=profile,
+        history=history,
+        encrypted_visibility=visibility.encrypted_state if visibility else None
     )
 
 @app.route('/patient/appointment', methods=['GET', 'POST'])
@@ -958,8 +1097,8 @@ def cancel_appointment(appointment_id):
 
     return redirect(url_for('patient_appointment'))
 
-@app.route('/create_appointment', methods=['GET', 'POST'])
-def create_appointment():
+@app.route('/request_appointment', methods=['GET', 'POST'])
+def request_appointment():
     if 'role' not in session or session['role'] != 'patient':
         return redirect(url_for('unauthorized'))
     user_id = session.get('user_id')
@@ -983,14 +1122,39 @@ def create_appointment():
         db.session.add(new_appointment)
         db.session.commit()
 
-        return redirect(url_for('create_appointment'))
+        return redirect(url_for('request_appointment'))
     
     profile = Patient.query.filter_by(account_id=user_id).first()
 
-    return render_template('patient/create_appointment.html', 
+    return render_template('patient/request_appointment.html', 
                            doctors=doctors,
                            profile=profile
                            )
+
+
+@app.route('/api/medical-visibility/save', methods=['POST'])
+def save_medical_visibility():
+    if 'user_id' not in session or session.get('role') != 'patient':
+        return {"error": "Unauthorized"}, 401
+
+    data = request.json
+    patient_id = data.get('patient_id')
+    encrypted_state = data.get('encrypted_state')
+
+    record = MedicalVisibility.query.filter_by(patient_id=patient_id).first()
+
+    if record:
+        record.encrypted_state = encrypted_state
+    else:
+        record = MedicalVisibility(
+            patient_id=patient_id,
+            encrypted_state=encrypted_state
+        )
+        db.session.add(record)
+
+    db.session.commit()
+    return {"status": "saved"}
+
 
 @app.route('/reports')
 def reports():

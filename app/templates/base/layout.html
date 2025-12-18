@@ -13,5 +13,72 @@
 </head>
 <body>
     {% block content %}{% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
+
+    <script>
+    const SECRET_KEY = 'medicapp_patient_visibility_v1';
+
+    window.encryptData = function(data) {
+        return CryptoJS.AES.encrypt(
+            JSON.stringify(data),
+            SECRET_KEY
+        ).toString();
+    }
+
+    window.decryptData = function(cipher) {
+        try {
+            const bytes = CryptoJS.AES.decrypt(cipher, SECRET_KEY);
+            return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        } catch (e) {
+            return {};
+        }
+    }
+
+    window.safeDecrypt = function(key) {
+        const encrypted = localStorage.getItem(key);
+        if (!encrypted) return {}; 
+
+        try {
+            const bytes = CryptoJS.AES.decrypt(
+                encrypted,
+                'medicapp_patient_visibility_v1'
+            );
+            const text = bytes.toString(CryptoJS.enc.Utf8);
+            return text ? JSON.parse(text) : {};
+        } catch (e) {
+            console.error('Decrypt failed:', e);
+            return {};
+        }
+    }
+
+    window.loadMedicalVisibility = function(patientId) {
+            const key = `patient_${patientId}_medical_visibility`;
+            const encrypted = localStorage.getItem(key);
+            return encrypted ? decryptData(encrypted) : {};
+        }
+
+    window.saveMedicalVisibility = function(patientId, data) {
+        const key = `patient_${patientId}_medical_visibility`;
+        const encrypted = encryptData(data);
+        localStorage.setItem(key, encrypted);
+    }
+
+    window.saveToBackend = function(patientId, encrypted) {
+        fetch('/api/medical-visibility/save', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                patient_id: patientId,
+                encrypted_state: encrypted
+            })
+        });
+    }
+
+    window.clearPatientStorage = function (patientId) {
+        localStorage.removeItem(`patient_${patientId}_medical_visibility`);
+    };
+    </script>
+
     {% block scripts %}{% endblock %}
+    
 </body>

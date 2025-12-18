@@ -1,10 +1,12 @@
-<aside class="w-64 bg-white shadow-xl flex flex-col p-4">
+<aside id="patientSidebar"
+       class="w-64 bg-white shadow-xl flex flex-col p-4
+              transform -translate-x-full lg:translate-x-0
+              transition-transform duration-300">
 
     <!-- Logo -->
     <div class="flex justify-center mb-8">
-        <img src="/static/img/logo-name-removebg-preview.png" 
-             class="w-40" 
-             alt="logo">
+        <img src="{{ url_for('static', filename='img/logo-name-removebg-preview.png') }}"
+            class="w-40" alt="logo">
     </div>
 
     <!-- Navigation -->
@@ -106,15 +108,34 @@
 
             <!-- Logout -->
             <div class="mt-10">
-                <a href="{{ url_for('logout') }}"
-                   class="flex items-center gap-3 p-3 rounded-xl hover:bg-red-100 transition-all">
+                <a
+                    href="{{ url_for('logout') }}"
+                    @click.prevent="
+                        clearPatientStorage({{ profile.patient_id }});
+                        window.location.href='{{ url_for('logout') }}';
+                    "
+                    class="flex items-center gap-3 p-3 rounded-xl hover:bg-red-100 transition-all"
+                    >
                     <img src="{{ url_for('static', filename='img/logout.jpg')}}" 
                          class="w-6 h-6" alt="logout">
                     <span class="font-medium">Logout</span>
                 </a>
+                
             </div>
 
         </ul>
     </nav>
 
 </aside>
+
+<script>
+  document.getElementById('logoutBtn')?.addEventListener('click', function () {
+    const patientId = this.dataset.patientId;
+    handleLogout(patientId);
+  });
+
+  function handleLogout(patientId) {
+    window.location.href = "/logout";
+  }
+</script>
+

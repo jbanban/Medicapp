@@ -1,5 +1,5 @@
 {% extends 'base/layout.html' %}
-{% block title %}Doctors | Fernandez Clinic{% endblock %}
+{% block title %}Doctors | MEDICAPP{% endblock %}
 
 {% block content %}
 <div class="flex min-h-screen bg-gray-100">
@@ -30,28 +30,48 @@
             <!-- LEFT: CREATE DOCTOR FORM -->
             <div class="col-span-1 bg-white rounded-2xl shadow p-6 border">
 
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Create Doctor Account</h2>
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                    {{ 'Edit Doctor Account' if edit_account else 'Create Doctor Account' }}
+                </h2>
 
                 <form method="POST" action="{{ url_for('admin_doctors') }}" class="space-y-4">
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" name="email"
-                               class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
+                {% if edit_account %}
+                    <input type="hidden" name="account_id" value="{{ edit_account.account_id }}">
+                {% endif %}
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Password</label>
-                        <input type="password" name="password"
-                               class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-                    </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" name="email"
+                        value="{{ edit_account.email if edit_account else '' }}"
+                        required
+                        class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
 
-                    <button type="submit"
-                        class="w-full py-2 bg-blue-600 text-white font-semibold rounded-xl shadow hover:bg-blue-700 transition">
-                        Create Doctor
-                    </button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">
+                        Password
+                        {% if edit_account %}
+                            <span class="text-xs text-gray-400">(leave blank to keep current)</span>
+                        {% endif %}
+                    </label>
+                    <input type="password" name="password"
+                        class="w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
 
-                </form>
+                <button type="submit"
+                    class="w-full py-2 bg-blue-600 text-white font-semibold rounded-xl shadow hover:bg-blue-700 transition">
+                    {{ 'Update Account' if edit_account else 'Create Account' }}
+                </button>
+
+                {% if edit_account %}
+                    <a href="{{ url_for('admin_doctors') }}"
+                    class="block text-center text-sm text-gray-500 hover:underline">
+                        Cancel Edit
+                    </a>
+                {% endif %}
+
+            </form>
             </div>
 
             <!-- RIGHT: DOCTORS TABLE -->
@@ -69,10 +89,73 @@
                 </div>
 
                 <div class="bg-white shadow-lg rounded-2xl border border-gray-200 overflow-hidden">
+                    <div class="max-h-[200px] overflow-y-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-blue-50 sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Action</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="results" class="divide-y divide-gray-100 bg-white">
+                                {% for account in accounts %}
+                                <tr class="hover:bg-blue-50 transition">
+                                    <td class="px-6 py-4 text-sm font-medium text-gray-800">
+                                        {{ account.email }}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm">
+                                        {% if account.doctor %}
+                                            <span class="px-3 py-1 rounded-full text-xs font-medium
+                                                        bg-green-100 text-green-700">
+                                            Profile Complete
+                                            </span>
+                                        {% else %}
+                                            <span class="px-3 py-1 rounded-full text-xs font-medium
+                                                        bg-red-100 text-red-700">
+                                            No Profile
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm flex gap-4">
+                                        <a href="{{ url_for('admin_doctors', account_id=account.account_id) }}"
+                                            class="text-blue-600 hover:text-blue-800 font-medium">
+                                            Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="w-full bg-white rounded-2xl shadow p-6 border mt-12">
+
+            <!-- SEARCH BAR -->
+            <div class="mb-4 flex justify-end">
+                <input type="text"
+                    class="w-1/2 px-4 py-2 rounded-xl border border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition"
+                    placeholder="Search doctor..."
+                    name="q"
+                    hx-get="/search"
+                    hx-trigger="keyup changed delay:500ms"
+                    hx-target="#results">
+            </div>
+
+            <div class="bg-white shadow-lg rounded-2xl border border-gray-200 overflow-hidden">
+                <div class="max-h-[450px] overflow-y-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-blue-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Doctor</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Account</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Specialization</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Action</th>
@@ -80,41 +163,46 @@
                         </thead>
 
                         <tbody id="results" class="divide-y divide-gray-100 bg-white">
-                            {% for account in accounts %}
+                            {% for doctor in doctors %}
                             <tr class="hover:bg-blue-50 transition">
+
+                                <!-- Doctor Name -->
                                 <td class="px-6 py-4 text-sm font-medium text-gray-800">
-                                    {{ account.email }}
+                                    Dr. {{ doctor.firstname }} {{ doctor.lastname }}
                                 </td>
+                                
+                                <!-- Account -->
+                                <td class="px-6 py-4 text-sm font-medium text-gray-800">
+                                    {{ doctor.email }}
+                                </td>
+                                
+                                <!-- Specialization -->
                                 <td class="px-6 py-4 text-sm text-gray-700">
-                                    {{ account.specialization }}
+                                    {{ doctor.specialization }}
                                 </td>
+
+                                <!-- Status -->
                                 <td class="px-6 py-4 text-sm">
-                                    <span class="px-4 py-1 rounded-full text-xs font-medium text-white 
-                                        bg-gradient-to-r from-green-500 to-green-700 shadow">
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium
+                                                bg-green-100 text-green-700">
                                         Active
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-sm flex gap-4">
-                                    {% if account.doctor %}
-                                        <a href="{{ url_for('edit_doctor', doctor_id=account.doctor.doctor_id) }}"
-                                        class="text-blue-600 hover:text-blue-800 font-medium">
-                                            Edit
-                                        </a>
-                                    {% else %}
-                                        <a href="{{ url_for('create_doctor_profile', account_id=account.account_id) }}"
-                                        class="text-green-600 hover:text-green-800 font-medium">
-                                            Create Profile
-                                        </a>
-                                    {% endif %}
 
+                                <!-- Action -->
+                                <td class="px-6 py-4 text-sm flex gap-4">
+                                    <a href="{{ url_for('edit_doctor', doctor_id=doctor.doctor_id) }}"
+                                    class="text-blue-600 hover:text-blue-800 font-medium">
+                                    Edit Profile
+                                    </a>
                                 </td>
+
                             </tr>
                             {% endfor %}
                         </tbody>
 
                     </table>
                 </div>
-
             </div>
 
         </div>

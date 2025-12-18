@@ -31,7 +31,7 @@
 
                     <!-- Patients -->
                     <li>
-                        <a href="{{ url_for('doctors_patient')}}"
+                        <a href="{{ url_for('doctor_patients')}}"
                            class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition-all group">
                             <i class="ri-team-line text-xl text-gray-500 group-hover:text-blue-700"></i>
                             <span class="font-medium">My Patients</span>
@@ -58,7 +58,7 @@
 
                     <!-- Profile -->
                     <li>
-                        <a href="{{ url_for('doctors_profile', user_id=session['user_id']) }}"
+                        <a href="{{ url_for('doctor_profile', doctor_id=doctor.doctor_id) }}"
                            class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition-all group">
                             <i class="ri-user-settings-line text-xl text-gray-500 group-hover:text-blue-700"></i>
                             <span class="font-medium">Profile</span>

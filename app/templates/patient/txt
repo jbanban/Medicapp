@@ -1,216 +1,82 @@
-{% extends 'base/layout.html' %}
-{% block title %}Patient Profile{% endblock %}
-{% block content %}
+<!-- LEFT SIDEBAR -->
+    <div class="w-full md:w-72 md:sticky md:top-6 h-fit">
+        <div class="bg-white shadow-md rounded-2xl p-6 border border-gray-100">
 
-<div class="min-h-screen bg-gray-100 p-6">
-    <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-md p-8">
-        
-        {% include 'base/notification.html' %}
+            <!-- Avatar -->
+            <div class="flex flex-col items-center">
+                <div class="w-24 h-24 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 
+                            shadow-inner flex items-center justify-center text-4xl font-semibold 
+                            text-gray-600 mb-3">
+                    {{ profile.firstname[0] }}{{ profile.lastname[0] }}
+                </div>
 
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-2xl font-semibold text-gray-800">Patient Profile</h1>
-            <p class="text-sm text-gray-600">Keep your information up to date for accurate medical records.</p>
+                <!-- Name -->
+                <h3 class="text-xl font-semibold text-gray-800">
+                    {{ profile.firstname }} {{ profile.lastname }}
+                </h3>
+                <p class="text-gray-500 text-sm">Patient</p>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="mt-6 space-y-3">
+                <div class="flex items-center text-sm text-gray-600">
+                    <i class="ri-mail-line text-gray-400 mr-3 text-lg"></i>
+                    {{ profile.email }}
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                    <i class="ri-phone-line text-gray-400 mr-3 text-lg"></i>
+                    {{ profile.phone }}
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-6 space-y-3">
+                <button class="w-full py-3 text-sm flex items-center justify-center
+                               bg-gray-100 hover:bg-gray-200 font-medium rounded-xl transition">
+                    <i class="ri-user-line mr-2 text-lg"></i>
+                    View Public Profile
+                </button>
+
+                <button class="w-full py-3 text-sm flex items-center justify-center
+                               bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition">
+                    <i class="ri-download-2-line mr-2 text-lg"></i>
+                    Download Account
+                </button>
+            </div>
+
+            <!-- Account Status -->
+            <div class="mt-8">
+                <h4 class="text-gray-800 font-semibold mb-3 text-sm uppercase tracking-wide">
+                    Account Status
+                </h4>
+
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Email verified</span>
+                        <span class="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded-full">
+                            Incomplete
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Phone verified</span>
+                        <span class="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded-full">
+                            Incomplete
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Medical history</span>
+                        <span class="px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded-full">
+                            Incomplete
+                        </span>
+                    </div>
+                </div>
+
+                <p class="text-center text-red-500 text-xs mt-4 font-medium">
+                    Complete your profile to enhance your experience.
+                </p>
+            </div>
+
         </div>
-
-        <form action="/create_profile" method="POST" class="space-y-10">
-
-            <!-- Personal Information -->
-            <section>
-                <h2 class="text-lg font-semibold text-gray-800 mb-2">Personal Information</h2>
-                <p class="text-sm text-gray-600 mb-4">Enter your basic personal details.</p>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-
-                    <!-- First Name -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">First Name</label>
-                        <input type="text" name="firstname" placeholder="John"
-                               class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
-                    </div>
-
-                    <!-- Middle Name -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Middle Name</label>
-                        <input type="text" name="middlename" placeholder="Michael"
-                               class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
-                    </div>
-
-                    <!-- Last Name -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Last Name</label>
-                        <input type="text" name="lastname" placeholder="Doe"
-                               class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
-                    </div>
-                </div>
-
-                <!-- Gender, Birthdate, Age -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-4">
-
-                    <!-- Gender -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Gender</label>
-                        <select name="gender"
-                                class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
-                            <option disabled selected>-- Select gender --</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                        </select>
-                    </div>
-
-                    <!-- Birthdate -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Birthdate</label>
-                        <input type="date" name="birthdate"
-                               class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
-                    </div>
-
-                    <!-- Age -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Age</label>
-                        <input type="number" name="age" placeholder="35"
-                               class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
-                    </div>
-
-                </div>
-
-                <!-- Blood Type & Civil Status -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
-
-                    <!-- Blood Type -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Blood Type</label>
-                        <input type="text" name="blood_type" placeholder="A+"
-                                class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
-                    </div>
-
-                    <!-- Civil Status -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Civil Status</label>
-                        <select name="civil_status"
-                                class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
-                            <option disabled selected>-- Select status --</option>
-                            <option>Single</option>
-                            <option>Married</option>
-                            <option>Widowed</option>
-                            <option>Separated</option>
-                        </select>
-                    </div>
-
-                </div>
-
-            </section>
-
-            <!-- Contact Information -->
-            <section class="pt-6 border-t">
-                <h2 class="text-lg font-semibold text-gray-800 mb-2">Contact Information</h2>
-                <p class="text-sm text-gray-600 mb-4">Provide your contact details.</p>
-
-                <!-- Full Address -->
-                <div>
-                    <label class="block text-sm text-gray-700 mb-1">Complete Address</label>
-                    <input type="text" name="complete_address" placeholder="123 Main St, City, Province"
-                           class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
-                </div>
-
-                <!-- Zipcode & Phone -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
-
-                    <!-- Zipcode -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Zipcode</label>
-                        <input type="text" name="zipcode" placeholder="8000"
-                               class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
-                    </div>
-
-                    <!-- Phone -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Phone Number</label>
-                        <input type="text" name="phone" placeholder="09123456789"
-                               class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
-                    </div>
-                </div>
-
-                <!-- Email -->
-                <div class="mt-4">
-                    <label class="block text-sm text-gray-700 mb-1">Email</label>
-                    <input type="email" name="email" placeholder="john.doe@example.com"
-                           class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
-                </div>
-
-            </section>
-
-            <!-- Emergency Contact -->
-            <section class="pt-6 border-t">
-                <h2 class="text-lg font-semibold text-gray-800 mb-2">Emergency Contact</h2>
-                <p class="text-sm text-gray-600 mb-4">Who should we call in case of emergency?</p>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-                    <!-- Emergency Contact Name -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Contact Name</label>
-                        <input type="text" name="emergency_contact_name" placeholder="Jane Doe"
-                               class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
-                    </div>
-
-                    <!-- Emergency Contact Phone -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Phone Number</label>
-                        <input type="text" name="emergency_contact_phone" placeholder="09129876543"
-                               class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
-                    </div>
-
-                </div>
-            </section>
-
-            <!-- Contact Preferences -->
-            <section class="pt-6 border-t">
-                <h2 class="text-lg font-semibold text-gray-800 mb-2">Contact Preferences</h2>
-                <p class="text-sm text-gray-600 mb-4">Choose how you want to be contacted.</p>
-
-                <!-- Email Notifications -->
-                <div class="flex justify-between items-center py-4 border-b">
-                    <div>
-                        <h4 class="font-medium text-gray-800">Email Notifications</h4>
-                        <p class="text-xs text-gray-500">Appointment updates and medical alerts.</p>
-                    </div>
-
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="toggle1" checked class="sr-only peer">
-                        <div
-                            class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-500 transition-colors"></div>
-                        <span
-                            class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transform transition-all peer-checked:translate-x-5"></span>
-                    </label>
-                </div>
-
-                <!-- SMS Notifications -->
-                <div class="flex justify-between items-center py-4 border-b">
-                    <div>
-                        <h4 class="font-medium text-gray-800">SMS Notifications</h4>
-                        <p class="text-xs text-gray-500">Text reminders for upcoming appointments.</p>
-                    </div>
-
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="toggle2" checked class="sr-only peer">
-                        <div
-                            class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-500 transition-colors"></div>
-                        <span
-                            class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transform transition-all peer-checked:translate-x-5"></span>
-                    </label>
-                </div>
-
-            </section>
-
-            <!-- Submit Button -->
-            <button type="submit"
-                class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-sm font-medium shadow-md transition">
-                Save Profile
-            </button>
-
-        </form>
     </div>
-</div>
-
-{% endblock %}

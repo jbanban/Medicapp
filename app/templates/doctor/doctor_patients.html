@@ -1,49 +1,126 @@
 {% extends 'base/layout.html' %}
-{% block title %}Doctors | Fernandez Clinic{% endblock %}
+{% block title %}My Patients | MEDICAPP{% endblock %}
+
 {% block content %}
-<div class="flex h-screen">
+<div class="flex min-h-screen bg-gray-100">
+
     {% include 'doctor/doctor_sidebar.html' %}
 
-    <!-- Main Appointments Content -->
-    <div class="flex-1 p-6">
-        <div class="flex justify-end gap-2 mb-12">
-                <a href="{{ url_for('profile', user_id=session['user_id']) }}">
-                    <img src="{{ url_for('static', filename='img/profile.jpg')}}" alt="profile" class="rounded-full w-8 h-8">
-                </a>
-            </div>
-        <div class="flex justify-between mb-4 align-center">
-            <h1 class="text-2xl font-bold text-blue-700">My Patients</h1>
-        </div>
-        <div class="flex flex-col">
-            <div class="overflow-x-auto">
-                <div class="p-1.5 w-full inline-block align-middle">
-                    <div class="overflow-hidden border rounded-lg">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50 text-center align-center">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-xs font-bold text-gray-500 uppercase ">Patient Name</th>
-                                    <th scope="col" class="px-6 py-3 text-xs font-bold text-gray-500 uppercase ">Schedule</th>
-                                    <th scope="col" class="px-6 py-3 text-xs font-bold text-gray-500 uppercase ">Status</th>
-                                    <th scope="col" class="px-6 py-3 text-xs font-bold text-gray-500 uppercase ">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody  class="bg-white divide-y divide-gray-200">
-                                {% for patient in patient %}
-                                <tr>
-                                    <td class="px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">{{ patient.firstname }} {{ patient.lastname }}</th>
-                                    <th class="px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">{{ patient.appointment_date }} {{ patient.appointment_time }}</th>
-                                    <th class="px-6 py-4 text-sm font-medium text-gray-800 whitespace-nowrap">{{ patient.status }}</th>
-                                    <td class="items-center justify-center inline-flex">
-                                        <form action="{{ url_for('done_appointment',appointment_id=appointment.appointment_id) }}" method="POST" class="text-red-600 m-4">
-                                            <button type="submit" class="text-green-600 bg-transparent border-none cursor-pointer">Done</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+    <!-- MAIN CONTENT -->
+    <div class="flex-1 flex flex-col">
+
+        <!-- Top Header -->
+        <header class="border-b bg-white px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-800">
+                <span class="text-blue-600">My</span> Patients
+            </h1>
+
+            <!-- Profile shortcut -->
+            <a href="{{ url_for('doctor_profile', doctor_id=doctor.doctor_id) }}"
+               class="flex items-center gap-2">
+                <div class="w-9 h-9 rounded-full bg-blue-600 text-white grid place-items-center font-semibold">
+                    {{ doctor.firstname[0] }}{{ doctor.lastname[0] }}
                 </div>
+            </a>
+        </header>
+
+        <!-- CONTENT -->
+        <div class="p-6">
+
+            <!-- Patients Table Card -->
+            <div class="bg-white rounded-2xl shadow border overflow-hidden">
+
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-blue-50">
+                        <tr>
+                            <th class="px-6 py-3 text-xs font-semibold text-gray-600 uppercase text-left">
+                                Patient
+                            </th>
+                            <th class="px-6 py-3 text-xs font-semibold text-gray-600 uppercase text-left">
+                                Schedule
+                            </th>
+                            <th class="px-6 py-3 text-xs font-semibold text-gray-600 uppercase text-center">
+                                Status
+                            </th>
+                            <th class="px-6 py-3 text-xs font-semibold text-gray-600 uppercase text-center">
+                                Action
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-gray-100">
+                        {% for appointment in appointments %}
+                        <tr class="hover:bg-blue-50 transition">
+
+                            <!-- Patient -->
+                            <td class="px-6 py-4 text-sm font-medium text-gray-800">
+                                {{ appointment.patient.firstname }}
+                                {{ appointment.patient.lastname }}
+                            </td>
+
+                            <!-- Schedule -->
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                {{ appointment.appointment_date }}
+                                <span class="text-gray-400">•</span>
+                                {{ appointment.appointment_time }}
+                            </td>
+
+                            <!-- Status -->
+                            <td class="px-6 py-4 text-center">
+                                {% if appointment.status == 'Pending' %}
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium
+                                                 bg-yellow-100 text-yellow-700">
+                                        Pending
+                                    </span>
+                                {% elif appointment.status == 'Accepted' %}
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium
+                                                 bg-blue-100 text-blue-700">
+                                        Accepted
+                                    </span>
+                                {% elif appointment.status == 'Done' %}
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium
+                                                 bg-green-100 text-green-700">
+                                        Done
+                                    </span>
+                                {% else %}
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium
+                                                 bg-gray-100 text-gray-600">
+                                        {{ appointment.status }}
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Action -->
+                            <td class="px-6 py-4 text-center">
+                                {% if appointment.status != 'Done' %}
+                                <form action="{{ url_for('done_appointment',
+                                                        appointment_id=appointment.appointment_id) }}"
+                                      method="POST">
+                                    <button
+                                        class="px-4 py-2 text-sm rounded-lg
+                                               bg-green-600 text-white
+                                               hover:bg-green-700 transition">
+                                        Mark as Done
+                                    </button>
+                                </form>
+                                {% else %}
+                                    <span class="text-sm text-gray-400 italic">
+                                        Completed
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-10 text-center text-gray-500">
+                                No patients found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
             </div>
         </div>
     </div>

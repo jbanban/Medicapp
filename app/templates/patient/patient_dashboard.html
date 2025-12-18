@@ -194,15 +194,17 @@
 <!-- Mobile Menu Script -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const toggle = document.getElementById('menuToggle');
-    const sidebar = document.querySelector('.w-64');
-    if (toggle && sidebar) {
-      toggle.addEventListener('click', () => {
-        sidebar.classList.toggle('-translate-x-full');
-        sidebar.classList.toggle('fixed');
-        sidebar.classList.toggle('z-50');
-      });
-    }
-  });
+  const toggle = document.getElementById('menuToggle');
+  const sidebar = document.getElementById('patientSidebar');
+
+  if (toggle && sidebar) {
+    toggle.addEventListener('click', () => {
+      sidebar.classList.toggle('-translate-x-full');
+      sidebar.classList.toggle('fixed');
+      sidebar.classList.toggle('z-50');
+    });
+  }
+});
+
 </script>
 {% endblock %}
