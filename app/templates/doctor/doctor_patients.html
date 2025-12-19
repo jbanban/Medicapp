@@ -10,22 +10,41 @@
     <div class="flex-1 flex flex-col">
 
         <!-- Top Header -->
-        <header class="border-b bg-white px-6 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-gray-800">
-                <span class="text-blue-600">My</span> Patients
-            </h1>
-
-            <!-- Profile shortcut -->
-            <a href="{{ url_for('doctor_profile', doctor_id=doctor.doctor_id) }}"
-               class="flex items-center gap-2">
-                <div class="w-9 h-9 rounded-full bg-blue-600 text-white grid place-items-center font-semibold">
-                    {{ doctor.firstname[0] }}{{ doctor.lastname[0] }}
+         <header class="bg-gray-100 border-b sticky top-0 z-40">
+            <div class="flex items-center justify-between px-6 py-4">
+                
+                <!-- Left -->
+                <div class="flex items-center">
+                    <button class="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100" id="menuToggle">
+                        <i class="fas fa-bars text-lg"></i>
+                    </button>
                 </div>
-            </a>
+
+                <!-- Right -->
+                <div class="flex items-center space-x-3">
+                    <div class="hidden sm:block text-right">
+                        <p class="text-sm font-medium text-gray-800">{{ doctor.firstname }} {{ doctor.lastname }}</p>
+                        <p class="text-xs text-gray-500">Doctor</p>
+                    </div>
+
+                    <!-- Profile shortcut -->
+                    <a href="{{ url_for('doctor_profile', doctor_id=doctor.doctor_id) }}"
+                        class="flex items-center gap-2">
+                        <div class="w-9 h-9 rounded-full bg-blue-600 text-white grid place-items-center font-semibold">
+                            {{ doctor.firstname[0] }}{{ doctor.lastname[0] }}
+                        </div>
+                    </a>
+                </div>
+
+            </div>
         </header>
 
         <!-- CONTENT -->
         <div class="p-6">
+
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">
+                <span class="text-blue-600">My</span> Patients
+            </h1>
 
             <!-- Patients Table Card -->
             <div class="bg-white rounded-2xl shadow border overflow-hidden">

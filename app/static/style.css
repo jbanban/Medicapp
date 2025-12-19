@@ -1,0 +1,17 @@
+/* Center icons when collapsed */
+#sidebar.collapsed a {
+    justify-content: center;
+}
+/* Remove spacing when text is hidden */
+#sidebar.collapsed a {
+    gap: 0;
+}
+.sidebar-icon {
+    @apply text-gray-500 transition-colors;
+}
+.group:hover .sidebar-icon {
+    color: rgb(29 78 216); /* blue-700 */
+}
+.sidebar-text {
+    @apply transition-opacity;
+}

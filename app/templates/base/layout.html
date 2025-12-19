@@ -6,7 +6,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
+    
     <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
 
     {% block styles %}{% endblock %}
@@ -77,6 +77,35 @@
     window.clearPatientStorage = function (patientId) {
         localStorage.removeItem(`patient_${patientId}_medical_visibility`);
     };
+
+    function toggleSidebar(btn) {
+        const sidebar = btn.closest('aside');
+        if (!sidebar) return;
+
+        const texts = sidebar.querySelectorAll('.sidebar-text');
+        const icons = sidebar.querySelectorAll('.sidebar-icon');
+        const logo = sidebar.querySelector('.sidebar-logo');
+
+        const collapsed = sidebar.classList.contains('collapsed');
+
+        if (!collapsed) {
+            sidebar.classList.add('collapsed', 'w-20');
+            sidebar.classList.remove('w-64');
+
+            texts.forEach(t => t.classList.add('hidden'));
+            logo?.classList.add('hidden');
+            icons.forEach(i => i.classList.add('mx-auto'));
+        } else {
+            sidebar.classList.remove('collapsed', 'w-20');
+            sidebar.classList.add('w-64');
+
+            texts.forEach(t => t.classList.remove('hidden'));
+            logo?.classList.remove('hidden');
+            icons.forEach(i => i.classList.remove('mx-auto'));
+        }
+    }
+
+
     </script>
 
     {% block scripts %}{% endblock %}

@@ -1,21 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doctor Dashboard</title>
-</head>
-<body class="bg-gray-100">
-
-<div class="flex h-screen">
+<div class="flex min-h-screen">
 
     <!-- Sidebar -->
-    <aside class="w-64 bg-white/80 backdrop-blur-md border-r shadow-lg p-6 flex flex-col justify-between">
+    <aside id="sidebar"
+        class="w-64 bg-white/80 backdrop-blur-md border-r shadow-lg p-4
+            flex flex-col justify-between
+            sticky top-0 h-screen
+            transition-all duration-300">
 
         <div>
-            <div class="mb-8">
-                <img src="/static/img/logo-name-removebg-preview.png" class="p-2 w-100px" alt="logo">
+            <div class="mb-8 flex items-center justify-between">
+                <img src="/static/img/logo-name-removebg-preview.png"
+                    class="sidebar-logo p-2 w-[180px] transition-all duration-300"
+                    alt="logo">
+
+                <!-- Collapse button -->
+                <button onclick="toggleSidebar(this)"
+                        class="text-gray-500 hover:text-blue-600">
+                    <i class="ri-menu-line text-xl"></i>
+                </button>
             </div>
+
 
             <nav>
                 <ul class="space-y-2 text-gray-700">
@@ -23,54 +27,77 @@
                     <!-- Dashboard -->
                     <li>
                         <a href="{{ url_for('doctor_dashboard')}}"
-                           class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition-all group">
-                            <i class="ri-dashboard-line text-xl text-gray-500 group-hover:text-blue-700"></i>
-                            <span class="font-medium">Dashboard</span>
+                            class="sidebar-link flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition
+                            {% if request.endpoint == 'doctor_dashboard' %}
+                                bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
+                            {% else %}
+                                hover:bg-blue-100 hover:text-blue-700
+                            {% endif %}">
+
+                            <i class="sidebar-icon ri-dashboard-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                            <span class="font-medium sidebar-text">Dashboard</span>
                         </a>
                     </li>
 
                     <!-- Patients -->
                     <li>
                         <a href="{{ url_for('doctor_patients')}}"
-                           class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition-all group">
-                            <i class="ri-team-line text-xl text-gray-500 group-hover:text-blue-700"></i>
-                            <span class="font-medium">My Patients</span>
+                            class="sidebar-link flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition
+                            {% if request.endpoint == 'doctor_patients' %}
+                                bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
+                            {% else %}
+                                hover:bg-blue-100 hover:text-blue-700
+                            {% endif %}">
+
+                            <i class="sidebar-icon ri-team-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                            <span class="font-medium sidebar-text">My Patients</span>
                         </a>
                     </li>
 
                     <!-- Appointments -->
                     <li>
                         <a href="{{ url_for('doctors_appointment') }}"
-                           class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition-all group">
-                            <i class="ri-calendar-line text-xl text-gray-500 group-hover:text-blue-700"></i>
-                            <span class="font-medium">Appointments</span>
+                           class="sidebar-link flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition
+                           {% if request.endpoint == 'doctors_appointment' %}
+                                bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
+                            {% else %}
+                                hover:bg-blue-100 hover:text-blue-700
+                            {% endif %}">
+
+                            <i class="sidebar-icon ri-calendar-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                            <span class="font-medium sidebar-text">Appointments</span>
                         </a>
                     </li>
 
                     <!-- Open Schedules -->
                     <li>
                         <a href="{{ url_for('doctors_schedule', user_id=session['user_id']) }}"
-                           class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition-all group">
-                            <i class="ri-timer-line text-xl text-gray-500 group-hover:text-blue-700"></i>
-                            <span class="font-medium">Open Schedules</span>
+                            class="sidebar-link flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition
+                            {% if request.endpoint == 'doctors_schedule' %}
+                                bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
+                            {% else %}
+                                hover:bg-blue-100 hover:text-blue-700
+                            {% endif %}">
+                            <i class="sidebar-icon ri-timer-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                            <span class="font-medium sidebar-text">Open Schedules</span>
                         </a>
                     </li>
 
                     <!-- Profile -->
                     <li>
                         <a href="{{ url_for('doctor_profile', doctor_id=doctor.doctor_id) }}"
-                           class="flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition-all group">
-                            <i class="ri-user-settings-line text-xl text-gray-500 group-hover:text-blue-700"></i>
-                            <span class="font-medium">Profile</span>
+                           class="sidebar-link flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition-all group">
+                            <i class="sidebar-icon ri-user-settings-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                            <span class="font-medium sidebar-text">Profile</span>
                         </a>
                     </li>
 
                     <!-- Logout -->
                     <div>
                         <a href="{{ url_for('logout') }}"
-                           class="flex items-center gap-3 p-3 rounded-xl hover:bg-red-100 transition-all group">
-                           <i class="ri-logout-box-r-line text-xl text-gray-500 group-hover:text-red-600"></i>
-                           <span class="font-medium">Logout</span>
+                           class="sidebar-link flex items-center gap-3 p-3 rounded-xl hover:bg-red-100 transition-all group">
+                           <i class="sidebar-icon ri-logout-box-r-line text-xl text-gray-500 group-hover:text-red-600"></i>
+                           <span class="font-medium sidebar-text">Logout</span>
                         </a>
                     </div>
                 </ul>
@@ -81,8 +108,3 @@
 
 </div>
 
-<!-- Icons -->
-<link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
-
-</body>
-</html>

@@ -643,41 +643,64 @@ def doctor_patients():
 def doctors_appointment():
     if 'role' not in session or session['role'] != 'doctor':
         return redirect(url_for('unauthorized'))
+
     user_id = session.get('user_id')
 
-    # appointments = db.session.query(Appointment).\
-    #     join(Doctor, Appointment.doctor_id == Doctor.doctor_id).\
-    #     join(Account, Doctor.account_id == Account.account_id).\
-    #     filter(Account.account_id == user_id).all()
+    doctor = Doctor.query.filter_by(account_id=user_id).first()
+    if not doctor:
+        return redirect(url_for('unauthorized'))
 
-    appointments = Appointment.query.filter_by(doctor_id=user_id).all()
-    return render_template('doctor/doctor_appointment.html', appointments=appointments)
+    appointments = Appointment.query.filter_by(
+        doctor_id=doctor.doctor_id
+    ).all()
+
+    return render_template(
+        'doctor/doctor_appointment.html', 
+        appointments=appointments,
+        doctor=doctor
+    )
+
 
 @app.route('/doctors/schedule', methods=['GET', 'POST'])
 def doctors_schedule():
     if 'role' not in session or session['role'] != 'doctor':
         return redirect(url_for('unauthorized'))
+
     user_id = session.get('user_id')
     if not user_id:
         return redirect(url_for('login'))
 
+    # Get doctor profile
+    doctor = Doctor.query.filter_by(account_id=user_id).first()
+    if not doctor:
+        flash("Please complete your doctor profile first.", "warning")
+        return redirect(url_for('unauthorized'))
+
     if request.method == 'POST':
-        doctor_id = session.get('user_id')
         preferred_date = request.form['preferred_date']
         preferred_time = request.form['preferred_time']
-        status = 'Available'
 
-        new_schedule = Doctor_Schedule(doctor_id=doctor_id, 
-                                       vacant_date=preferred_date,
-                                       vacant_time=preferred_time, 
-                                       status=status)
+        new_schedule = Doctor_Schedule(
+            doctor_id=doctor.doctor_id,
+            vacant_date=preferred_date,
+            vacant_time=preferred_time,
+            status='Available'
+        )
         db.session.add(new_schedule)
         db.session.commit()
-        return redirect(url_for('doctors_schedule'))
-    
-    schedules = Doctor_Schedule.query.filter_by(doctor_id=user_id).all()
 
-    return render_template('doctor/open_schedule.html', schedules=schedules)
+        flash("Schedule added successfully.", "success")
+        return redirect(url_for('doctors_schedule'))
+
+    schedules = Doctor_Schedule.query.filter_by(
+        doctor_id=doctor.doctor_id
+    ).all()
+
+    return render_template(
+        'doctor/calendar.html',
+        schedules=schedules,
+        doctor=doctor
+    )
 
 @app.route('/available_doctors')
 def available_doctors():

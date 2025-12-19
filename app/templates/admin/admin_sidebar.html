@@ -1,79 +1,98 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 font-sans">
+<div class="flex min-h-screen">
 
-  <!-- Sidebar -->
-  <div class="flex min-h-screen">
-    <aside class="w-64 bg-white shadow-xl flex flex-col">
-      <!-- Logo / Header -->
-      <div class="mb-8">
-        <img src="/static/img/logo-name-removebg-preview.png" class="p-2 w-100px" alt="logo">
-      </div>
+    <!-- Sidebar -->
+    <aside id="sidebar"
+        class="w-64 bg-white/80 backdrop-blur-md border-r shadow-lg p-4
+               flex flex-col justify-between
+               sticky top-0 h-screen
+               transition-all duration-300">
 
-      <!-- Navigation -->
-      <nav class="flex-1 pl-6">
-        <ul class="space-y-3">
-          <li>
-            <a href="{{ url_for('admin_dashboard') }}" 
-              class="flex items-center p-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition">
-              <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 22 21">
-                <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z"/>
-                <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z"/>
-              </svg>
-              <span class="font-medium">Dashboard</span>
-            </a>
-          </li>
+        <div>
+            <!-- Logo + Toggle -->
+            <div class="mb-8 flex items-center justify-between">
+                <img src="/static/img/logo-name-removebg-preview.png"
+                     class="sidebar-logo p-2 w-[180px] transition-all duration-300"
+                     alt="logo">
 
-          <li>
-            <a href="{{ url_for('admin_doctors') }}" 
-              class="flex items-center p-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition">
-              <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 18">
-                <path d="M14 2a3.963 3.963 0 0 0-1.4.267 6.439 6.439 0 0 1-1.331 6.638A4 4 0 1 0 14 2Z"/>
-                <path d="M15 11h-1.264A6.957 6.957 0 0 1 15 15v2h4a1 1 0 0 0 1-1v-1a5 5 0 0 0-5-5Z"/>
-              </svg>
-              <span class="font-medium">Doctors</span>
-            </a>
-          </li>
+                <button onclick="toggleSidebar(this)"
+                        class="text-gray-500 hover:text-blue-600">
+                    <i class="ri-menu-line text-xl"></i>
+                </button>
+            </div>
 
-          <li>
-            <a href="{{ url_for('patients_list') }}" 
-              class="flex items-center p-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition">
-                <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 18">
-                    <path d="M14 2a3.963 3.963 0 0 0-1.4.267 6.439 6.439 0 0 1-1.331 6.638A4 4 0 1 0 14 2Z"/>
-                    <path d="M15 11h-1.264A6.957 6.957 0 0 1 15 15v2h4a1 1 0 0 0 1-1v-1a5 5 0 0 0-5-5Z"/>
-                </svg>
-              <span class="font-medium">Patients</span>
-            </a>
-          </li>
+            <!-- Navigation -->
+            <nav>
+                <ul class="space-y-2 text-gray-700">
 
-          <li>
-            <a href="{{ url_for('reports') }}" 
-              class="flex items-center p-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition">
-              <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 18">
-                <path d="M18 0H6a2 2 0 0 0-2 2h14v12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Z"/>
-                <path d="M14 4H2a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12V6a2 2 0 0 0-2-2Z"/>
-              </svg>
-              <span class="font-medium">Reports</span>
-            </a>
-          </li>
-          <!-- Logout -->
-          <div class="mt-8">
-            <a href="{{ url_for('logout') }}" 
-              class="flex items-center p-3 rounded-xl text-red-600 hover:bg-red-50 transition">
-              <img src="{{ url_for('static', filename='img/logout.jpg')}}" alt="logout" class="w-6 h-6 mr-3">
-              <span class="font-medium">Logout</span>
-            </a>
-          </div>
-        </ul>
-      </nav>
+                    <!-- Dashboard -->
+                    <li>
+                        <a href="{{ url_for('admin_dashboard') }}"
+                           class="sidebar-link flex items-center gap-3 p-3 rounded-xl transition
+                           {% if request.endpoint == 'admin_dashboard' %}
+                               bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
+                           {% else %}
+                               hover:bg-blue-100 hover:text-blue-700
+                           {% endif %}">
+                            <i class="sidebar-icon ri-dashboard-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                            <span class="font-medium sidebar-text">Dashboard</span>
+                        </a>
+                    </li>
+
+                    <!-- Doctors -->
+                    <li>
+                        <a href="{{ url_for('admin_doctors') }}"
+                           class="sidebar-link flex items-center gap-3 p-3 rounded-xl transition
+                           {% if request.endpoint == 'admin_doctors' %}
+                               bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
+                           {% else %}
+                               hover:bg-blue-100 hover:text-blue-700
+                           {% endif %}">
+                            <i class="sidebar-icon ri-team-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                            <span class="font-medium sidebar-text">Doctors</span>
+                        </a>
+                    </li>
+
+                    <!-- Patients -->
+                    <li>
+                        <a href="{{ url_for('patients_list') }}"
+                           class="sidebar-link flex items-center gap-3 p-3 rounded-xl transition
+                           {% if request.endpoint == 'patients_list' %}
+                               bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
+                           {% else %}
+                               hover:bg-blue-100 hover:text-blue-700
+                           {% endif %}">
+                            <i class="sidebar-icon ri-user-heart-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                            <span class="font-medium sidebar-text">Patients</span>
+                        </a>
+                    </li>
+
+                    <!-- Reports -->
+                    <li>
+                        <a href="{{ url_for('reports') }}"
+                           class="sidebar-link flex items-center gap-3 p-3 rounded-xl transition
+                           {% if request.endpoint == 'reports' %}
+                               bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
+                           {% else %}
+                               hover:bg-blue-100 hover:text-blue-700
+                           {% endif %}">
+                            <i class="sidebar-icon ri-file-chart-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                            <span class="font-medium sidebar-text">Reports</span>
+                        </a>
+                    </li>
+
+                    <!-- Logout -->
+                    <div>
+                        <a href="{{ url_for('logout') }}"
+                           class="sidebar-link flex items-center gap-3 p-3 rounded-xl hover:bg-red-100 transition-all group">
+                            <i class="sidebar-icon ri-logout-box-r-line text-xl text-gray-500 group-hover:text-red-600"></i>
+                            <span class="font-medium sidebar-text">Logout</span>
+                        </a>
+                    </div>
+
+                </ul>
+            </nav>
+        </div>
 
     </aside>
-  </div>
-</body>
-</html>
+
+</div>
