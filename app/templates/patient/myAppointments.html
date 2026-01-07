@@ -1,0 +1,91 @@
+{% extends 'base/layout.html' %}
+{% block title %}My Appointments | MEDICAPP{% endblock %}
+{% block content %}
+
+    {% include 'patient/patient_sidebar.html' %}
+
+    <div class="flex-1 flex flex-col bg-gray-50">
+        <!-- Header -->
+        <header class="bg-white border-b px-6 py-4 flex justify-between items-center">
+            <input type="text" placeholder="Search..."
+                class="border rounded-lg px-4 py-2 w-64 text-sm focus:outline-none focus:ring">
+        </header>
+
+        <!-- Main -->
+        <main class="w-full px-6 py-8">
+
+            <!-- Title -->
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">
+                        <span class="text-blue-600">My</span> Appointments
+                    </h1>
+                    <p class="text-gray-500 text-sm">Manage your scheduled appointments</p>
+                </div>
+
+                <a href="#"
+                class="bg-blue-700 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-800">
+                    Book New Appointment
+                </a>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex gap-2 mb-6">
+                <button class="bg-gray-200 px-4 py-1 rounded-lg text-sm font-medium">
+                    Upcoming
+                </button>
+                <button class="px-4 py-1 rounded-lg text-sm text-gray-500">
+                    Past
+                </button>
+            </div>
+
+            <!-- Appointment Cards -->
+            <div class="space-y-4">
+                {% for appt in appointments %}
+                <div class="bg-white border rounded-lg p-5 flex justify-between items-center">
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                            👤
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">{{ appt.doctor }}</h3>
+                            <p class="text-sm text-gray-500">{{ appt.specialty }}</p>
+
+                            <div class="text-sm text-gray-600 mt-1">
+                                {{ appt.service }} • {{ appt.date }} • {{ appt.time }} <br>
+                                {{ appt.location }}
+                            </div>
+
+                            <div class="flex gap-2 mt-3">
+                                <button class="bg-black text-white px-3 py-1 rounded-md text-sm">
+                                    Check In Online
+                                </button>
+                                <button class="border px-3 py-1 rounded-md text-sm">
+                                    View Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-end gap-2">
+                        <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">
+                            {{ appt.status }}
+                        </span>
+                        <button class="text-gray-400 hover:text-black">⋯</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Info Box -->
+            <div class="bg-white border rounded-lg p-5 mt-8">
+                <h3 class="font-semibold mb-1">Appointment Information</h3>
+                <p class="text-sm text-gray-600">
+                    <strong>Cancellation Policy:</strong><br>
+                    Please cancel or reschedule appointments at least 24 hours in advance to avoid inconvenience.
+                </p>
+            </div>
+        </div>    
+    </div>
+    
+{% endblock %}

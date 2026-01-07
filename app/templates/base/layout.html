@@ -5,18 +5,22 @@
     <title>{% block title %}{% endblock %}</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     
     <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet">
 
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     {% block styles %}{% endblock %}
 </head>
 <body>
-    {% block content %}{% endblock %}
+    <div class="flex min-h-screen">
+        {% block content %}{% endblock %}
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.min.js"></script>
 
     <script>
-    const SECRET_KEY = 'medicapp_patient_visibility_v1';
 
     window.encryptData = function(data) {
         return CryptoJS.AES.encrypt(
@@ -41,7 +45,7 @@
         try {
             const bytes = CryptoJS.AES.decrypt(
                 encrypted,
-                'medicapp_patient_visibility_v1'
+                '{{ SECRET_KEY }}'
             );
             const text = bytes.toString(CryptoJS.enc.Utf8);
             return text ? JSON.parse(text) : {};

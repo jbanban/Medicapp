@@ -1,21 +1,5 @@
 {% extends 'base/layout.html' %}
 {% block title %}Schedule Appointment | MEDICAPP{% endblock %}
-{% block styles %}
-    ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
-    ::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-        background: #555;
-    }
-{% endblock %}
 {% block content %}
 <body class="bg-gray-50">
     <!-- Main Container -->
@@ -462,19 +446,39 @@
             });
         }
 
-        // Event Handlers
-        function toggleDay(dayKey) {
-            state.availability[dayKey].available = !state.availability[dayKey].available;
-            if (state.availability[dayKey].available && !state.availability[dayKey].start) {
-                state.availability[dayKey].start = '09:00';
-                state.availability[dayKey].end = '17:00';
+        async function initScheduler() {
+            try {
+                await loadAvailability();
+                renderAvailabilitySchedule();
+                renderCalendar();
+            } catch (err) {
+                console.error("Scheduler init failed:", err);
             }
-            renderAvailabilitySchedule();
-            renderCalendar();
+        }
+
+        async function loadAvailability() {
+            const res = await fetch("/api/availability");
+            const data = await res.json();
+        }
+
+        async function saveAvailability() {
+            await fetch('/api/availability', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(state.availability)
+            });
         }
 
         function updateDayTime(dayKey, field, value) {
             state.availability[dayKey][field] = value;
+            saveAvailability();
+            renderCalendar();
+        }
+
+        function toggleDay(dayKey) {
+            state.availability[dayKey].available = !state.availability[dayKey].available;
+            saveAvailability();
+            renderAvailabilitySchedule();
             renderCalendar();
         }
 
@@ -515,6 +519,7 @@
                 console.error('Error loading appointments:', error);
             }
         }
+
 
         // Initialization
         document.addEventListener('DOMContentLoaded', async () => {

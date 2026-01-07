@@ -1,0 +1,57 @@
+<div class="bg-white rounded-xl shadow-sm p-6 h-full flex flex-col gap-6">
+
+  <div>
+    <h2 class="text-xs font-semibold uppercase text-slate-500">
+      Setup schedule
+    </h2>
+    <p class="text-sm text-slate-600 mt-1">
+      Define default availability
+    </p>
+  </div>
+
+  <!-- Duration -->
+  <div class="space-y-2">
+    <label class="text-sm font-medium">Appointment duration</label>
+    <select
+      class="w-full rounded-lg border-slate-200 focus:ring-2 focus:ring-blue-500">
+      <option>15 minutes</option>
+      <option>30 minutes</option>
+      <option selected>1 hour</option>
+    </select>
+  </div>
+
+  <!-- Weekly Template -->
+  <div class="space-y-3">
+    <label class="text-sm font-medium">Weekly availability</label>
+
+    {% for d in ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"] %}
+    <div class="flex items-center gap-2">
+      <span class="w-10 text-sm text-slate-600">{{ d }}</span>
+
+      <input type="time"
+        class="rounded-md border-slate-200 text-sm px-2 py-1"
+        value="09:00">
+
+      <span class="text-slate-400">–</span>
+
+      <input type="time"
+        class="rounded-md border-slate-200 text-sm px-2 py-1"
+        value="17:00">
+
+      <button
+        class="ml-auto w-8 h-8 rounded-full hover:bg-slate-100
+               text-slate-400 hover:text-red-500">
+        ✕
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="mt-auto">
+    <button
+      class="w-full bg-blue-600 text-white py-2 rounded-lg
+             hover:bg-blue-700 transition">
+      Save template
+    </button>
+  </div>
+</div>

@@ -270,6 +270,7 @@ def calculate_appointment_statistics():
     }
 
 
+#API's
 @app.route("/api/appointments", methods=["GET"])
 def get_appointments():
     appointments = Appointment.query.all()
@@ -364,6 +365,44 @@ def check_availability():
         'success': True,
         'booked_slots': booked_slots
     })
+
+
+@app.route("/api/day/<date>")
+def get_day_schedule(date):
+    slots = Doctor_Schedule.query.filter_by(vacant_date=date).all()
+    return jsonify([
+        {
+            "time": s.vacant_time,
+            "status": s.status
+        } for s in slots
+    ])
+
+@app.route("/api/open-slot", methods=["POST"])
+def open_slot():
+    data = request.json
+    date = data["date"]
+    time = data["time"]
+
+    existing = Doctor_Schedule.query.filter_by(
+        vacant_date=date,
+        vacant_time=time
+    ).first()
+
+    if existing:
+        return jsonify({"error": "Slot already exists"}), 400
+
+    slot = Doctor_Schedule(
+        doctor_id=1,
+        vacant_date=date,
+        vacant_time=time,
+        status="pending"
+    )
+
+    db.session.add(slot)
+    db.session.commit()
+
+    return jsonify({"success": True})
+
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -684,11 +723,10 @@ def doctors_schedule():
             doctor_id=doctor.doctor_id,
             vacant_date=preferred_date,
             vacant_time=preferred_time,
-            status='Available'
+            status='Pending'
         )
         db.session.add(new_schedule)
         db.session.commit()
-
         flash("Schedule added successfully.", "success")
         return redirect(url_for('doctors_schedule'))
 
@@ -701,6 +739,32 @@ def doctors_schedule():
         schedules=schedules,
         doctor=doctor
     )
+
+@app.route('/scheduler', methods=['GET', 'POST'])
+def doctor_scheduler():
+    selected_date = request.args.get('date')
+
+    
+    user_id = session.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+
+    # Get doctor profile
+    doctor = Doctor.query.filter_by(account_id=user_id).first()
+
+    if request.method == 'POST':
+        preferred_date = request.form['preferred_date']
+        preferred_time = request.form['preferred_time']
+
+        new_schedule = Doctor_Schedule(
+            doctor_id=doctor.doctor_id,
+            vacant_date=preferred_date,
+            vacant_time=preferred_time,
+            status='Pending'
+        )
+        db.session.add(new_schedule)
+        db.session.commit()
+    return render_template('doctor/scheduler.html', selected_date=selected_date)
 
 @app.route('/available_doctors')
 def available_doctors():
@@ -767,6 +831,12 @@ def delete_doctor_schedule(doctor_schedule_id):
     db.session.delete(schedule)
     db.session.commit()
     return redirect(url_for('doctors_schedule'))
+
+@app.route('/scheduler')
+def scheduler():
+    selected_date = request.args.get('date')
+    return render_template('scheduler.html', selected_date=selected_date)
+
 
 @app.route('/medical_records', methods=['GET','POST'])
 def medical_records():
@@ -967,7 +1037,7 @@ def patient_appointment():
     profile = Patient.query.filter_by(account_id=user_id).first()
     appointments = Appointment.query.filter_by(patient_id=session.get('user_id')).all()
 
-    return render_template('patient/patient_appointment.html', 
+    return render_template('patient/myAppointments.html', 
                            appointments=appointments,
                            profile=profile
                            )
@@ -1030,17 +1100,38 @@ def upload_doctor_photo(doctor_id):
 
 
 @app.route('/doctors/view_available/time_for_<int:doctor_id>')
-def view_available_time(doctor_id):
+def viewAvailableTime(doctor_id):
     if 'role' not in session or session['role'] != 'patient':
         return redirect(url_for('unauthorized'))
     user_id = session.get('user_id')
 
     profile = Patient.query.filter_by(account_id=user_id).first()
     schedules = Doctor_Schedule.query.filter_by(doctor_id=doctor_id).all()
-    return render_template('patient/view_available_time.html', 
+
+    if request.method == 'POST':
+        preferred_date = request.form['vacant_date']
+        preferred_time = request.form['vacant_time']
+        status = 'Booked'
+
+        # Create appointment
+        new_appointment = Appointment(
+            patient_id=user_id,
+            doctor_id=doctor_id,
+            appointment_date=preferred_date,
+            appointment_time=preferred_time,
+            status=status
+        )
+        db.session.add(new_appointment)
+        db.session.commit()
+        flash('Appointment booked successfully!', 'success')
+
+        return redirect(url_for('patient_appointment'))
+    
+    return render_template('patient/viewAvailableTime.html', 
                            schedules=schedules,
                            profile=profile
                            )
+
 
 @app.route('/book_appointment/<int:doctor_schedule_id>', methods=['GET', 'POST'])
 def book_appointment(doctor_schedule_id):

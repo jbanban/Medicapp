@@ -1,0 +1,47 @@
+<div class="bg-white rounded-xl shadow-sm h-full flex flex-col">
+
+    <!-- Date Selector -->
+    <div class="flex gap-3 px-6 py-4 border-b">
+        {% for d in range(19, 26) %}
+        <button
+        class="flex flex-col items-center w-14 py-2 rounded-lg
+                {{ 'bg-blue-600 text-white' if d == 22 else
+                    'hover:bg-slate-100 text-slate-600' }}">
+        <span class="text-xs">Wed</span>
+        <span class="text-sm font-semibold">{{ d }}</span>
+        </button>
+        {% endfor %}
+    </div>
+
+    <!-- Timeline -->
+    <div class="flex-1 overflow-auto relative">
+
+        <div class="flex">
+        <!-- Time axis -->
+        <div class="w-16 text-xs text-slate-400">
+            {% for h in range(6, 19) %}
+            <div class="h-20 flex justify-end pr-2 pt-1">
+            {{ h }}:00
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Slots -->
+        <div class="flex-1">
+            {% for h in range(6, 19) %}
+            <div class="h-20 border-t flex">
+            {% for m in [0, 30] %}
+            <div
+                onclick="openSlot('{{ selected_date }}','{{ h }}:' + String({{ m }}).padStart(2,'0'))"
+                class="flex-1 mx-1 rounded-lg border hover:ring-2 hover:ring-blue-400 cursor-pointer"
+                >
+            </div>
+
+            {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        </div>
+
+    </div>
+</div>

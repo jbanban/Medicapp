@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Doctor Calendar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="{{ url_for('static', filename='app.js') }}"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 h-screen">
+
+<header class="h-16 bg-white shadow-sm flex items-center px-6">
+  <h1 class="text-lg font-semibold tracking-tight">
+    Doctor Schedule
+  </h1>
+</header>
+
+<main class="h-[calc(100vh-4rem)] p-4">
+  {% block content %}{% endblock %}
+</main>
+
+</body>
+</html>

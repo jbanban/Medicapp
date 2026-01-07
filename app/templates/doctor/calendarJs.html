@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calendar Scheduler</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script defer src="{{ url_for('static', filename='calendar.js') }}"></script>
+</head>
+{% include 'doctor/doctor_sidebar.html' %}
+<body class="bg-gray-50 h-screen flex flex-col">
+
+<div id="calendar" class="flex flex-col h-full"></div>
+
+<script>
+  lucide.createIcons();
+</script>
+
+</body>
+</html>
