@@ -1,0 +1,372 @@
+{% extends "base/layout.html" %}
+{% block title %}Medical Specialties{% endblock %}
+
+{% block content %}
+{% include 'doctor/doctor_sidebar.html' %}
+<div class="w-full min-h-screen bg-slate-50 p-6">
+
+    <div class="mx-auto max-w-6xl">
+        
+
+    <!-- HEADER -->
+    <div class="mb-8">
+      <h1 id="pageTitle" class="text-4xl font-bold text-slate-900">
+        Medical Specialties
+      </h1>
+      <p id="pageSubtitle" class="text-slate-600 mt-2">
+        Learn about our different medical specialties and the conditions we treat
+      </p>
+    </div>
+
+    <!-- LANGUAGE -->
+    <div class="mb-6 flex gap-2">
+      <button onclick="setLanguage('en')" class="lang-btn border bg-teal-600 text-white px-4 py-2 rounded">English</button>
+      <button onclick="setLanguage('tl')" class="lang-btn border px-4 py-2 rounded">Tagalog</button>
+      <button onclick="setLanguage('bi')" class="lang-btn border px-4 py-2 rounded">Cebuano</button>
+    </div>
+
+    <!-- SEARCH -->
+    <input id="searchInput"
+      class="w-full mb-2 rounded-lg border px-4 py-3"
+      oninput="renderSpecialties()"/>
+
+    <p id="resultCount" class="text-sm text-slate-500 mb-6"></p>
+
+    <!-- GRID -->
+    <div id="specialtiesGrid" class="grid gap-4 lg:grid-cols-2 justify-center"></div>
+
+
+    <div id="emptyState" class="hidden text-center text-slate-500 py-12">
+      Walay espesyalisasyon nga nagtugma sa imong gipangita.
+    </div>
+
+  </div>
+</div>
+
+<script>
+const specialties = [
+{
+ id:"cardiology", icon:"❤️",
+ name:{en:"Cardiology",tl:"Kardiologiya",bi:"Kardiolohiya"},
+ description:{
+  en:"Cardiology is the medical specialty dealing with disorders of the heart and blood vessels. Our cardiologists diagnose and treat heart conditions, manage blood pressure, and provide preventive care for cardiovascular health.",
+  tl:"Ang Kardiologiya ay ang espesyalidad sa medisina na tumutukoy sa mga karamdaman ng puso at ng mga ugat ng dugo. Ang aming mga kardiolog ay nag-diagnose at nag-treat ng mga kondisyon ng puso, namamahala sa blood pressure, at nagbibigay ng preventive care para sa kalusugan ng cardiovascular.",
+  bi:"Ang Kardiolohiya mao ang espesyalisasyon sa medisina nga nag-atiman sa mga sakit sa kasingkasing ug mga daluang-dugo."
+ },
+ symptoms:{
+  en:["Chest pain","Shortness of breath","Irregular heartbeat","Dizziness","Swelling in legs","High blood pressure",],
+  tl:["Sakit sa dibdib","Maikling paghinga","Hindi regular na tibok ng puso","Hilo","Puffiness sa mga binti","Mataas na blood pressure",],
+  bi:["Sakit sa dughan","Mubo ang pagginhawa","Dili regular nga tibok sa kasingkasing"]
+ }
+},
+{
+ id:"pediatrics", icon:"👶",
+ name:{en:"Pediatrics",tl:"Pediatriya",bi:"Pedyatriya"},
+ description:{
+  en:"Pediatrics focuses on the medical care of infants, children, and adolescents. Our pediatricians provide comprehensive health care from birth through teenage years, including vaccinations, growth monitoring, and treatment of childhood illnesses.",
+  tl:"Ang Pediatriya ay nakatuon sa medikal na pag-aalaga ng mga sanggol, bata, at kabataan. Ang aming mga pediatrician ay nagbibigay ng komprehensibong healthcare mula sa pagsilang hanggang sa mga taong may edad na teenager, kabilang ang mga bakunasyon, pag-monitor sa paglaki, at paggamot sa mga sakit ng bata.",
+  bi:"Ang Pedyatriya nagtutok sa medikal nga pag-atiman sa mga bata gikan sa pagkahimugso hangtod sa pagkatin-edyer."
+ },
+ symptoms:{
+  en:["Fever","Cough","Rash", "Ear pain", "Vomiting", "Difficulty sleeping"],
+  tl:["Lagnat","Ubo","Pantal", "Sakit sa tenga", "Pagsusuka", "Hirap sa pagtulog"],
+  bi:["Hilanat","Ubo","Pantal"]
+ }
+},
+{
+ id:"dermatology", icon:"🩹",
+ name:{en:"Dermatology",tl:"Dermatolohiya",bi:"Dermatolohiya"},
+ description:{
+  en:"Dermatology specializes in the diagnosis and treatment of skin, hair, and nail disorders. Our dermatologists treat acne, eczema, psoriasis, skin cancer, and other skin conditions with both medical and cosmetic solutions.",
+  tl:"Ang Dermatolohiya ay espesyalista sa diagnosis at paggamot ng mga karamdaman ng balat, buhok, at kuko. Ang aming mga dermatolog ay gumagamot ng acne, eczema, psoriasis, cancer ng balat, at iba pang kondisyon ng balat gamit ang medikal at cosmetic na solusyon.",
+  bi:"Ang Dermatolohiya espesyalisasyon sa pag-diagnose ug pagtambal sa mga sakit sa panit, buhok, ug kuko."
+ },
+ symptoms:{
+  en:["Rash","Acne","Itching", "Hair loss", "Moles or birthmarks", "Dry skin"],
+  tl:["Pantal","Acne","Pangangati", "Pagkawala ng buhok", "Mga tili o birthmarks", "Dry skin"],
+  bi:["Pantal","Acne","Pangati"]
+ }
+},
+{
+ id:"neurology", icon:"🧠",
+ name:{en:"Neurology",tl:"Neurolohiya",bi:"Neurolohiya"},
+ description:{
+  en:"Neurology is the medical specialty dealing with disorders of the nervous system including the brain, spinal cord, and nerves. Neurologists diagnose and treat conditions like headaches, stroke, Parkinson's disease, and seizures.",
+  tl:"Ang Neurolohiya ay ang espesyalidad sa medisina na tumutukoy sa mga karamdaman ng nervous system kabilang ang utak, spinal cord, at mga nerve. Ang mga neurologist ay nag-diagnose at nag-treat ng mga kondisyon tulad ng headaches, stroke, Parkinson's disease, at seizures.",
+  bi:"Ang Neurolohiya nagtutok sa mga sakit sa utok, spinal cord, ug mga nerbiyo."
+ },
+ symptoms:{
+  en:["Headache","Seizures", "Numbness or tingling", "Memory problems", "Tremors"],
+  tl:["Sakit ng ulo","Kombulsyon","Numbness o kati", "Problema sa memorya", "Panginginig"],
+  bi:["Labad sa ulo","Kombulsyon","Binhod o Katol-katol", "Problema sa memorya","Pagpangurog"]
+ }
+},
+{
+ id:"orthopedics", icon:"🦴",
+ name:{en:"Orthopedic Surgery",tl:"Orthopedic Surgery",bi:"Orthopedic Surgery"},
+ description:{
+  en:"Orthopedic surgery focuses on the treatment of musculoskeletal disorders including bones, joints, ligaments, and tendons. Our orthopedic surgeons treat fractures, sports injuries, arthritis, and other orthopedic conditions.",
+  tl:"Ang Orthopedic Surgery ay nakatuon sa paggamot ng musculoskeletal disorders kabilang ang buto, joints, ligaments, at tendons. Ang aming mga orthopedic surgeon ay gumagamot ng fractures, sports injuries, arthritis, at iba pang orthopedic conditions.",
+  bi:"Ang Orthopedic Surgery nagtutok sa mga sakit sa bukog, lutahan, ug kaunoran."
+ },
+ symptoms:{
+  en:["Joint pain","Back pain","Swelling", "Muscle weakness","Limited mobility", "Sports injuries", ],
+  tl:["Sakit sa kasukasuan","Sakit sa likod","Pamamaga","Sakit sa joints","Kahinaan ng kalamnan","pinsala sa palakasan",],
+  bi:["Sakit sa lutahan","Sakit sa likod","Pagkahubag"]
+ }
+},
+{
+ id:"pulmonology", icon:"💨",
+ name:{en:"Pulmonology",tl:"Pulmonolohiya",bi:"Pulmonolohiya"},
+ description:{
+  en:"Pulmonology specializes in diseases of the lungs and respiratory system. Our pulmonologists diagnose and treat asthma, COPD, pneumonia, bronchitis, and other respiratory conditions.",
+  tl:"Ang Pulmonolohiya ay espesyalista sa mga sakit ng paru-paro at respiratory system. Ang aming mga pulmonologist ay nag-diagnose at nag-treat ng asthma, COPD, pneumonia, bronchitis, at iba pang respiratory conditions.",
+  bi:"Ang Pulmonolohiya espesyalisasyon sa mga sakit sa baga ug sistema sa pagginhawa."
+ },
+ symptoms:{
+  en:["Cough","Shortness of breath","Wheezing", "Chronic cough", "Chest pain", "Coughing up blood", "Sleep apnea"],
+  tl:["Ubo","Kapos sa paghinga", "Hihihingal", "Malalang ubo", "Sakit sa dibdib", "Ubo ng dugo",],
+  bi:["Ubo","Mubo ang pagginhawa","Maglisud ug gininhawa", "Sakit sa dughan", "Ubo og dugo"]
+ }
+},
+{
+ id:"gastroenterology", icon:"🍽️",
+ name:{en:"Gastroenterology",tl:"Gastroenterolohiya",bi:"Gastroenterolohiya"},
+ description:{
+  en:"Gastroenterology focuses on disorders of the digestive system including the stomach, intestines, liver, and pancreas. Our gastroenterologists treat GERD, ulcers, Crohn's disease, IBS, and perform endoscopic procedures.",
+  tl: "Ang Gastroenterolohiya ay nakatuon sa mga karamdaman ng digestive system kabilang ang tiyan, intestines, atay, at pancreas. Ang aming mga gastroenterologist ay gumagamot ng GERD, ulcers, Crohn's disease, IBS, at nagsasagawa ng endoscopic procedures.",
+  bi:"Ang Gastroenterolohiya nagtutok sa mga sakit sa tiyan, tinai, atay, ug pancreas."
+ },
+ symptoms:{
+  en:["Abdominal pain",
+      "Nausea and vomiting",
+      "Diarrhea or constipation",
+      "Heartburn",
+      "Bloating",
+      "Loss of appetite",],
+  tl:["Sakit ng tiyan",
+      "Pagduduwal at pagsusuka",
+      "Pagtatae o paninigas ng dumi",
+      "Pangangasim ng sikmura",
+      "Kabag",
+      "Nawalan ng gana",],
+  bi:["Gisakitan ug tiyan",
+      "Gikabuhi",
+      "Gikalibanga",
+      "Pagsunog sa tiyan",
+      "Panuhot",
+      "Way gana mokaon",]
+ }
+},
+{
+ id:"psychiatry", icon:"🧘",
+ name:{en:"Psychiatry",tl:"Psychiatriya",bi:"Psychiatriya"},
+ description:{
+  en:"Psychiatry is the medical specialty dealing with mental health disorders. Our psychiatrists diagnose and treat depression, anxiety, bipolar disorder, schizophrenia, and other mental health conditions.",
+  tl:"Ang Psychiatriya ay ang espesyalidad sa medisina na tumutukoy sa mental health disorders. Ang aming mga psychiatrist ay nag-diagnose at nag-treat ng depression, anxiety, bipolar disorder, schizophrenia, at iba pang mental health conditions.",
+  bi:"Ang Psychiatriya nagtutok sa pag-atiman sa kahimsog sa pangisip."
+ },
+ symptoms:{
+  en:["Depression",
+      "Persistent sadness",
+      "Anxiety",
+      "Sleep disturbances",
+      "Mood swings",
+      "Concentration problems",
+      "Withdrawal from activities",
+  ],
+  tl:["Depresyon",
+      "Patuloy na kalungkutan",
+      "Kabalisahan",
+      "Mga kaguluhan sa pagtulog",
+      "Pabago-bago ng nararamdaman",
+      "Mga problema sa konsentrasyon",
+      "Pag-withdraw mula sa mga aktibidad",
+    ],
+  bi:["Kasubo",
+      "Kabalaka",
+      "Problema sa tulog",
+      "Pagbag-o sa mood",
+      "Problema sa konsentrasyon",
+      "Paglikay sa mga kalihokan",
+    ]
+ }
+},
+{
+ id:"endocrinology", icon:"⚗️",
+ name:{en:"Endocrinology",tl:"Endocrinolohiya",bi:"Endocrinolohiya"},
+ description:{
+  en:"Endocrinology specializes in hormonal disorders and glandular diseases. Our endocrinologists diagnose and treat diabetes, thyroid disorders, hormonal imbalances, and other endocrine conditions.",
+  tl:"Ang Endocrinolohiya ay espesyalista sa hormonal disorders at glandular diseases. Ang aming mga endocrinologist ay nag-diagnose at nag-treat ng diabetes, thyroid disorders, hormonal imbalances, at iba pang endocrine conditions.",
+  bi:"Ang Endocrinolohiya espesyalisasyon sa mga sakit sa hormones ug glandula."
+ },
+ symptoms:{
+  en:["Excessive thirst",
+      "Frequent urination",
+      "Unexplained weight changes",
+      "Fatigue",
+      "Hair loss",
+      "Temperature sensitivity",
+    ],
+  tl:["Sobrang pagkauhaw",
+      "Madalas na pag-ihi",
+      "Hindi maipaliwanag na mga pagbabago sa timbang",
+      "Pagod",
+      "Paglalagas ng buhok",
+      "Pagiging sensitibo sa temperatura",
+  ],
+  bi:["Gikapoy",
+      "Nautro ang timbang",
+      "Sobra nga kauhaw",
+      "Kanunay nga pag-ihi",
+      "Pagkahulog sa buhok",
+      "Sensitibo sa temperatura"
+    ]
+ }
+},
+{
+ id:"rheumatology", icon:"🔄",
+ name:{en:"Rheumatology",tl:"Rheumatology",bi:"Rheumatology"},
+ description:{
+  en:"Rheumatology focuses on inflammatory disorders of the joints, bones, and connective tissues. Our rheumatologists treat rheumatoid arthritis, lupus, osteoarthritis, and other rheumatic diseases.",
+  tl:"Ang Rheumatology ay nakatuon sa inflammatory disorders ng joints, buto, at connective tissues. Ang aming mga rheumatologist ay gumagamot ng rheumatoid arthritis, lupus, osteoarthritis, at iba pang rheumatic diseases.",
+  bi:"Ang Rheumatology nagtutok sa pamaga ug kasakit sa mga lutahan."
+ },
+ symptoms:{
+  en:["Joint pain and swelling",
+      "Morning stiffness",
+      "Fatigue",
+      "Fever",
+      "Skin rashes",
+      "Limited range of motion",
+      ],
+  tl:["Pananakit at pamamaga ng kasukasuan",
+      "Ang paninigas ng umaga",
+      "Pagod",
+      "Lagnat",
+      "Mga pantal sa balat",
+      "Limitadong saklaw ng paggalaw",
+      ],
+  bi:["Panuhot","Kakapoy","Hilanat",
+      "Kasakit sa lutahan",
+      "Kalibanga",
+      "Limitadong lihok"]
+ }
+},
+{
+ id:"oncology", icon:"🔬",
+ name:{en:"Oncology",tl:"Onkolohiya",bi:"Onkolohiya"},
+ description:{
+  en:"Oncology specializes in the diagnosis and treatment of cancer. Our oncologists provide comprehensive cancer care including chemotherapy, radiation therapy, immunotherapy, and supportive care.",
+  tl:"Ang Onkolohiya ay espesyalista sa diagnosis at paggamot ng cancer. Ang aming mga oncologist ay nagbibigay ng comprehensive cancer care kabilang ang chemotherapy, radiation therapy, immunotherapy, at supportive care.",
+  bi:"Ang Onkolohiya espesyalisasyon sa pag-diagnose ug pagtambal sa kanser."
+ },
+ symptoms:{
+  en:["Unexplained weight loss",
+      "Persistent fatigue",
+      "Lumps or bumps",
+      "Persistent cough",
+      "Abnormal bleeding",
+      "Changes in skin",
+      ],
+  tl:["Hindi maipaliwanag na pagbaba ng timbang",
+      "Patuloy na pagkapagod",
+      "Mga bukol o bukol",
+      "Patuloy na ubo",
+      "Abnormal na pagdurugo",
+      "Mga pagbabago sa balat",
+  ],
+  bi:["Pag-ubos sa timbang","Kapoy","Bukol",
+      "Kanunay nga ubo",
+      "Dili normal nga pagdugo",
+      "Pagbag-o sa pamanit"
+  ]
+ }
+},
+{
+ id:"urology", icon:"💧",
+ name:{en:"Urology",tl:"Urolohiya",bi:"Urolohiya"},
+ description:{
+  en:"Urology specializes in the urinary system and male reproductive organs. Our urologists treat kidney stones, urinary incontinence, prostate issues, erectile dysfunction, and other urological conditions.",
+  tl:"Ang Urolohiya ay espesyalista sa urinary system at male reproductive organs. Ang aming mga urologist ay gumagamot ng kidney stones, urinary incontinence, prostate issues, erectile dysfunction, at iba pang urological conditions.",
+  bi:"Ang Urolohiya nagtutok sa mga sakit sa urinary system ug male reproductive organs."
+ },
+ symptoms:{
+  en:["Painful urination",
+      "Blood in urine",
+      "Frequent urination",
+      "Urinary incontinence",
+      "Lower back pain",
+      "Erectile dysfunction",
+      ],
+  tl:["Masakit na pag-ihi",
+      "Dugo sa ihi",
+      "Madalas na pag-ihi",
+      "Hindi pagpipigil sa ihi",
+      "Sakit sa ibabang bahagi ng likod",
+      "Problema sa pagpapatayo ng ari",
+    ],
+  bi:["Sakit sa pag-ihi",
+      "Dugo sa ihi",
+      "Kanunay nga pag-ihi",
+      "Dili makontrol ang pag-ihi",
+      "Sakit ang bat-ang",
+      "Problema sa pagpatindog sa lagay"
+  ]
+ }
+}
+]
+
+let language="en", expandedId=null
+
+const uiText={
+ en:{title:"Medical Specialties",sub:"Learn about our different medical specialties and the conditions we treat",search:"Search specialties, symptoms, or descriptions...",click:"Click to learn more",book:"Book Appointment with Specialist",found:"specialty(ies) found"},
+ tl:{title:"Mga Medikal na Espesyalidad",sub:"Alamin ang aming mga espesyalisasyon at ginagamot na kondisyon",search:"Maghanap ng espesyalisasyon, sintomas, o paglalarawan...",click:"I-click upang malaman pa",book:"Mag-book ng Appointment sa Espesyalista",found:"espesyalidad ang nahanap"},
+ bi:{title:"Mga Medikal nga Espesyalisasyon",sub:"Pagpaila sa lain-laing espesyalisasyon ug mga sakit nga among gitambalan",search:"Pangitaa ang espesyalisasyon, mga sintomas, o paghulagway...",click:"I-klik aron makakuha og dugang impormasyon",book:"Magpa-book og Appointment sa Espesyalista",found:"ka espesyalisasyon ang nakit-an"}
+}
+
+function setLanguage(l){
+ language=l
+ pageTitle.innerText=uiText[l].title
+ pageSubtitle.innerText=uiText[l].sub
+ searchInput.placeholder=uiText[l].search
+ document.querySelectorAll(".lang-btn").forEach(b=>b.classList.remove("bg-teal-600","text-white"))
+ event.target.classList.add("bg-teal-600","text-white")
+ renderSpecialties()
+}
+
+function renderSpecialties(){
+ const g=specialtiesGrid,e=emptyState
+ const q=searchInput.value.toLowerCase()
+ g.innerHTML=""
+ const f=specialties.filter(s=>s.name[language].toLowerCase().includes(q)||s.description[language].toLowerCase().includes(q)||s.symptoms[language].some(x=>x.toLowerCase().includes(q)))
+ resultCount.innerText=f.length+" "+uiText[language].found
+ if(!f.length){e.classList.remove("hidden");return}else e.classList.add("hidden")
+ f.forEach(s=>{
+  const ex=expandedId===s.id
+  g.innerHTML+=`
+  <div onclick="toggleExpand('${s.id}')" class="bg-white rounded-xl p-5 shadow hover:shadow-lg cursor-pointer">
+   <div class="flex justify-between">
+    <div class="flex gap-3">
+     <span class="text-3xl">${s.icon}</span>
+     <div>
+      <h2 class="font-semibold text-lg">${s.name[language]}</h2>
+      <p class="text-sm text-slate-500">${uiText[language].click}</p>
+     </div>
+    </div>
+    <span class="${ex?'rotate-180':''}">▼</span>
+   </div>
+   ${ex?`
+   <div class="mt-4 border-t pt-4 space-y-3">
+    <p>${s.description[language]}</p>
+    <div class="flex flex-wrap gap-2">${s.symptoms[language].map(x=>`<span class="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm">${x}</span>`).join("")}</div>
+    <button class="w-full bg-teal-600 text-white py-2 rounded">${uiText[language].book}</button>
+   </div>`:""}
+  </div>`
+ })
+}
+
+function toggleExpand(id){expandedId=expandedId===id?null:id;renderSpecialties()}
+renderSpecialties()
+</script>
+{% endblock %}

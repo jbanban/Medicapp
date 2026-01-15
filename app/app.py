@@ -740,7 +740,7 @@ def doctors_schedule():
         doctor=doctor
     )
 
-@app.route('/scheduler', methods=['GET', 'POST'])
+@app.route('/doctor/scheduler', methods=['GET', 'POST'])
 def doctor_scheduler():
     selected_date = request.args.get('date')
 
@@ -764,7 +764,7 @@ def doctor_scheduler():
         )
         db.session.add(new_schedule)
         db.session.commit()
-    return render_template('doctor/scheduler.html', selected_date=selected_date)
+    return render_template('doctor/scheduler.html', selected_date=selected_date, doctor=doctor)
 
 @app.route('/available_doctors')
 def available_doctors():
@@ -832,7 +832,7 @@ def delete_doctor_schedule(doctor_schedule_id):
     db.session.commit()
     return redirect(url_for('doctors_schedule'))
 
-@app.route('/scheduler')
+@app.route('/sched')
 def scheduler():
     selected_date = request.args.get('date')
     return render_template('scheduler.html', selected_date=selected_date)
@@ -1294,6 +1294,14 @@ def search():
         results = []
 
     return render_template("search_results.html", results=results)
+
+@app.route('/about')
+def about():
+
+    doctor = Doctor.query.first()
+    patient = Patient.query.first()
+
+    return render_template('about.html', doctor=doctor, patient=patient)
 
 @app.route('/logout')
 def logout():

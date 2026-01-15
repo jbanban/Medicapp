@@ -5,7 +5,8 @@
         class="w-64 bg-white/80 backdrop-blur-md border-r shadow-lg p-4
             flex flex-col justify-between
             sticky top-0 h-screen
-            transition-all duration-300">
+            transition-all duration-300
+            overflow-y-auto">
 
         <div>
             <div class="mb-8 flex items-center justify-between">
@@ -83,6 +84,14 @@
                         </a>
                     </li>
 
+                    <li>
+                        <a href="{{ url_for('about') }}"
+                            class="sidebar-link flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition-all group">
+                            <i class="sidebar-icon ri-user-settings-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                            <span class="font-medium sidebar-text">About</span>
+                        </a>
+                    </li>
+
                     <!-- Profile -->
                     <li>
                         <a href="{{ url_for('doctor_profile', doctor_id=doctor.doctor_id) }}"
@@ -91,7 +100,7 @@
                             <span class="font-medium sidebar-text">Profile</span>
                         </a>
                     </li>
-
+                    
                     <!-- Logout -->
                     <div>
                         <a href="{{ url_for('logout') }}"
