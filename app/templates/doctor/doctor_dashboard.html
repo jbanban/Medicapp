@@ -7,7 +7,7 @@
     {% include 'doctor/doctor_sidebar.html' %}
     {% include 'base/notification.html' %}
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto">
+    <main class="flex-1">
 
         <!-- Top Header -->
         <header class="bg-gray-100 border-b sticky top-0 z-40">
@@ -28,7 +28,7 @@
                     </div>
 
                     <!-- Profile shortcut -->
-                    <a href="{{ url_for('doctor_profile', doctor_id=doctor.doctor_id) }}"
+                    <a href="{{ url_for('doctor.doctor_profile', doctor_id=doctor.doctor_id) }}"
                         class="flex items-center gap-2">
                         <div class="w-9 h-9 rounded-full bg-blue-600 text-white grid place-items-center font-semibold">
                             {{ doctor.firstname[0] }}{{ doctor.lastname[0] }}

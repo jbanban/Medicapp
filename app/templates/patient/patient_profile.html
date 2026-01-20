@@ -3,13 +3,13 @@
 {% block content %}
 
 <div class="w-full bg-gray-50 py-8 px-4">
-
+    {% include 'base/notification.html' %}
 <div
     x-data="{
         tab: 'personal',
-        patientId: {{ profile.patient_id }},
+        patientId: {{ patient.patient_id }},
         visibility: decryptData(
-            localStorage.getItem('patient_{{ profile.patient_id }}_medical_visibility') || ''
+            localStorage.getItem('patient_{{ patient.patient_id }}_medical_visibility') || ''
         ) || {},
 
         toggle(key) {
@@ -35,31 +35,43 @@
 
     <!-- LEFT SIDEBAR -->
     <div class="w-full md:w-72 md:sticky md:top-6 h-fit">
-        <div class="bg-white shadow-md rounded-2xl p-6 border border-gray-100">
+        <div class="bg-white shadow-md rounded-2xl px-6 pt-2 border border-gray-100">
+
+            <!-- Close Button -->
+            <a
+                href="{{ url_for('patient.patient_dashboard') }}"
+                class="mr-4 pt-2 text-xl font-semibold text-gray-400 hover:text-gray-700 transition"
+                title="Close"
+            >
+                &#8678;
+            </a>
 
             <!-- Avatar -->
-            <div class="flex flex-col items-center">
-                <div class="w-24 h-24 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 
-                            shadow-inner flex items-center justify-center text-4xl font-semibold 
-                            text-gray-600 mb-3">
-                    {{ profile.firstname[0] }}{{ profile.lastname[0] }}
-                </div>
+            <div class="flex flex-col items-center" x-data="{ preview: null }">
+                {% if patient and patient.profile_image %}
+                    <img src="{{ url_for('static', filename=patient.profile_image) }}" alt="photo" class="w-28 h-28 rounded-full object-cover border">
+                {% else %}
+                    <div class="w-28 h-28 rounded-full bg-gray-200 grid place-items-center text-3xl font-semibold text-gray-700">
+                        {{ (patient.firstname[0] if patient and patient.firstname else 'P') ~ (patient.lastname[0] if patient and patient.lastname else '') }}
+                    </div>
+                {% endif %}
 
                 <h3 class="text-xl font-semibold text-gray-800">
-                    {{ profile.firstname }} {{ profile.lastname }}
+                    {{ patient.full_name() }}
                 </h3>
                 <p class="text-gray-500 text-sm">Patient</p>
             </div>
+
 
             <!-- Contact Info -->
             <div class="mt-6 space-y-3">
                 <div class="flex items-center text-sm text-gray-600">
                     <i class="ri-mail-line text-gray-400 mr-3 text-lg"></i>
-                    {{ profile.email }}
+                    {{ patient.email }}
                 </div>
                 <div class="flex items-center text-sm text-gray-600">
                     <i class="ri-phone-line text-gray-400 mr-3 text-lg"></i>
-                    {{ profile.phone }}
+                    {{ patient.phone }}
                 </div>
             </div>
             <!-- Actions -->
@@ -70,11 +82,57 @@
                     View Public Profile
                 </button>
 
-                <button class="w-full py-3 text-sm flex items-center justify-center
-                               bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition">
-                    <i class="ri-download-2-line mr-2 text-lg"></i>
-                    Download Account
+                <!-- EDIT PROFILE BUTTON -->
+                <button
+                    id="editProfileBtn"
+                    type="button"
+                    class="w-full py-3 text-sm flex items-center justify-center
+                        bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl transition"
+                >
+                    <i class="ri-edit-line mr-2 text-lg"></i>
+                    Edit Profile
                 </button>
+
+                <!-- UPLOAD + CANCEL (HIDDEN INITIALLY) -->
+                <div id="editActions" class="hidden mt-3 flex gap-2">
+
+                    <!-- UPLOAD FORM -->
+                    <form
+                        id="photoForm"
+                        action="{{ url_for('patient.update_profile_image', patient_id=patient.patient_id) }}"
+                        method="POST"
+                        enctype="multipart/form-data"
+                        class="flex-1"
+                    >
+                        <input
+                            type="file"
+                            name="photo"
+                            accept="image/*"
+                            class="hidden"
+                            id="photoInput"
+                            onchange="this.form.submit()"
+                        >
+
+                        <button
+                            type="button"
+                            onclick="document.getElementById('photoInput').click()"
+                            class="w-full py-3 bg-black text-white rounded-xl text-sm font-medium"
+                        >
+                            Upload
+                        </button>
+                    </form>
+
+                    <!-- CANCEL BUTTON -->
+                    <button
+                        id="cancelEditBtn"
+                        type="button"
+                        class="flex-1 py-3 bg-red-600 hover:bg-red-700
+                            text-white rounded-xl text-sm font-medium transition"
+                    >
+                        Cancel
+                    </button>
+                </div>
+
             </div>
 
             <!-- Account Status -->
@@ -155,16 +213,6 @@
                     Documents
                 </button>
             </div>
-
-            <!-- Close Button -->
-            <a
-                href="{{ url_for('patient_dashboard') }}"
-                class="mr-4 text-xl font-semibold text-gray-400 hover:text-gray-700 transition"
-                title="Close"
-            >
-                ✕
-            </a>
-
         </div>
 
         <!-- TAB CONTENT -->
@@ -186,7 +234,27 @@
     </div>
 
 </div>
-</div>
+
+<script>
+const editBtn = document.getElementById('editProfileBtn');
+const editActions = document.getElementById('editActions');
+const cancelBtn = document.getElementById('cancelEditBtn');
+
+if (editBtn) {
+    editBtn.addEventListener('click', () => {
+        editBtn.classList.add('hidden');     // hide Edit button
+        editActions.classList.remove('hidden'); // show Upload + Cancel
+    });
+}
+
+if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+        editActions.classList.add('hidden'); // hide Upload + Cancel
+        editBtn.classList.remove('hidden');  // show Edit button again
+    });
+}
+</script>
+
 
 <!-- Alpine.js -->
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>

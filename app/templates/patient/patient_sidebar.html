@@ -23,9 +23,9 @@
 
                 <!-- Dashboard -->
                 <li>
-                    <a href="{{ url_for('patient_dashboard') }}"
+                    <a href="{{ url_for('patient.patient_dashboard') }}"
                     class="flex items-center gap-3 px-3 py-3 rounded-xl transition
-                    {% if request.endpoint == 'patient_dashboard' %}
+                    {% if request.endpoint == 'patient.patient_dashboard' %}
                             bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
                     {% else %}
                             hover:bg-blue-100 hover:text-blue-700
@@ -39,9 +39,9 @@
 
                 <!-- Doctors -->
                 <li>
-                    <a href="{{ url_for('available_doctors') }}"
+                    <a href="{{ url_for('patient.available_doctors') }}"
                     class="flex items-center gap-3 px-3 py-3 rounded-xl transition
-                    {% if request.endpoint == 'available_doctors' %}
+                    {% if request.endpoint == 'patient.available_doctors' %}
                             bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
                     {% else %}
                             hover:bg-blue-100 hover:text-blue-700
@@ -55,9 +55,9 @@
 
                 <!-- Appointments -->
                 <li>
-                    <a href="{{ url_for('patient_appointment') }}"
+                    <a href="{{ url_for('patient.patient_appointment') }}"
                     class="flex items-center gap-3 px-3 py-3 rounded-xl transition
-                    {% if request.endpoint == 'patient_appointment' %}
+                    {% if request.endpoint == 'patient.patient_appointment' %}
                             bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
                     {% else %}
                             hover:bg-blue-100 hover:text-blue-700
@@ -71,9 +71,9 @@
 
                 <!-- Book Appointment -->
                 <li>
-                    <a href="{{ url_for('create_appointment') }}"
+                    <a href="{{ url_for('patient.request_appointment') }}"
                     class="flex items-center gap-3 px-3 py-3 rounded-xl transition
-                    {% if request.endpoint == 'create_appointment' %}
+                    {% if request.endpoint == 'patient.request_appointment' %}
                             bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
                     {% else %}
                             hover:bg-blue-100 hover:text-blue-700
@@ -85,11 +85,26 @@
                     </a>
                 </li>
 
+                
+                <li>
+                    <a href="{{ url_for('misc.about') }}"
+                        class="flex items-center gap-3 px-3 py-3 rounded-xl transition
+                            {% if request.endpoint == 'misc.about' %}
+                                    bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
+                            {% else %}
+                                    hover:bg-blue-100 hover:text-blue-700
+                            {% endif %}">
+                        <i class="sidebar-icon ri-user-settings-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                        <span class="font-medium sidebar-text">About</span>
+                    </a>
+                </li>
+                
+
                 <!-- Profile -->
                 <li>
-                    <a href="{{ url_for('patient_profile') }}"
+                    <a href="{{ url_for('patient.patient_profile') }}"
                     class="flex items-center gap-3 px-3 py-3 rounded-xl transition
-                    {% if request.endpoint == 'patient_profile' %}
+                    {% if request.endpoint == 'patient.patient_profile' %}
                             bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
                     {% else %}
                             hover:bg-blue-100 hover:text-blue-700
@@ -104,10 +119,10 @@
                 <!-- Logout -->
                 <div class="mt-10">
                     <a
-                        href="{{ url_for('logout') }}"
+                        href="{{ url_for('auth.logout') }}"
                         @click.prevent="
                             clearPatientStorage({{ profile.patient_id }});
-                            window.location.href='{{ url_for('logout') }}';
+                            window.location.href='{{ url_for('auth.logout') }}';
                         "
                         class="flex items-center gap-3 p-3 rounded-xl hover:bg-red-100 transition-all"
                         >

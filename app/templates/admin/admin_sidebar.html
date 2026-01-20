@@ -26,9 +26,9 @@
 
                     <!-- Dashboard -->
                     <li>
-                        <a href="{{ url_for('admin_dashboard') }}"
+                        <a href="{{ url_for('admin.admin_dashboard') }}"
                            class="sidebar-link flex items-center gap-3 p-3 rounded-xl transition
-                           {% if request.endpoint == 'admin_dashboard' %}
+                           {% if request.endpoint == 'admin.admin_dashboard' %}
                                bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
                            {% else %}
                                hover:bg-blue-100 hover:text-blue-700
@@ -40,9 +40,9 @@
 
                     <!-- Doctors -->
                     <li>
-                        <a href="{{ url_for('admin_doctors') }}"
+                        <a href="{{ url_for('admin.admin_doctors') }}"
                            class="sidebar-link flex items-center gap-3 p-3 rounded-xl transition
-                           {% if request.endpoint == 'admin_doctors' %}
+                           {% if request.endpoint == 'admin.admin_doctors' %}
                                bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
                            {% else %}
                                hover:bg-blue-100 hover:text-blue-700
@@ -54,9 +54,9 @@
 
                     <!-- Patients -->
                     <li>
-                        <a href="{{ url_for('patients_list') }}"
+                        <a href="{{ url_for('admin.patients_list') }}"
                            class="sidebar-link flex items-center gap-3 p-3 rounded-xl transition
-                           {% if request.endpoint == 'patients_list' %}
+                           {% if request.endpoint == 'admin.patients_list' %}
                                bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
                            {% else %}
                                hover:bg-blue-100 hover:text-blue-700
@@ -68,9 +68,9 @@
 
                     <!-- Reports -->
                     <li>
-                        <a href="{{ url_for('reports') }}"
+                        <a href="{{ url_for('admin.admin_reports') }}"
                            class="sidebar-link flex items-center gap-3 p-3 rounded-xl transition
-                           {% if request.endpoint == 'reports' %}
+                           {% if request.endpoint == 'admin.admin_reports' %}
                                bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
                            {% else %}
                                hover:bg-blue-100 hover:text-blue-700
@@ -82,7 +82,7 @@
 
                     <!-- Logout -->
                     <div>
-                        <a href="{{ url_for('logout') }}"
+                        <a href="{{ url_for('auth.logout') }}"
                            class="sidebar-link flex items-center gap-3 p-3 rounded-xl hover:bg-red-100 transition-all group">
                             <i class="sidebar-icon ri-logout-box-r-line text-xl text-gray-500 group-hover:text-red-600"></i>
                             <span class="font-medium sidebar-text">Logout</span>

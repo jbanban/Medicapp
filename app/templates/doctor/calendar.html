@@ -2,8 +2,6 @@
 {% block title %}Calendar | MEDICAPP{% endblock %}
 {% block content %}
 <div class="flex bg-gray-100 w-full">
-
-    {% include 'doctor/doctor_sidebar.html' %}
     
     <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col">
@@ -16,12 +14,12 @@
 
             <!-- Logo -->
             <div class="flex items-center gap-2">
-                <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10z"/>
-                    </svg>
-                </div>
-                <span class="text-xl font-medium text-gray-700">Calendar</span>
+                <a href="{{ url_for('doctor.doctor_dashboard') }}" class="flex items-center">
+                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <img src="{{ url_for('static', filename='img/logo.png')}}" alt="logo" >
+                    </div>
+                    <span class="text-xl font-medium text-gray-700">MEDICAPP</span>
+                </a>
             </div>
 
             <!-- Today Button -->
@@ -49,11 +47,11 @@
                 </button>
             </div>
 
-            <!-- Month Title -->
-            <h1 id="monthTitle" class="text-xl font-normal text-gray-700"></h1>
-
-             <!-- Title -->
-            <h1 id="headerTitle" class="text-xl font-normal text-gray-700"></h1>
+            <div class="flex items-baseline gap-3 text-xl font-normal text-gray-700">
+                <span id="monthTitle" class="hidden"></span>
+                <span id="weekNumber" class="hidden text-gray-500"></span>
+                <span id="headerTitle" class="hidden"></span>
+            </div>
 
         </div>
 
@@ -322,7 +320,7 @@ function renderCalendar(month, year) {
                        cursor-pointer transition-colors group
                        ${isCurrentMonth ? "bg-white" : "bg-gray-50"}
                        hover:bg-blue-50"
-                onclick="goToScheduler('${formattedDate}')"
+                onclick="openWeekFromDate('${formattedDate}')"
             >
                 <div class="flex justify-between items-start mb-1">
                     <span class="text-xs font-medium
@@ -341,27 +339,57 @@ function renderCalendar(month, year) {
 }
 
 
-// ===== Global navigation =====
-if (typeof window.goToScheduler === "undefined") {
-    window.goToScheduler = function (date) {
-        window.location.href = `/doctor/scheduler?date=${date}`;
-    };
+// ===== Schedule navigation =====
+const schedulerUrl = "{{ url_for('doctor.scheduler') }}";
+
+function openWeekFromDate(dateString) {
+    const clickedDate = new Date(dateString);
+
+    calendarState.currentDate = clickedDate;
+    calendarState.view = "week";
+
+    // Align week to clicked day
+    if (window.state && window.getStartOfWeek) {
+        state.currentWeekStart = getStartOfWeek(clickedDate);
+    }
+
+    showView("week");
 }
 
+
+function getWeekNumber(date) {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
 
 /* ================================
    HEADER TITLE
 ================================ */
 function updateHeaderTitle() {
-    const title = document.getElementById("headerTitle");
-    if (!title) return;
+    const monthTitle  = document.getElementById("monthTitle");
+    const weekNumber  = document.getElementById("weekNumber");
+    const headerTitle = document.getElementById("headerTitle");
+
+    if (!monthTitle || !weekNumber || !headerTitle) return;
+
+    // Hide all first
+    monthTitle.classList.add("hidden");
+    weekNumber.classList.add("hidden");
+    headerTitle.classList.add("hidden");
 
     const d = calendarState.currentDate;
 
+    /* ===== MONTH VIEW ===== */
     if (calendarState.view === "month") {
-        title.textContent = `${months[d.getMonth()]} ${d.getFullYear()}`;
+        monthTitle.textContent =
+            `${months[d.getMonth()]} ${d.getFullYear()}`;
+        monthTitle.classList.remove("hidden");
     }
 
+    /* ===== WEEK VIEW ===== */
     if (calendarState.view === "week") {
         const start = new Date(d);
         start.setDate(d.getDate() - d.getDay());
@@ -369,9 +397,22 @@ function updateHeaderTitle() {
         const end = new Date(start);
         end.setDate(start.getDate() + 6);
 
-        title.textContent =
+        weekNumber.textContent = `Week ${getWeekNumber(d)}`;
+        headerTitle.textContent =
             `${start.toLocaleDateString()} – ${end.toLocaleDateString()}`;
+
+        weekNumber.classList.remove("hidden");
+        headerTitle.classList.remove("hidden");
     }
+}
+
+
+function getStartOfWeek(date) {
+    const d = new Date(date);
+    const day = d.getDay(); // 0 = Sunday
+    d.setDate(d.getDate() - day);
+    d.setHours(0, 0, 0, 0);
+    return d;
 }
 
 
@@ -388,10 +429,13 @@ function render() {
         );
     }
 
-    // if (calendarState.view === "week") {
-    //     state.currentWeekStart = getStartOfWeek(calendarState.currentDate);
-    //     window.renderSchedCalendar?.();
-    // }
+    if (calendarState.view === "week") {
+        if (window.state && window.getStartOfWeek) {
+            state.currentWeekStart = getStartOfWeek(calendarState.currentDate);
+            window.renderSchedCalendar?.();
+        }
+    }
+
 }
 
 /* ================================
@@ -463,6 +507,22 @@ document.addEventListener("DOMContentLoaded", () => {
     /* ---------- INITIAL LOAD ---------- */
     showView("month");
 });
+(function autoSwitchToWeek() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("view") === "week" && params.has("date")) {
+
+        const clickedDate = new Date(params.get("date"));
+
+        calendarState.currentDate = new Date(clickedDate);
+        calendarState.view = "week";
+
+        if (window.state && window.getStartOfWeek) {
+            state.currentWeekStart = getStartOfWeek(clickedDate);
+        }
+
+        showView("week");
+    }
+})();
 
 </script>
 {% endblock %}

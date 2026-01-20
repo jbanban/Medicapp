@@ -2,44 +2,23 @@
 {% block title %}{{ doctor.firstname if doctor else 'Doctor' }} Profile | MEDICAPP {% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-50 p-6">
+<div class="w-full bg-gray-50 p-2">
+  {% include 'base/notification.html' %}
   <div class="max-w-7xl mx-auto">
 
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">
-          {{ (doctor.firstname ~ ' ' ~ doctor.lastname) if doctor else 'Doctor Profile' }}
-        </h1>
-        <p class="text-sm text-gray-500 mt-1">Manage your profile, credentials and clinic information</p>
-      </div>
-
-      <!-- Action area: upload photo, profile initials -->
-      <div class="flex items-center gap-4">
-        <div class="text-right mr-2 hidden sm:block">
-          <div class="text-sm font-medium text-gray-800">
-            {{ doctor.firstname ~ ' ' ~ doctor.lastname if doctor and doctor.firstname else 'Doctor' }}
-          </div>
-          <div class="text-xs text-gray-500">Doctor</div>
-        </div>
-
-        <div class="flex items-center gap-3">
-          {% if doctor and doctor.profile_image %}
-            <img src="{{ url_for('static', filename=doctor.profile_image) }}" alt="profile"
-                 class="w-12 h-12 rounded-full object-cover border">
-          {% else %}
-            <div class="w-12 h-12 rounded-full bg-blue-600 text-white grid place-items-center font-semibold">
-              {{ (doctor.firstname[0] if doctor and doctor.firstname else 'D') ~ (doctor.lastname[0] if doctor and doctor.lastname else '') }}
-            </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-12">
       <!-- Left column: basic card -->
       <aside class="lg:col-span-1">
-        <div class="bg-white rounded-xl shadow p-6">
+        <div class="bg-white rounded-xl shadow px-6 pt-3">
+          <!-- Close Button -->
+          <a
+              href="{{ url_for('doctor.doctor_dashboard') }}"
+              class="mr-4 pt-2 text-xl font-semibold text-gray-400 hover:text-gray-700 transition"
+              title="Close"
+          >
+              &#8678;
+          </a>
+          
           <div class="flex flex-col items-center gap-4">
             {% if doctor and doctor.profile_image %}
               <img src="{{ url_for('static', filename=doctor.profile_image) }}" alt="photo" class="w-28 h-28 rounded-full object-cover border">
@@ -129,7 +108,7 @@
             <!-- Edit controls (top-right) -->
             <div class="flex items-center gap-3">
               <button id="editProfileBtn" class="px-3 py-2 bg-blue-600 text-white rounded-md text-sm">Edit</button>
-              <form action="{{ url_for('doctor_profile', doctor_id=doctor.doctor_id) }}" method="POST" enctype="multipart/form-data" class="hidden" id="photoForm">
+              <form action="{{ url_for('doctor.upload_doctor_photo', doctor_id=doctor.doctor_id) }}" method="POST" enctype="multipart/form-data" class="hidden" id="photoForm">
                 <input type="file" name="photo" accept="image/*" class="text-sm">
                 <button type="submit" class="mt-2 px-3 py-1 bg-gray-800 text-white rounded text-sm">Upload</button>
               </form>
@@ -173,7 +152,7 @@
 
           <!-- Personal Info -->
           <section data-panel="details" class="tab-panel hidden">
-            <form action="{{ url_for('create_doctor_profile', doctor_id=doctor.doctor_id) }}" method="POST" id="personalForm">
+            <form method="POST" id="personalForm">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm text-gray-600">First name</label>
@@ -278,7 +257,7 @@
               </ul>
 
               <!-- Add form (hidden initially) -->
-              <form action="{{ url_for('add_qualification', doctor_id=doctor.doctor_id) }}" method="POST" id="qualificationForm" class="hidden space-y-3">
+              <form action="{{ url_for('doctor.add_qualification', doctor_id=doctor.doctor_id) }}" method="POST" id="qualificationForm" class="hidden space-y-3">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <input name="degree" placeholder="Degree (e.g. MD - Harvard)" class="p-2 border rounded">
                   <input name="institution" placeholder="Institution" class="p-2 border rounded">
@@ -308,7 +287,7 @@
                     <div class="text-sm text-gray-600">{{ e.company }} • {{ e.duration }}</div>
                   </div>
                   <div class="flex gap-2">
-                    <form action="{{ url_for('delete_experience', exp_id=e.id, doctor_id=doctor.doctor_id) }}" method="POST" onsubmit="return confirm('Delete experience?')">
+                    <form action="{{ url_for('doctor.delete_experience', exp_id=e.id, doctor_id=doctor.doctor_id) }}" method="POST" onsubmit="return confirm('Delete experience?')">
                       <button type="submit" class="text-sm text-red-600">Delete</button>
                     </form>
                   </div>
@@ -318,7 +297,7 @@
                 {% endfor %}
               </ul>
 
-              <form action="{{ url_for('add_experience', doctor_id=doctor.doctor_id) }}" method="POST" id="experienceForm" class="hidden space-y-3">
+              <form action="{{ url_for('doctor.add_experience', doctor_id=doctor.doctor_id) }}" method="POST" id="experienceForm" class="hidden space-y-3">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <input name="role" placeholder="Role/Position" class="p-2 border rounded">
                   <input name="company" placeholder="Company / Hospital" class="p-2 border rounded">
@@ -347,7 +326,7 @@
                     <div class="font-semibold text-gray-800">{{ a.title }}</div>
                   </div>
                   <div class="flex gap-2">
-                    <form action="{{ url_for('delete_award', award_id=a.id, doctor_id=doctor.doctor_id) }}" method="POST" onsubmit="return confirm('Delete award?')">
+                    <form action="{{ url_for('doctor.delete_award', award_id=a.id, doctor_id=doctor.doctor_id) }}" method="POST" onsubmit="return confirm('Delete award?')">
                       <button type="submit" class="text-sm text-red-600">Delete</button>
                     </form>
                   </div>
@@ -357,7 +336,7 @@
                 {% endfor %}
               </ul>
 
-              <form action="{{ url_for('add_award', doctor_id=doctor.doctor_id) }}" method="POST" id="awardForm" class="hidden space-y-3">
+              <form action="{{ url_for('doctor.add_award', doctor_id=doctor.doctor_id) }}" method="POST" id="awardForm" class="hidden space-y-3">
                 <input name="title" placeholder="Award or Certification title" class="p-2 border rounded w-full">
                 <div class="flex gap-3">
                   <button class="px-3 py-2 bg-blue-600 text-white rounded">Add</button>
@@ -369,7 +348,7 @@
 
           <!-- Clinic Info -->
           <section data-panel="clinic" class="tab-panel hidden">
-            <form action="{{ url_for('update_clinic_info', doctor_id=doctor.doctor_id) }}" method="POST">
+            <form action="{{ url_for('doctor.update_clinic_info', doctor_id=doctor.doctor_id) }}" method="POST">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm text-gray-600">Clinic Name</label>
@@ -406,7 +385,7 @@
           <!-- Settings -->
           <section data-panel="settings" class="tab-panel hidden">
             <div class="space-y-4">
-              <form action="{{ url_for('update_doctor_settings', doctor_id=doctor.doctor_id) }}" method="POST">
+              <form action="{{ url_for('doctor.update_doctor_settings', doctor_id=doctor.doctor_id) }}" method="POST">
                 <div class="flex items-center justify-between p-4 border rounded">
                   <div>
                     <div class="font-medium">Public Profile</div>
@@ -423,14 +402,14 @@
                   <input type="checkbox" name="accept_appointments" {% if doctor and doctor.accept_appointments %}checked{% endif %}>
                 </div>
 
-                <div class="mt-4">
+                <div class="mt-4 mb-6">
                   <button class="px-4 py-2 bg-green-600 text-white rounded">Save Settings</button>
                 </div>
               </form>
 
               <div class="mt-6 border rounded p-4 bg-red-50">
                 <h4 class="font-semibold text-red-700">Danger Zone</h4>
-                <form action="{{ url_for('deactivate_doctor', doctor_id=doctor.doctor_id) }}" method="POST" onsubmit="return confirm('Deactivate profile?')">
+                <form action="{{ url_for('doctor.deactivate_doctor', doctor_id=doctor.doctor_id) }}" method="POST" onsubmit="return confirm('Deactivate profile?')">
                   <button class="mt-3 px-3 py-2 bg-red-600 text-white rounded">Deactivate Profile</button>
                 </form>
               </div>

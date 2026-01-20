@@ -1,159 +1,165 @@
+<form method="POST"
+      action="{{ url_for('patient.update_profile_details', patient_id=patient.patient_id) }}"
+      enctype="multipart/form-data"
+      class="space-y-8">
 
-<!-- PERSONAL INFO -->
-<h2 class="text-xl font-semibold text-gray-800">Personal Information</h2>
-<p class="text-sm text-gray-500 mb-6">
-    Update your personal details and contact information.
-</p>
+    <!-- PERSONAL INFO -->
+    <h2 class="text-xl font-semibold text-gray-800">Personal Information</h2>
+    <p class="text-sm text-gray-500 mb-6">
+        Update your personal details and contact information.
+    </p>
 
-<div class="space-y-5">
+    <div class="space-y-5">
 
-    <!-- Name Fields -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <div>
-            <label class="text-sm font-medium text-gray-700 mb-1 block">First Name</label>
-            <input type="text" value="{{ profile.firstname }}"
-                class="w-full rounded-xl border-gray-300 focus:ring-red-400 focus:border-red-400 p-3 shadow-sm">
+        <!-- Name Fields -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+                <label class="text-sm font-medium text-gray-700 block">First Name</label>
+                <input type="text" name="firstname" value="{{ patient.firstname }}"
+                       class="w-full rounded-xl border-gray-300 p-3 shadow-sm focus:ring-red-400">
+            </div>
+
+            <div>
+                <label class="text-sm font-medium text-gray-700 block">Middle Name</label>
+                <input type="text" name="middlename" value="{{ patient.middlename }}"
+                       class="w-full rounded-xl border-gray-300 p-3 shadow-sm focus:ring-red-400">
+            </div>
+
+            <div>
+                <label class="text-sm font-medium text-gray-700 block">Last Name</label>
+                <input type="text" name="lastname" value="{{ patient.lastname }}"
+                       class="w-full rounded-xl border-gray-300 p-3 shadow-sm focus:ring-red-400">
+            </div>
         </div>
 
-        <div>
-            <label class="text-sm font-medium text-gray-700 mb-1 block">Middle Name</label>
-            <input type="text" value="{{ profile.middlename }}"
-                class="w-full rounded-xl border-gray-300 focus:ring-red-400 focus:border-red-400 p-3 shadow-sm">
+        <!-- Email + Phone -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+                <label class="text-sm font-medium text-gray-700 block">Email</label>
+                <input type="email" name="email" value="{{ patient.email }}"
+                       class="w-full rounded-xl border-gray-300 p-3 shadow-sm focus:ring-red-400">
+            </div>
+
+            <div>
+                <label class="text-sm font-medium text-gray-700 block">Phone Number</label>
+                <input type="tel" name="phone" value="{{ patient.phone }}"
+                       class="w-full rounded-xl border-gray-300 p-3 shadow-sm focus:ring-red-400">
+            </div>
         </div>
 
-        <div>
-            <label class="text-sm font-medium text-gray-700 mb-1 block">Last Name</label>
-            <input type="text" value="{{ profile.lastname }}"
-                class="w-full rounded-xl border-gray-300 focus:ring-red-400 focus:border-red-400 p-3 shadow-sm">
+        <!-- Birthdate, Gender -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+                <label class="text-sm font-medium text-gray-700 block">Date of Birth</label>
+                <input type="date" name="birthdate" value="{{ patient.birthdate }}"
+                       class="w-full rounded-xl border-gray-300 p-3 shadow-sm focus:ring-red-400">
+            </div>
+
+            <div>
+                <label class="text-sm font-medium text-gray-700 block">Gender</label>
+                <select name="gender"
+                        class="w-full rounded-xl border-gray-300 p-3 shadow-sm focus:ring-red-400">
+                    <option value="Male" {{ 'selected' if patient.gender == 'Male' }}>Male</option>
+                    <option value="Female" {{ 'selected' if patient.gender == 'Female' }}>Female</option>
+                </select>
+            </div>
         </div>
+
+        <!-- Blood Type + Civil Status -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+                <label class="text-sm font-medium text-gray-700 block">Blood Type</label>
+                <input type="text" name="blood_type" value="{{ patient.blood_type }}"
+                       class="w-full rounded-xl border-gray-300 p-3 shadow-sm focus:ring-red-400">
+            </div>
+
+            <div>
+                <label class="text-sm font-medium text-gray-700 block">Civil Status</label>
+                <input type="text" name="civil_status" value="{{ patient.civil_status }}"
+                       class="w-full rounded-xl border-gray-300 p-3 shadow-sm focus:ring-red-400">
+            </div>
+        </div>
+
+        <!-- ================= ADDRESS SECTION ================= -->
+        <div class="pt-8 border-t">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Address Information</h3>
+
+            <!-- CURRENT ADDRESS -->
+            <p class="text-sm font-medium text-gray-700 mb-2">Current Address</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input name="current_house_no" value="{{ patient.current_house_no }}"
+                       placeholder="House / Unit No."
+                       class="form-input ">
+                <input name="current_street" value="{{ patient.current_street }}"
+                       placeholder="Street"
+                       class="form-input">
+                <input name="current_barangay" value="{{ patient.current_barangay }}"
+                       placeholder="Barangay"
+                       class="form-input">
+                <input name="current_city" value="{{ patient.current_city }}"
+                       placeholder="City / Municipality"
+                       class="form-input">
+                <input name="current_province" value="{{ patient.current_province }}"
+                       placeholder="Province"
+                       class="form-input">
+                <input name="current_zipcode" value="{{ patient.current_zipcode }}"
+                       placeholder="Zip Code"
+                       class="form-input">
+            </div>
+
+            <!-- PERMANENT ADDRESS -->
+            <p class="text-sm font-medium text-gray-700 mt-6 mb-2">Permanent Address</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input name="permanent_house_no" value="{{ patient.permanent_house_no }}"
+                       placeholder="House / Unit No."
+                       class="form-input">
+                <input name="permanent_street" value="{{ patient.permanent_street }}"
+                       placeholder="Street"
+                       class="form-input">
+                <input name="permanent_barangay" value="{{ patient.permanent_barangay }}"
+                       placeholder="Barangay"
+                       class="form-input">
+                <input name="permanent_city" value="{{ patient.permanent_city }}"
+                       placeholder="City / Municipality"
+                       class="form-input">
+                <input name="permanent_province" value="{{ patient.permanent_province }}"
+                       placeholder="Province"
+                       class="form-input">
+                <input name="permanent_zipcode" value="{{ patient.permanent_zipcode }}"
+                       placeholder="Zip Code"
+                       class="form-input">
+            </div>
+        </div>
+
     </div>
 
-    <!-- Email + Phone -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div>
-            <label class="text-sm font-medium text-gray-700 mb-1 block">Email</label>
-            <input type="email" value="{{ profile.email }}"
-                class="w-full rounded-xl border-gray-300 focus:ring-red-400 focus:border-red-400 p-3 shadow-sm">
+    <!-- ================= EMERGENCY CONTACT ================= -->
+    <div class="mt-12 pt-8 border-t border-gray-200">
+        <h2 class="text-xl font-semibold text-gray-800">Emergency Contact</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <input name="ec_name" value="{{ patient.ec_name }}"
+                   placeholder="Contact Name"
+                   class="form-input">
+            <input name="ec_relation" value="{{ patient.ec_relation }}"
+                   placeholder="Relation"
+                   class="form-input">
+            <input name="ec_phone" value="{{ patient.ec_phone }}"
+                   placeholder="Contact Number"
+                   class="form-input">
         </div>
 
-        <div>
-            <label class="text-sm font-medium text-gray-700 mb-1 block">Phone Number</label>
-            <input type="tel" value="{{ profile.phone }}"
-                class="w-full rounded-xl border-gray-300 focus:ring-red-400 focus:border-red-400 p-3 shadow-sm">
-        </div>
+        <input name="ec_address" value="{{ patient.ec_address }}"
+               placeholder="Complete Address"
+               class="form-input mt-3">
     </div>
 
-    <!-- Birthdate, Gender -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div>
-            <label class="text-sm font-medium text-gray-700 mb-1 block">Date of Birth</label>
-            <input type="text" value="{{ profile.birthdate }}"
-                class="w-full rounded-xl border-gray-300 focus:ring-red-400 focus:border-red-400 p-3 shadow-sm">
-        </div>
-
-        <div>
-            <label class="text-sm font-medium text-gray-700 mb-1 block">Gender</label>
-            <input type="text" value="{{ profile.gender }}"
-                class="w-full rounded-xl border-gray-300 focus:ring-red-400 focus:border-red-400 p-3 shadow-sm">
-        </div>
+    <!-- SAVE BUTTON -->
+    <div class="flex justify-end pt-6">
+        <button type="submit"
+                class="px-6 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition">
+            Save Changes
+        </button>
     </div>
 
-    <!-- Blood Type + Civil Status -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div>
-            <label class="text-sm font-medium text-gray-700 mb-1 block">Blood Type</label>
-            <input type="text" value="{{ profile.blood_type }}"
-                class="w-full rounded-xl border-gray-300 focus:ring-red-400 focus:border-red-400 p-3 shadow-sm">
-        </div>
-
-        <div>
-            <label class="text-sm font-medium text-gray-700 mb-1 block">Civil Status</label>
-            <input type="text" value="{{ profile.civil_status }}"
-                class="w-full rounded-xl border-gray-300 focus:ring-red-400 focus:border-red-400 p-3 shadow-sm">
-        </div>
-    </div>
-
-    <!-- Address -->
-    <div>
-        <label class="text-sm font-medium text-gray-700 mb-1 block">Current Address</label>
-        <input type="text" value="{{ profile.current_address }}"
-            class="w-full rounded-xl border-gray-300 focus:ring-red-400 focus:border-red-400 p-3 shadow-sm">
-    </div>
-
-    <div>
-        <label class="text-sm font-medium text-gray-700 mb-1 block">Permanent Address</label>
-        <input type="text" value="{{ profile.permanent_address }}"
-            class="w-full rounded-xl border-gray-300 focus:ring-red-400 focus:border-red-400 p-3 shadow-sm">
-    </div>
-
-</div>
-
-<!-- EMERGENCY CONTACT SECTION -->
-<div class="mt-12 pt-8 border-t border-gray-200">
-    <h2 class="text-xl font-semibold text-gray-800">Emergency Contact</h2>
-    <p class="text-sm text-gray-500 mb-6">Provide emergency contact details.</p>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div>
-            <label class="text-sm font-medium text-gray-700 mb-1 block">Contact Name</label>
-            <input type="text" value="{{ profile.ec_name }}"
-                class="w-full rounded-xl border-gray-300 focus:ring-red-400 focus:border-red-400 p-3 shadow-sm">
-        </div>
-
-        <div>
-            <label class="text-sm font-medium text-gray-700 mb-1 block">Relation</label>
-            <input type="text" value="{{ profile.ec_relation }}"
-                class="w-full rounded-xl border-gray-300 focus:ring-red-400 focus:border-red-400 p-3 shadow-sm">
-        </div>
-
-        <div>
-            <label class="text-sm font-medium text-gray-700 mb-1 block">Contact Number</label>
-            <input type="text" value="{{ profile.ec_phone }}"
-                class="w-full rounded-xl border-gray-300 focus:ring-red-400 focus:border-red-400 p-3 shadow-sm">
-        </div>
-    </div>
-    <div>
-        <label class="text-sm font-medium text-gray-700 mb-1 block">Complete Address</label>
-        <input type="text" value="{{ profile.ec_address }}"
-            class="w-full rounded-xl border-gray-300 focus:ring-red-400 focus:border-red-400 p-3 shadow-sm">
-    </div>
-</div>
-
-<!-- Contact Preferences -->
-<section class="mt-12 pt-8 border-t border-gray-200">
-    <h2 class="text-lg font-semibold text-gray-800 mb-2">Contact Preferences</h2>
-    <p class="text-sm text-gray-600 mb-4">Choose how you want to be contacted.</p>
-
-    <!-- Email Notifications -->
-    <div class="flex justify-between items-center py-4 border-b">
-        <div>
-            <h4 class="font-medium text-gray-800">Email Notifications</h4>
-            <p class="text-xs text-gray-500">Appointment updates and medical alerts.</p>
-        </div>
-
-        <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="toggle1" checked class="sr-only peer">
-            <div
-                class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-500 transition-colors"></div>
-            <span
-                class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transform transition-all peer-checked:translate-x-5"></span>
-        </label>
-    </div>
-
-    <!-- SMS Notifications -->
-    <div class="flex justify-between items-center py-4 border-b">
-        <div>
-            <h4 class="font-medium text-gray-800">SMS Notifications</h4>
-            <p class="text-xs text-gray-500">Text reminders for upcoming appointments.</p>
-        </div>
-
-        <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="toggle2" checked class="sr-only peer">
-            <div
-                class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-500 transition-colors"></div>
-            <span
-                class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transform transition-all peer-checked:translate-x-5"></span>
-        </label>
-    </div>
-
-</section>
+</form>
