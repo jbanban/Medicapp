@@ -8,10 +8,10 @@ from . import auth_bp
 @auth_bp.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
+        username = request.form['username']
         password = request.form['password']
-        
-        user = Account.query.filter_by(email=email).first()
+
+        user = Account.query.filter_by(username=username).first()
 
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.account_id

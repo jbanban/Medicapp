@@ -14,7 +14,7 @@ def patient_appointment():
     user_id = session.get('user_id')
 
     appointments = Appointment.query.filter_by(patient_id=session.get('user_id')).all()
-    profile = Patient.query.filter_by(account_id=user_id).first()
+    patient = Patient.query.filter_by(account_id=user_id).first()
     decrypted_patient = {
         "patient_id": patient.patient_id,
 

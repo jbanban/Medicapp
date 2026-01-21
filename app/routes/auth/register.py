@@ -8,7 +8,7 @@ from . import auth_bp
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        email = request.form.get('email')
+        username = request.form.get('username')
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
         role = request.form.get('role', 'patient')
@@ -17,19 +17,18 @@ def register():
             flash("Passwords do not match!", "danger")
             return redirect(url_for('auth.register'))
 
-        existing_user = Account.query.filter_by(email=email).first()
+        existing_user = Account.query.filter_by(username=username).first()
         if existing_user:
-            flash("Email already exists!", "danger")
+            flash("Username already exists!", "danger")
             return redirect(url_for('auth.register'))
 
         hashed_pw = generate_password_hash(password, method='scrypt')
-        new_account = Account(email=email, password=hashed_pw, role=role)
-
+        new_account = Account(username=username, password=hashed_pw, role=role) 
         db.session.add(new_account)
         db.session.commit()
 
         flash("Account successfully created!", "success")
-        return redirect(url_for('auth.register'))
+        return redirect(url_for('auth.login'))
 
     return render_template('register.html')
 

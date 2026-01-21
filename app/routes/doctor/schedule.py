@@ -5,6 +5,7 @@ from app.models.doctor_schedule import Doctor_Schedule
 from app import db
 from . import doctor_bp
 
+
 @doctor_bp.route('/schedule', methods=['GET', 'POST'])
 def doctors_schedule():
     if 'role' not in session or session['role'] != 'doctor':
@@ -14,29 +15,33 @@ def doctors_schedule():
     if not user_id:
         return redirect(url_for('auth.login'))
 
-    # Get doctor profile
     doctor = Doctor.query.filter_by(account_id=user_id).first()
     if not doctor:
         flash("Please complete your doctor profile first.", "warning")
-        return redirect(url_for('unauthorized'))
+        return redirect(url_for('misc.unauthorized'))
 
     if request.method == 'POST':
-        preferred_date = request.form['preferred_date']
-        preferred_time = request.form['preferred_time']
+        selected_date = request.form['preferred_date']
+        start_time = request.form['start_time']
+        end_time = request.form['end_time']
+        duration = int(request.form['duration'])
 
-        new_schedule = Doctor_Schedule(
+        slots_created = generate_and_save_slots(
             doctor_id=doctor.doctor_id,
-            vacant_date=preferred_date,
-            vacant_time=preferred_time,
-            status='Available'
+            selected_date=selected_date,
+            start_time=start_time,
+            end_time=end_time,
+            duration_minutes=duration
         )
-        db.session.add(new_schedule)
-        db.session.commit()
-        flash("Schedule added successfully.", "success")
+
+        flash(f"{slots_created} slots successfully created.", "success")
         return redirect(url_for('doctor.doctors_schedule'))
 
     schedules = Doctor_Schedule.query.filter_by(
         doctor_id=doctor.doctor_id
+    ).order_by(
+        Doctor_Schedule.date,
+        Doctor_Schedule.start_time
     ).all()
 
     return render_template(

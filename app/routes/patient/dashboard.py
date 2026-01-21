@@ -7,7 +7,7 @@ from app.security.crypto import decrypt_value
 from . import patient_bp
 
 
-@patient_bp.route('/patient/dashboard')
+@patient_bp.route('/dashboard')
 def patient_dashboard():
     if 'role' not in session or session['role'] != 'patient':
         return redirect(url_for('unauthorized'))

@@ -35,7 +35,7 @@ def patient_profile():
         "patient_id": patient.patient_id,   # ✅ ADD THIS
 
         "firstname": decrypt_value(patient.firstname),
-        "middlename": decrypt_value(patient.middlename),
+        "middlename": safe_decrypt(patient.middlename),
         "lastname": decrypt_value(patient.lastname),
 
         "full_name": " ".join(filter(None, [
@@ -45,7 +45,7 @@ def patient_profile():
         ])),
 
         "gender": decrypt_value(patient.gender),
-        "blood_type": decrypt_value(patient.blood_type),
+        "blood_type": safe_decrypt(patient.blood_type),
         "civil_status": decrypt_value(patient.civil_status),
         "birthdate": patient.birthdate,
         "age": patient.age,
@@ -55,16 +55,16 @@ def patient_profile():
         "phone": decrypt_value(patient.phone),
 
         # CURRENT ADDRESS
-        "current_house_no": decrypt_value(patient.current_house_no),
-        "current_street": decrypt_value(patient.current_street),
+        "current_house_no": safe_decrypt(patient.current_house_no),
+        "current_street": safe_decrypt(patient.current_street),
         "current_barangay": decrypt_value(patient.current_barangay),
         "current_city": decrypt_value(patient.current_city),
         "current_province": decrypt_value(patient.current_province),
         "current_zipcode": decrypt_value(patient.current_zipcode),
 
         # PERMANENT ADDRESS
-        "permanent_house_no": decrypt_value(patient.permanent_house_no),
-        "permanent_street": decrypt_value(patient.permanent_street),
+        "permanent_house_no": safe_decrypt(patient.permanent_house_no),
+        "permanent_street": safe_decrypt(patient.permanent_street),
         "permanent_barangay": decrypt_value(patient.permanent_barangay),
         "permanent_city": decrypt_value(patient.permanent_city),
         "permanent_province": decrypt_value(patient.permanent_province),
@@ -117,7 +117,7 @@ def create_profile():
 
         # ---------------- BASIC INFO ----------------
         firstname = form.get('firstname', '').strip()
-        middlename = form.get('middlename', '').strip()
+        middlename = empty_to_none(form.get('middlename', '').strip())
         lastname = form.get('lastname', '').strip()
         gender = form.get('gender', '').strip()
         birthdate_str = form.get('birthdate', '').strip()
@@ -239,25 +239,25 @@ def create_profile():
         try:
             patient = Patient(
                 firstname=encrypt_value(firstname),
-                middlename=encrypt_value(middlename),
+                middlename=safe_decrypt(middlename),
                 lastname=encrypt_value(lastname),
                 gender=encrypt_value(gender),
                 birthdate=birthdate,  # optional: keep plaintext for queries
                 age=age,
-                blood_type=encrypt_value(blood_type),
+                blood_type=safe_decrypt(blood_type),
                 civil_status=encrypt_value(civil_status),
 
                 # CURRENT ADDRESS
-                current_house_no=encrypt_value(current_house_no),
-                current_street=encrypt_value(current_street),
+                current_house_no=safe_decrypt(current_house_no),
+                current_street=safe_decrypt(current_street),
                 current_barangay=encrypt_value(current_barangay),
                 current_city=encrypt_value(current_city),
                 current_province=encrypt_value(current_province),
                 current_zipcode=encrypt_value(current_zipcode),
 
                 # PERMANENT ADDRESS
-                permanent_house_no=encrypt_value(permanent_house_no),
-                permanent_street=encrypt_value(permanent_street),
+                permanent_house_no=safe_decrypt(permanent_house_no),
+                permanent_street=safe_decrypt(permanent_street),
                 permanent_barangay=encrypt_value(permanent_barangay),
                 permanent_city=encrypt_value(permanent_city),
                 permanent_province=encrypt_value(permanent_province),
