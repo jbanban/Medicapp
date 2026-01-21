@@ -1,14 +1,16 @@
 from typing import TYPE_CHECKING
 from datetime import datetime, date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Integer, String, Date, DateTime, ForeignKey
+from sqlalchemy import Integer, Date, DateTime, ForeignKey
 from app.extensions import db
+from app.security.encrypted_column import EncryptedColumn
 
 if TYPE_CHECKING:
     from app.models.account import Account
     from app.models.appointment import Appointment
     from app.models.medical_record import MedicalRecord
     from app.models.patient_history_background import PatientHistoryBackground
+
 
 class Patient(db.Model):
     __tablename__ = "patient"
@@ -24,43 +26,45 @@ class Patient(db.Model):
     )
 
     # ---------------- BASIC INFORMATION ----------------
-    firstname: Mapped[str] = mapped_column(String(50), nullable=False)
-    middlename: Mapped[str] = mapped_column(String(50), nullable=True)
-    lastname: Mapped[str] = mapped_column(String(50), nullable=False)
-    gender: Mapped[str] = mapped_column(String(10), nullable=False)
+    firstname: Mapped[str] = mapped_column(EncryptedColumn, nullable=False)
+    middlename: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
+    lastname: Mapped[str] = mapped_column(EncryptedColumn, nullable=False)
+    gender: Mapped[str] = mapped_column(EncryptedColumn, nullable=False)
+
     birthdate: Mapped[date] = mapped_column(Date, nullable=False)
     age: Mapped[int] = mapped_column(Integer, nullable=False)
-    blood_type: Mapped[str] = mapped_column(String(5), nullable=True)
-    civil_status: Mapped[str] = mapped_column(String(20), nullable=True)
+
+    blood_type: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
+    civil_status: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
 
     # ---------------- CURRENT ADDRESS ----------------
-    current_house_no: Mapped[str] = mapped_column(String(100), nullable=True)
-    current_street: Mapped[str] = mapped_column(String(150), nullable=True)
-    current_barangay: Mapped[str] = mapped_column(String(150), nullable=True)
-    current_city: Mapped[str] = mapped_column(String(150), nullable=True)
-    current_province: Mapped[str] = mapped_column(String(150), nullable=True)
-    current_zipcode: Mapped[str] = mapped_column(String(10), nullable=True)
+    current_house_no: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
+    current_street: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
+    current_barangay: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
+    current_city: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
+    current_province: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
+    current_zipcode: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
 
     # ---------------- PERMANENT ADDRESS ----------------
-    permanent_house_no: Mapped[str] = mapped_column(String(100), nullable=False)
-    permanent_street: Mapped[str] = mapped_column(String(150), nullable=True)
-    permanent_barangay: Mapped[str] = mapped_column(String(150), nullable=False)
-    permanent_city: Mapped[str] = mapped_column(String(150), nullable=False)
-    permanent_province: Mapped[str] = mapped_column(String(150), nullable=False)
-    permanent_zipcode: Mapped[str] = mapped_column(String(10), nullable=False)
+    permanent_house_no: Mapped[str] = mapped_column(EncryptedColumn, nullable=False)
+    permanent_street: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
+    permanent_barangay: Mapped[str] = mapped_column(EncryptedColumn, nullable=False)
+    permanent_city: Mapped[str] = mapped_column(EncryptedColumn, nullable=False)
+    permanent_province: Mapped[str] = mapped_column(EncryptedColumn, nullable=False)
+    permanent_zipcode: Mapped[str] = mapped_column(EncryptedColumn, nullable=False)
 
     # ---------------- CONTACT INFORMATION ----------------
-    phone: Mapped[str] = mapped_column(String(20), nullable=False)
-    email: Mapped[str] = mapped_column(String(100), nullable=True)
+    phone: Mapped[str] = mapped_column(EncryptedColumn, nullable=False)
+    email: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
 
     # ---------------- EMERGENCY CONTACT ----------------
-    ec_name: Mapped[str] = mapped_column(String(100), nullable=True)
-    ec_phone: Mapped[str] = mapped_column(String(20), nullable=True)
-    ec_relation: Mapped[str] = mapped_column(String(50), nullable=True)
-    ec_address: Mapped[str] = mapped_column(String(200), nullable=True)
+    ec_name: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
+    ec_phone: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
+    ec_relation: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
+    ec_address: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
 
-    profile_image: Mapped[str] = mapped_column(String(255), nullable=True)
-
+    # ---------------- FILES ----------------
+    profile_image: Mapped[str] = mapped_column(nullable=True)
 
     # ---------------- METADATA ----------------
     created_at: Mapped[datetime] = mapped_column(
@@ -105,5 +109,3 @@ class Patient(db.Model):
         if self.middlename:
             return f"{self.firstname} {self.middlename} {self.lastname}"
         return f"{self.firstname} {self.lastname}"
-
-

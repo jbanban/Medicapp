@@ -25,12 +25,12 @@
               <!-- Right Side (User Info) -->
               <div class="flex items-center space-x-3">
                 <div class="hidden sm:block text-right">
-                    <p class="text-sm font-medium text-gray-800">{{ profile.firstname }} {{ profile.lastname }}</p>
+                    <p class="text-sm font-medium text-gray-800">{{ patient.firstname }} {{ patient.lastname }}</p>
                     <p class="text-xs text-gray-500">Patient</p>
                 </div>
                 <div class="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center">
                     <span class="text-white font-medium text-sm">
-                    {{ profile.firstname[0] if profile.firstname else 'U' }}
+                    {{ patient.firstname[0] if patient.firstname else 'U' }}
                     </span>
                 </div>
               </div>
@@ -41,7 +41,7 @@
     <!-- Dashboard Content -->
     <main class="flex-1 p-6 lg:p-10">
       <!-- Greeting -->
-      <h2 class="text-2xl lg:text-3xl font-bold text-gray-800">Hello, {{ profile.firstname }} 👋</h2>
+      <h2 class="text-2xl lg:text-3xl font-bold text-gray-800">Hello, {{ patient.firstname }} 👋</h2>
       <p class="text-gray-500 mt-1">Here’s your health information at a glance.</p>
 
       <!-- Quick Info Cards -->

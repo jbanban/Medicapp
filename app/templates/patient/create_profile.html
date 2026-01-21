@@ -171,42 +171,78 @@
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">House / Unit / Lot No.</label>
                         <input type="text" name="current_house_no" placeholder="e.g. Lot 12, Unit 3"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.current_house_no }}">
+                            {% if errors and errors.current_house_no %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.current_house_no }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
 
                     <!-- Street -->
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">Street Name</label>
                         <input type="text" name="current_street" placeholder="e.g. Rizal Street"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.current_street }}">
+                            {% if errors and errors.current_street %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.current_street }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
 
                     <!-- Barangay -->
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">Barangay</label>
                         <input type="text" name="current_barangay" placeholder="e.g. Barangay San Isidro"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.current_barangay }}">
+                            {% if errors and errors.current_barangay %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.current_barangay }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
 
                     <!-- City / Municipality -->
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">City / Municipality</label>
                         <input type="text" name="current_city" placeholder="e.g. Davao City"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.current_city }}">
+                            {% if errors and errors.current_city %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.current_city }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
 
                     <!-- Province -->
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">Province</label>
                         <input type="text" name="current_province" placeholder="e.g. Davao del Sur"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.current_province }}">
+                            {% if errors and errors.current_province %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.current_province }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
 
                     <!-- Zip Code -->
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">Zip Code</label>
                         <input type="text" name="current_zipcode" placeholder="e.g. 8000"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.current_zipcode }}">
+                            {% if errors and errors.current_zipcode %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.current_zipcode }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
                 </div>
             </div>
@@ -219,37 +255,73 @@
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">House / Unit / Lot No.</label>
                         <input type="text" name="permanent_house_no"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.permanent_house_no }}">
+                            {% if errors and errors.permanent_house_no %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.permanent_house_no }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
 
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">Street Name</label>
                         <input type="text" name="permanent_street"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.permanent_street }}">
+                            {% if errors and errors.permanent_street %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.permanent_street }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
 
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">Barangay</label>
                         <input type="text" name="permanent_barangay"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.permanent_barangay }}">
+                            {% if errors and errors.permanent_barangay %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.permanent_barangay }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
 
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">City / Municipality</label>
                         <input type="text" name="permanent_city"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.permanent_city }}">
+                            {% if errors and errors.permanent_city %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.permanent_city }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
 
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">Province</label>
                         <input type="text" name="permanent_province"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.permanent_province }}">
+                            {% if errors and errors.permanent_province %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.permanent_province }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
 
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">Zip Code</label>
                         <input type="text" name="permanent_zipcode"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.permanent_zipcode }}">
+                            {% if errors and errors.permanent_zipcode %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.permanent_zipcode }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
                 </div>
             </div>
@@ -263,14 +335,26 @@
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">Mobile Number</label>
                         <input type="text" name="phone" placeholder="e.g. 09123456789"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.phone }}">
+                            {% if errors and errors.phone %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.phone }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
 
                     <!-- Email -->
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">Email Address</label>
                         <input type="email" name="email" placeholder="e.g. juan.dela.cruz@email.com"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.email }}">
+                            {% if errors and errors.email %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.email }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
                 </div>
             </div>
@@ -288,21 +372,39 @@
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">Contact Name</label>
                         <input type="text" name="ec_name" placeholder="Jane Doe"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.ec_name }}">
+                            {% if errors and errors.ec_name %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.ec_name }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
 
                     <!-- Emergency Contact Relation -->
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">Relation</label>
                         <input type="text" name="ec_relation" placeholder="Sister"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.ec_relation }}">
+                            {% if errors and errors.ec_relation %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.ec_relation }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
 
                     <!-- Emergency Contact Phone -->
                     <div>
                         <label class="block text-sm text-gray-700 mb-1">Phone Number</label>
                         <input type="text" name="ec_phone" placeholder="09129876543"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                            {{ 'border-red-500' if errors and errors.ec_phone }}">
+                            {% if errors and errors.ec_phone %}
+                                <p class="text-red-600 text-xs mt-1">
+                                    {{ errors.ec_phone }} <span class="text-red-600">*</span>
+                                </p>
+                            {% endif %}
                     </div>
                 </div>
 
@@ -310,7 +412,13 @@
                 <div>
                     <label class="block text-sm text-gray-700 mb-1 mt-4">Complete Address</label>
                     <input type="text" name="ec_address" placeholder="123 Main St, City, Province"
-                        class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
+                        class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
+                        {{ 'border-red-500' if errors and errors.ec_address }}">
+                        {% if errors and errors.ec_address %}
+                            <p class="text-red-600 text-xs mt-1">
+                                {{ errors.ec_address }} <span class="text-red-600">*</span>
+                            </p>
+                        {% endif %}
                 </div>
             </section>
 

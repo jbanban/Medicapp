@@ -2,10 +2,12 @@ from flask import render_template, request, redirect, url_for, flash, session
 from app.models.patient import Patient
 from app.models.patient_history_background import PatientHistoryBackground
 from app.models.medical_visibility import MedicalVisibility
+from app.services.file_uploads import allowed_image, validate_file_size
+from app.services.empty_to_none import empty_to_none
+from app.security.crypto import encrypt_value, decrypt_value, safe_decrypt
 from app import db
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from app.services.file_uploads import allowed_image, validate_file_size
 import os
 from . import patient_bp
 
@@ -28,12 +30,72 @@ def patient_profile():
         patient_id=patient.patient_id
     ).first()
 
+    # ---------------- DECRYPT PATIENT DATA ----------------
+    decrypted_patient = {
+        "patient_id": patient.patient_id,   # ✅ ADD THIS
+
+        "firstname": decrypt_value(patient.firstname),
+        "middlename": decrypt_value(patient.middlename),
+        "lastname": decrypt_value(patient.lastname),
+
+        "full_name": " ".join(filter(None, [
+            decrypt_value(patient.firstname),
+            decrypt_value(patient.middlename),
+            decrypt_value(patient.lastname)
+        ])),
+
+        "gender": decrypt_value(patient.gender),
+        "blood_type": decrypt_value(patient.blood_type),
+        "civil_status": decrypt_value(patient.civil_status),
+        "birthdate": patient.birthdate,
+        "age": patient.age,
+
+        # CONTACT
+        "email": decrypt_value(patient.email),
+        "phone": decrypt_value(patient.phone),
+
+        # CURRENT ADDRESS
+        "current_house_no": decrypt_value(patient.current_house_no),
+        "current_street": decrypt_value(patient.current_street),
+        "current_barangay": decrypt_value(patient.current_barangay),
+        "current_city": decrypt_value(patient.current_city),
+        "current_province": decrypt_value(patient.current_province),
+        "current_zipcode": decrypt_value(patient.current_zipcode),
+
+        # PERMANENT ADDRESS
+        "permanent_house_no": decrypt_value(patient.permanent_house_no),
+        "permanent_street": decrypt_value(patient.permanent_street),
+        "permanent_barangay": decrypt_value(patient.permanent_barangay),
+        "permanent_city": decrypt_value(patient.permanent_city),
+        "permanent_province": decrypt_value(patient.permanent_province),
+        "permanent_zipcode": decrypt_value(patient.permanent_zipcode),
+
+        # EMERGENCY CONTACT
+        "ec_name": decrypt_value(patient.ec_name),
+        "ec_relation": decrypt_value(patient.ec_relation),
+        "ec_phone": decrypt_value(patient.ec_phone),
+        "ec_address": decrypt_value(patient.ec_address),
+    }
+
+    decrypted_history = None
+    if history:
+        decrypted_history = {
+            "pastMedicalHistory": decrypt_value(history.pastMedicalHistory),
+            "beenHospitalized": decrypt_value(history.beenHospitalized),
+            "hadSurgery": decrypt_value(history.hadSurgery),
+            "allergies": decrypt_value(history.allergies),
+            "ongoingMedications": decrypt_value(history.ongoingMedications),
+            "familyHistory": decrypt_value(history.familyHistory),
+        }
+
+    
     return render_template(
         "patient/patient_profile.html",
-        patient=patient,
-        history=history,
+        patient=decrypted_patient,
+        history=decrypted_history,
         encrypted_visibility=visibility.encrypted_state if visibility else None
     )
+
 
 
 @patient_bp.route('/create_profile', methods=['GET', 'POST'])
@@ -64,8 +126,8 @@ def create_profile():
         civil_status = form.get('civil_status', '').strip()
 
         # ---------------- CURRENT ADDRESS ------------------
-        current_house_no = form.get('current_house_no', '').strip()
-        current_street = form.get('current_street', '').strip()
+        current_house_no = empty_to_none(form.get('current_house_no', '').strip())
+        current_street = empty_to_none(form.get('current_street', '').strip())
         current_barangay = form.get('current_barangay', '').strip()
         current_city = form.get('current_city', '').strip()
         current_province = form.get('current_province', '').strip()
@@ -73,8 +135,8 @@ def create_profile():
 
 
         # ----------------- PERMANENT ADDRESS ----------------
-        permanent_house_no = form.get('permanent_house_no', '').strip()
-        permanent_street = form.get('permanent_street', '').strip()
+        permanent_house_no = empty_to_none(form.get('permanent_house_no', '').strip())
+        permanent_street = empty_to_none(form.get('permanent_street', '').strip())
         permanent_barangay = form.get('permanent_barangay', '').strip()
         permanent_city = form.get('permanent_city', '').strip()
         permanent_province = form.get('permanent_province', '').strip()
@@ -176,37 +238,39 @@ def create_profile():
         # ---------------- SAVE TO DATABASE ----------------
         try:
             patient = Patient(
-                firstname=firstname,
-                middlename=middlename,
-                lastname=lastname,
-                gender=gender,
-                birthdate=birthdate,
+                firstname=encrypt_value(firstname),
+                middlename=encrypt_value(middlename),
+                lastname=encrypt_value(lastname),
+                gender=encrypt_value(gender),
+                birthdate=birthdate,  # optional: keep plaintext for queries
                 age=age,
-                blood_type=blood_type,
-                civil_status=civil_status,
-                
+                blood_type=encrypt_value(blood_type),
+                civil_status=encrypt_value(civil_status),
+
                 # CURRENT ADDRESS
-                current_house_no=current_house_no,
-                current_street=current_street,
-                current_barangay=current_barangay,
-                current_city=current_city,
-                current_province=current_province,
-                current_zipcode=current_zipcode,
+                current_house_no=encrypt_value(current_house_no),
+                current_street=encrypt_value(current_street),
+                current_barangay=encrypt_value(current_barangay),
+                current_city=encrypt_value(current_city),
+                current_province=encrypt_value(current_province),
+                current_zipcode=encrypt_value(current_zipcode),
 
                 # PERMANENT ADDRESS
-                permanent_house_no=permanent_house_no,
-                permanent_street=permanent_street,
-                permanent_barangay=permanent_barangay,
-                permanent_city=permanent_city,
-                permanent_province=permanent_province,
-                permanent_zipcode=permanent_zipcode,
+                permanent_house_no=encrypt_value(permanent_house_no),
+                permanent_street=encrypt_value(permanent_street),
+                permanent_barangay=encrypt_value(permanent_barangay),
+                permanent_city=encrypt_value(permanent_city),
+                permanent_province=encrypt_value(permanent_province),
+                permanent_zipcode=encrypt_value(permanent_zipcode),
 
-                phone=phone,
-                email=email,
-                ec_name=ec_name,
-                ec_relation=ec_relation,
-                ec_phone=ec_phone,
-                ec_address=ec_address,
+                phone=encrypt_value(phone),
+                email=encrypt_value(email),
+
+                ec_name=encrypt_value(ec_name),
+                ec_relation=encrypt_value(ec_relation),
+                ec_phone=encrypt_value(ec_phone),
+                ec_address=encrypt_value(ec_address),
+
                 account_id=user_id
             )
 
@@ -215,12 +279,12 @@ def create_profile():
 
             history = PatientHistoryBackground(
                 patient_id=patient.patient_id,
-                pastMedicalHistory=pastMedicalHistory,
-                beenHospitalized=beenHospitalized,
-                hadSurgery=hadSurgery,
-                allergies=allergies,
-                ongoingMedications=ongoingMedications,
-                familyHistory=familyHistory
+                pastMedicalHistory=encrypt_value(pastMedicalHistory),
+                beenHospitalized=encrypt_value(beenHospitalized),
+                hadSurgery=encrypt_value(hadSurgery),
+                allergies=encrypt_value(allergies),
+                ongoingMedications=encrypt_value(ongoingMedications),
+                familyHistory=encrypt_value(familyHistory),
             )
 
             db.session.add(history)
@@ -266,20 +330,19 @@ def update_profile_image(patient_id):
     ext = file.filename.rsplit(".", 1)[1].lower()
     filename = secure_filename(f"patient_{patient.patient_id}.{ext}")
 
-    upload_folder = os.path.join(
-        current_app.root_path, "static", "uploads", "patients"
-    )
+    upload_folder = os.path.join("app", "static", "uploads", "patients")
     os.makedirs(upload_folder, exist_ok=True)
 
     file_path = os.path.join(upload_folder, filename)
 
     # Remove old image if exists
     if patient.profile_image:
-        old_path = os.path.join(
-            current_app.root_path, "static", patient.profile_image
-        )
+        old_path = os.path.join("static", patient.profile_image)
         if os.path.exists(old_path):
-            os.remove(old_path)
+            try:
+                os.remove(old_path)
+            except:
+                pass
 
     file.save(file_path)
 
@@ -304,14 +367,14 @@ def update_profile_details(patient_id):
 
     try:
         # ---------------- BASIC INFO ----------------
-        patient.firstname = form.get("firstname")
-        patient.middlename = form.get("middlename")
-        patient.lastname = form.get("lastname")
-        patient.email = form.get("email")
-        patient.phone = form.get("phone")
-        patient.gender = form.get("gender")
-        patient.blood_type = form.get("blood_type")
-        patient.civil_status = form.get("civil_status")
+        patient.firstname = encrypt_value(form.get("firstname"))
+        patient.middlename = encrypt_value(form.get("middlename"))
+        patient.lastname = encrypt_value(form.get("lastname"))
+        patient.email = encrypt_value(form.get("email"))
+        patient.phone = encrypt_value(form.get("phone"))
+        patient.gender = encrypt_value(form.get("gender"))
+        patient.blood_type = encrypt_value(form.get("blood_type"))
+        patient.civil_status = encrypt_value(form.get("civil_status"))
 
         birthdate = form.get("birthdate")
         if birthdate:
@@ -323,26 +386,26 @@ def update_profile_details(patient_id):
             )
 
         # ---------------- CURRENT ADDRESS ----------------
-        patient.current_house_no = form.get("current_house_no")
-        patient.current_street = form.get("current_street")
-        patient.current_barangay = form.get("current_barangay")
-        patient.current_city = form.get("current_city")
-        patient.current_province = form.get("current_province")
-        patient.current_zipcode = form.get("current_zipcode")
+        patient.current_house_no = encrypt_value(form.get("current_house_no"))
+        patient.current_street = encrypt_value(form.get("current_street"))
+        patient.current_barangay = encrypt_value(form.get("current_barangay"))
+        patient.current_city = encrypt_value(form.get("current_city"))
+        patient.current_province = encrypt_value(form.get("current_province"))
+        patient.current_zipcode = encrypt_value(form.get("current_zipcode"))
 
         # ---------------- PERMANENT ADDRESS ----------------
-        patient.permanent_house_no = form.get("permanent_house_no")
-        patient.permanent_street = form.get("permanent_street")
-        patient.permanent_barangay = form.get("permanent_barangay")
-        patient.permanent_city = form.get("permanent_city")
-        patient.permanent_province = form.get("permanent_province")
-        patient.permanent_zipcode = form.get("permanent_zipcode")
+        patient.permanent_house_no = encrypt_value(form.get("permanent_house_no"))
+        patient.permanent_street = encrypt_value(form.get("permanent_street"))
+        patient.permanent_barangay = encrypt_value(form.get("permanent_barangay"))
+        patient.permanent_city = encrypt_value(form.get("permanent_city"))
+        patient.permanent_province = encrypt_value(form.get("permanent_province"))
+        patient.permanent_zipcode = encrypt_value(form.get("permanent_zipcode"))
 
         # ---------------- EMERGENCY CONTACT ----------------
-        patient.ec_name = form.get("ec_name")
-        patient.ec_relation = form.get("ec_relation")
-        patient.ec_phone = form.get("ec_phone")
-        patient.ec_address = form.get("ec_address")
+        patient.ec_name = encrypt_value(form.get("ec_name"))
+        patient.ec_relation = encrypt_value(form.get("ec_relation"))
+        patient.ec_phone = encrypt_value(form.get("ec_phone"))
+        patient.ec_address = encrypt_value(form.get("ec_address"))
 
         db.session.commit()
         flash("Profile details updated successfully.", "success")
@@ -353,3 +416,4 @@ def update_profile_details(patient_id):
         print("PROFILE UPDATE ERROR:", e)
 
     return redirect(url_for("patient.patient_profile"))
+

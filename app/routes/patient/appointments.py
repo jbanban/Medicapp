@@ -2,6 +2,7 @@ from flask import render_template, session, redirect, url_for, request, flash
 from app.models.patient import Patient
 from app.models.appointment import Appointment
 from app.models.doctor_schedule import Doctor_Schedule
+from app.security.crypto import decrypt_value
 from app import db
 from . import patient_bp
 
@@ -12,12 +13,25 @@ def patient_appointment():
         return redirect(url_for('unauthorized'))
     user_id = session.get('user_id')
 
-    profile = Patient.query.filter_by(account_id=user_id).first()
     appointments = Appointment.query.filter_by(patient_id=session.get('user_id')).all()
+    profile = Patient.query.filter_by(account_id=user_id).first()
+    decrypted_patient = {
+        "patient_id": patient.patient_id,
+
+        "firstname": decrypt_value(patient.firstname),
+        "middlename": decrypt_value(patient.middlename),
+        "lastname": decrypt_value(patient.lastname),
+
+        "full_name": " ".join(filter(None, [
+            decrypt_value(patient.firstname),
+            decrypt_value(patient.middlename),
+            decrypt_value(patient.lastname)
+        ])),
+    }
 
     return render_template('patient/myAppointments.html', 
                            appointments=appointments,
-                           profile=profile
+                           patient=decrypted_patient
                            )
 
 @patient_bp.route('/doctors/view_available/time_for_<int:doctor_id>')

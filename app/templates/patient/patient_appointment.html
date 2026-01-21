@@ -23,12 +23,12 @@
                 <!-- Right -->
                 <div class="flex items-center space-x-3">
                     <div class="hidden sm:block text-right">
-                        <p class="text-sm font-medium text-gray-800">{{ profile.firstname }} {{ profile.lastname }}</p>
+                        <p class="text-sm font-medium text-gray-800">{{ patient.firstname }} {{ patient.lastname }}</p>
                         <p class="text-xs text-gray-500">Patient</p>
                     </div>
                     <div class="w-9 h-9 bg-blue-500 rounded-full flex items-center justify-center">
                         <span class="text-white font-medium text-sm">
-                        {{ profile.firstname[0] if profile.firstname else 'U' }}
+                        {{ patient.firstname[0] if patient.firstname else 'U' }}
                         </span>
                     </div>
                 </div>
