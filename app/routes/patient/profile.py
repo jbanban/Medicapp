@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash, session
+from flask import render_template, request, redirect, url_for, flash, session, current_app
 from app.models.patient import Patient
 from app.models.patient_history_background import PatientHistoryBackground
 from app.models.medical_visibility import MedicalVisibility
@@ -40,9 +40,11 @@ def patient_profile():
 
         "full_name": " ".join(filter(None, [
             decrypt_value(patient.firstname),
-            decrypt_value(patient.middlename),
+            safe_decrypt(patient.middlename),
             decrypt_value(patient.lastname)
         ])),
+        
+        "profile_image": patient.profile_image,
 
         "gender": decrypt_value(patient.gender),
         "blood_type": safe_decrypt(patient.blood_type),
@@ -330,19 +332,20 @@ def update_profile_image(patient_id):
     ext = file.filename.rsplit(".", 1)[1].lower()
     filename = secure_filename(f"patient_{patient.patient_id}.{ext}")
 
-    upload_folder = os.path.join("app", "static", "uploads", "patients")
+    upload_folder = os.path.join("static", "uploads", "patients")
     os.makedirs(upload_folder, exist_ok=True)
 
     file_path = os.path.join(upload_folder, filename)
 
     # Remove old image if exists
     if patient.profile_image:
-        old_path = os.path.join("static", patient.profile_image)
+        old_path = os.path.join(
+            current_app.root_path,
+            "static",
+            patient.profile_image
+        )
         if os.path.exists(old_path):
-            try:
-                os.remove(old_path)
-            except:
-                pass
+            os.remove(old_path)
 
     file.save(file_path)
 
@@ -416,4 +419,5 @@ def update_profile_details(patient_id):
         print("PROFILE UPDATE ERROR:", e)
 
     return redirect(url_for("patient.patient_profile"))
+
 

@@ -12,6 +12,8 @@ class EncryptedColumn(TypeDecorator):
         """Encrypt before storing in DB"""
         if value is None:
             return value
+        if isinstance(value, str) and not value.strip():
+            return None
         return encrypt_value(value)
 
     def process_result_value(self, value, dialect):
@@ -22,10 +24,11 @@ class EncryptedColumn(TypeDecorator):
         try:
             plaintext = decrypt_value(value)
 
-            # 🔍 Audit log
-            audit_logger.info(
-                "Decryption event | column=EncryptedColumn"
-            )
+            if audit_logger:
+                audit_logger.info(
+                    "Decryption event",
+                    extra={"column": "EncryptedColumn"}
+                )
 
             return plaintext
 

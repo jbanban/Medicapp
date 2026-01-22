@@ -1,7 +1,7 @@
 from flask import render_template, session, redirect, url_for, flash
 from app.models.patient import Patient
 from app.models.doctor import Doctor
-from app.security.crypto import decrypt_value
+from app.security.crypto import decrypt_value, safe_decrypt
 from . import patient_bp
 
 @patient_bp.route('/available_doctors')
@@ -16,12 +16,12 @@ def available_doctors():
         "patient_id": patient.patient_id,
 
         "firstname": decrypt_value(patient.firstname),
-        "middlename": decrypt_value(patient.middlename),
+        "middlename": safe_decrypt(patient.middlename),
         "lastname": decrypt_value(patient.lastname),
 
         "full_name": " ".join(filter(None, [
             decrypt_value(patient.firstname),
-            decrypt_value(patient.middlename),
+            safe_decrypt(patient.middlename),
             decrypt_value(patient.lastname)
         ])),
     }

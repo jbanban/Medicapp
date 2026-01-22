@@ -18,12 +18,12 @@ class PatientHistoryBackground(db.Model):
     )
 
     # ---------------- MEDICAL HISTORY (ENCRYPTED) ----------------
-    pastMedicalHistory: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
-    beenHospitalized: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
-    hadSurgery: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
-    allergies: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
-    ongoingMedications: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
-    familyHistory: Mapped[str] = mapped_column(EncryptedColumn, nullable=True)
+    pastMedicalHistory: Mapped[str] = mapped_column(EncryptedColumn(), nullable=True)
+    beenHospitalized: Mapped[str] = mapped_column(EncryptedColumn(), nullable=True)
+    hadSurgery: Mapped[str] = mapped_column(EncryptedColumn(), nullable=True)
+    allergies: Mapped[str] = mapped_column(EncryptedColumn(), nullable=True)
+    ongoingMedications: Mapped[str] = mapped_column(EncryptedColumn(), nullable=True)
+    familyHistory: Mapped[str] = mapped_column(EncryptedColumn(), nullable=True)
 
     # ---------------- METADATA ----------------
     created_at: Mapped[datetime] = mapped_column(

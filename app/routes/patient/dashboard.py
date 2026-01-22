@@ -3,7 +3,7 @@ from flask import render_template, session, redirect, url_for, flash
 from app.models.patient import Patient
 from app.models.appointment import Appointment
 from app.models.account import Account
-from app.security.crypto import decrypt_value
+from app.security.crypto import decrypt_value, safe_decrypt
 from . import patient_bp
 
 
@@ -22,12 +22,12 @@ def patient_dashboard():
         "patient_id": patient.patient_id,   # ✅ ADD THIS
 
         "firstname": decrypt_value(patient.firstname),
-        "middlename": decrypt_value(patient.middlename),
+        "middlename": safe_decrypt(patient.middlename),
         "lastname": decrypt_value(patient.lastname),
 
         "full_name": " ".join(filter(None, [
             decrypt_value(patient.firstname),
-            decrypt_value(patient.middlename),
+            safe_decrypt(patient.middlename),
             decrypt_value(patient.lastname)
         ])),
     }

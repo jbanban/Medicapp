@@ -1,6 +1,6 @@
 {% extends 'base/layout.html' %}
 
-{% block title %}Update Doctor Profile{% endblock %}
+{% block title %}Create Doctor Profile{% endblock %}
 
 {% block content %}
 <div class="w-full bg-gray-50 px-6 py-8">
@@ -23,7 +23,7 @@
         <div class="px-6 py-6">
           
           {% if selected_account %}
-          <h2 class="text-xl font-semibold mb-4">Create Profile for Dr. {{ selected_account.email }}</h2>
+          <h2 class="text-xl font-semibold mb-4">Create Profile for Dr. {{ selected_account.username }}</h2>
           <hr class="my-4 border-gray-200">
           {% endif %}
 
