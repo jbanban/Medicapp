@@ -15,7 +15,7 @@
                 w-80 md:w-72 lg:w-80
                 bg-white border-r
                 flex flex-col
-                overflow-hidden
+                overflow-y-hidden
                 "
                 >
 
@@ -42,11 +42,9 @@
                                     <p class="text-xs text-gray-500">How long should each appointment last?</p>
                                 </div>
                                 <select id="duration" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    <option value="15">15 minutes</option>
                                     <option value="30">30 minutes</option>
                                     <option value="45">45 minutes</option>
                                     <option value="60" selected>1 hour</option>
-                                    <option value="90">1.5 hours</option>
                                     <option value="120">2 hours</option>
                                 </select>
                             </div>
@@ -79,8 +77,44 @@
 
             <!-- Footer -->
             <div class="px-6 py-5 border-t border-gray-200 flex justify-end">
-                <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 md:px-8 py-2.5 rounded-md font-medium text-sm md:text-base">
-                    Next
+                <button
+                    id="saveBtn"
+                    onclick="saveSlots()"
+                    class="
+                        bg-blue-600 hover:bg-blue-700
+                        disabled:bg-blue-400 disabled:cursor-not-allowed
+                        text-white
+                        px-6 md:px-8 py-2.5
+                        rounded-md
+                        font-medium text-sm md:text-base
+                        inline-flex items-center justify-center gap-2
+                        transition
+                    "
+                >
+                    <span id="saveBtnText">Next</span>
+
+                    <!-- Spinner (hidden by default) -->
+                    <svg
+                        id="saveSpinner"
+                        class="hidden w-5 h-5 animate-spin text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                    >
+                        <circle
+                            class="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            stroke-width="4"
+                        ></circle>
+                        <path
+                            class="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                        ></path>
+                    </svg>
                 </button>
             </div>
         </aside>
@@ -106,89 +140,158 @@
                 <!-- Time Grid -->
                 <div
                     id="timeGrid"
-                    class="divide-y divide-gray-200"
+                    class="divide-y divide-gray-200 relative"
                 >
                     <!-- rendered by JS -->
                 </div>
 
             </div>
         </main>
+        <div id="editModal"
+            class="fixed inset-0 bg-black/40 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg w-80 p-4 space-y-3">
+            <h3 class="text-lg font-semibold">Edit Schedule</h3>
 
-    </div>
+            <div class="text-sm text-gray-600" id="editDate"></div>
 
-    <!-- Booking Modal -->
-    <div id="bookingModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <!-- Modal content remains mostly the same, just adjusted padding -->
-            <div class="px-5 py-4 md:px-6 md:py-5 border-b border-gray-200">
-                <h3 class="text-xl md:text-2xl font-semibold">Book Appointment</h3>
+            <div class="flex gap-2">
+            <input id="editStart" type="time"
+                    class="flex-1 border rounded px-2 py-1">
+            <input id="editEnd" type="time"
+                    class="flex-1 border rounded px-2 py-1">
             </div>
-            <div class="p-5 md:p-6 space-y-5">
-                <div class="px-6 py-4 space-y-4">
-                <!-- Appointment Details -->
-                <div class="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                    <div>
-                        <div id="modalDate" class="font-medium text-gray-900"></div>
-                        <div id="modalTime" class="text-sm text-gray-600 flex items-center gap-1">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <span></span>
-                        </div>
-                        <div id="modalTitle" class="text-sm text-gray-700 mt-1 font-medium"></div>
-                    </div>
-                </div>
 
-                <!-- Booking Form -->
-                <form id="bookingForm" class="space-y-4">
-                    <div class="space-y-2">
-                        <label for="userName" class="text-sm font-medium text-gray-700">Name *</label>
-                        <input 
-                            type="text" 
-                            id="userName" 
-                            required 
-                            placeholder="Enter your name"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
+            <div class="flex justify-between pt-3">
+            <button
+                onclick="deleteSchedule()"
+                class="text-red-600 text-sm hover:underline">
+                Delete
+            </button>
 
-                    <div class="space-y-2">
-                        <label for="userEmail" class="text-sm font-medium text-gray-700">Email *</label>
-                        <input 
-                            type="email" 
-                            id="userEmail" 
-                            required 
-                            placeholder="Enter your email"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    <div class="space-y-2">
-                        <label for="userNotes" class="text-sm font-medium text-gray-700">Additional Notes</label>
-                        <textarea 
-                            id="userNotes" 
-                            rows="4" 
-                            placeholder="Add any additional information..."
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        ></textarea>
-                    </div>
-
-                    <div class="flex gap-2 justify-end pt-4">
-                        <button type="button" id="cancelBooking" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">Confirm Booking</button>
-                    </div>
-                </form>
+            <div class="space-x-2">
+                <button onclick="closeEditModal()"
+                        class="px-3 py-1 text-sm">
+                Cancel
+                </button>
+                <button onclick="saveScheduleEdit()"
+                        class="bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                Save
+                </button>
+            </div>
             </div>
         </div>
+        </div>
+
     </div>
+
 </div>
+<div
+  id="scheduleTooltip"
+  class="fixed z-50 hidden bg-gray-900 text-white text-xs rounded px-3 py-2 shadow-lg pointer-events-none"
+></div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
+const tooltip = document.getElementById("scheduleTooltip");
+
+function showTooltip(e, html) {
+    tooltip.innerHTML = html;
+    tooltip.style.left = e.pageX + 12 + "px";
+    tooltip.style.top = e.pageY + 12 + "px";
+    tooltip.classList.remove("hidden");
+}
+
+function hideTooltip() {
+    tooltip.classList.add("hidden");
+}
+
+function getScheduleForTime(date, time) {
+    const dayNames = [
+        'sunday','monday','tuesday',
+        'wednesday','thursday','friday','saturday'
+    ];
+
+    const dayKey = dayNames[date.getDay()];
+    const schedules = state.savedSchedules[dayKey] || [];
+
+    const [h, m] = time.split(':').map(Number);
+    const t = h * 60 + m;
+
+    return schedules.find(s => {
+        const [sh, sm] = s.start.split(':').map(Number);
+        const [eh, em] = s.end.split(':').map(Number);
+        return t >= sh * 60 + sm && t < eh * 60 + em;
+    });
+}
+
+let activeSchedule = null;
+
+function openEditModal(schedule) {
+    activeSchedule = schedule;
+
+    document.getElementById("editDate").textContent = schedule.date;
+    document.getElementById("editStart").value = schedule.start;
+    document.getElementById("editEnd").value = schedule.end;
+
+    document.getElementById("editModal").classList.remove("hidden");
+}
+
+function closeEditModal() {
+    activeSchedule = null;
+    document.getElementById("editModal").classList.add("hidden");
+}
+
+async function saveScheduleEdit() {
+    if (!activeSchedule) return;
+
+    const start = document.getElementById("editStart").value;
+    const end = document.getElementById("editEnd").value;
+
+    await fetch(`/api/schedules/${activeSchedule.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ start, end })
+    });
+
+    closeEditModal();
+    await loadSchedulesForWeek();
+    renderSchedCalendar();
+}
+
+async function deleteSchedule() {
+    if (!activeSchedule) return;
+
+    if (!confirm("Delete this schedule?")) return;
+
+    await fetch(`/api/schedules/${activeSchedule.id}`, {
+        method: "DELETE"
+    });
+
+    closeEditModal();
+    await loadSchedulesForWeek();
+    renderSchedCalendar();
+}
+
+function setSavingState(isSaving) {
+    const btn = document.getElementById("saveBtn");
+    const text = document.getElementById("saveBtnText");
+    const spinner = document.getElementById("saveSpinner");
+
+    if (!btn || !text || !spinner) return;
+
+    if (isSaving) {
+        btn.disabled = true;
+        text.textContent = "Saving...";
+        spinner.classList.remove("hidden");
+    } else {
+        btn.disabled = false;
+        text.textContent = "Next";
+        spinner.classList.add("hidden");
+    }
+}
+
 function getDateFromURL() {
     const params = new URLSearchParams(window.location.search);
     const dateStr = params.get("date");
@@ -198,8 +301,6 @@ function getDateFromURL() {
 // State Management
 const state = {
     currentWeekStart: null,
-    selectedDate: null,
-    selectedTime: null,
     duration: 60,
     title: '',
     availability: {
@@ -210,8 +311,10 @@ const state = {
         thursday: { start: '09:00', end: '17:00', available: true },
         friday: { start: '09:00', end: '17:00', available: true },
         saturday: { available: false }
-    }
+    },
+    savedSchedules: {}
 };
+
 
 const DAYS = [
     { key: 'sunday', label: 'Sun' },
@@ -271,28 +374,25 @@ function getDayAvailability(date) {
 
 function isTimeSlotAvailable(date, time) {
     const dayAvail = getDayAvailability(date);
-    if (!dayAvail?.available) return false;
 
-    // Check if slot is already booked
-    const dateStr = date.toISOString().split('T')[0];
-    if (window.bookedAppointments) {
-        const isBooked = window.bookedAppointments.some(apt => 
-            apt.date === dateStr && apt.time === time
-        );
-        if (isBooked) return false;
-    }
+    if (!dayAvail || !dayAvail.available) return false;
+    if (!dayAvail.start || !dayAvail.end) return false;
 
     const [hour, minute] = time.split(':').map(Number);
     const timeInMinutes = hour * 60 + minute;
 
-    const [startHour, startMinute] = (dayAvail.start || '09:00').split(':').map(Number);
-    const startInMinutes = startHour * 60 + startMinute;
+    const [startHour, startMinute] = dayAvail.start.split(':').map(Number);
+    const [endHour, endMinute] = dayAvail.end.split(':').map(Number);
 
-    const [endHour, endMinute] = (dayAvail.end || '17:00').split(':').map(Number);
+    const startInMinutes = startHour * 60 + startMinute;
     const endInMinutes = endHour * 60 + endMinute;
 
-    return timeInMinutes >= startInMinutes && timeInMinutes + state.duration <= endInMinutes;
+    return (
+        timeInMinutes >= startInMinutes &&
+        timeInMinutes + state.duration <= endInMinutes
+    );
 }
+
 
 // Render Functions
 function renderAvailabilitySchedule() {
@@ -392,11 +492,38 @@ function scrollToAvailability(startTime, endTime) {
     });
 }
 
+function isTimeBooked(date, time) {
+    const dayNames = [
+        'sunday','monday','tuesday',
+        'wednesday','thursday','friday','saturday'
+    ];
+
+    const dayKey = dayNames[date.getDay()];
+    const schedules = state.savedSchedules[dayKey] || [];
+
+    const [h, m] = time.split(':').map(Number);
+    const t = h * 60 + m;
+    const duration = state.duration;
+
+    return schedules.some(s => {
+        const [sh, sm] = s.start.split(':').map(Number);
+        const [eh, em] = s.end.split(':').map(Number);
+
+        const start = sh * 60 + sm;
+        const end = eh * 60 + em;
+
+        return (
+            t < end &&
+            t + duration > start   // overlap check
+        );
+    });
+}
+
 
 function renderSchedCalendar() {
     const today = new Date();
 
-    // ===== SAFE HEADER TITLE UPDATE =====
+    // ===== HEADER TITLE =====
     const monthYearEl = document.getElementById('monthYear');
     if (monthYearEl && state.currentWeekStart) {
         monthYearEl.textContent = formatDate(
@@ -405,13 +532,15 @@ function renderSchedCalendar() {
         );
     }
 
-    // ===== REQUIRED DOM GUARDS =====
     const headersContainer = document.getElementById('daySchedHeaders');
     const timeGrid = document.getElementById('timeGrid');
 
-    if (!headersContainer || !timeGrid) {
-        console.warn('Scheduler DOM not ready yet');
-        return;
+    if (!headersContainer || !timeGrid) return;
+
+    // ===== BUILD WEEK DAYS =====
+    const weekDays = [];
+    for (let i = 0; i < 7; i++) {
+        weekDays.push(addDays(state.currentWeekStart, i));
     }
 
     // ===== DAY HEADERS =====
@@ -421,27 +550,35 @@ function renderSchedCalendar() {
         </div>
     `;
 
-    const weekDays = [];
-    for (let i = 0; i < 7; i++) {
-        weekDays.push(addDays(state.currentWeekStart, i));
-    }
-
     weekDays.forEach(day => {
         const isToday = isSameDay(day, today);
+        const dayAvail = getDayAvailability(day);
+        const hasSchedule = dayAvail?.available === true;
+
         const header = document.createElement('div');
-        header.className = 'border-r border-gray-200 p-4 text-center';
+        header.className = `
+            border-r border-gray-200 p-4 text-center
+            ${hasSchedule ? 'bg-blue-50' : ''}
+        `;
+
         header.innerHTML = `
+            ${hasSchedule ? `<span class="day-dot"></span>` : ''}
+
             <div class="text-xs text-gray-600 uppercase">
                 ${formatDate(day, 'EEE')}
             </div>
+
             <div class="${
                 isToday
-                    ? 'bg-blue-600 text-white rounded-full w-12 h-12 flex items-center justify-center mx-auto text-2xl font-normal mt-1'
-                    : 'text-2xl font-normal text-gray-900 mt-1'
-            }">
+                    ? 'bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center mx-auto mt-1'
+                    : hasSchedule
+                        ? 'text-blue-700 font-semibold mt-1'
+                        : 'text-gray-900 mt-1'
+            } text-2xl">
                 ${day.getDate()}
             </div>
         `;
+
         headersContainer.appendChild(header);
     });
 
@@ -449,18 +586,13 @@ function renderSchedCalendar() {
     timeGrid.innerHTML = '';
 
     const timeSlots = [];
-    const startMinutes = 0;
-    const endMinutes = 23 * 60;
-
-    for (let minutes = startMinutes; minutes <= endMinutes; minutes += 30) {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-
-    timeSlots.push(
-        `${hours.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}`
-    );
+    for (let minutes = 0; minutes <= 23 * 60; minutes += 30) {
+        const h = Math.floor(minutes / 60);
+        const m = minutes % 60;
+        timeSlots.push(
+            `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
+        );
     }
-
 
     timeSlots.forEach(time => {
         const row = document.createElement('div');
@@ -468,38 +600,51 @@ function renderSchedCalendar() {
         row.className = 'grid border-b border-gray-200';
         row.style.gridTemplateColumns = '80px repeat(7, minmax(0, 1fr))';
 
-        const timeLabel = time.endsWith(':00') ? time : '';
-
         row.innerHTML = `
             <div class="w-20 border-r border-gray-200 p-2 text-right text-xs text-gray-500">
-                ${timeLabel}
+                ${time.endsWith(':00') ? time : ''}
             </div>
         `;
 
         weekDays.forEach(day => {
             const isAvailable = isTimeSlotAvailable(day, time);
+            const isBooked = isTimeBooked(day, time);
 
             const cell = document.createElement('div');
             cell.className = `
-                border-r border-gray-200 min-h-[32px] relative  
-                ${isAvailable ? 'cursor-pointer hover:bg-blue-50' : ''}
+                border-r border-gray-200 min-h-[32px] relative
+                ${isBooked ? 'bg-red-100' : isAvailable ? 'bg-blue-100' : ''}
             `;
 
-            if (isAvailable) {
-                cell.onclick = () => openBookingModal(day, time);
-                cell.innerHTML = `
-                    <div class="absolute inset-0 bg-blue-100 border-2 border-blue-300 m-0.5 rounded">
-                        ${
-                            time.endsWith(':00')
-                                ? `<div class="p-1">
-                                    <div class="h-4 w-4 bg-white rounded-sm border border-blue-400 flex items-center justify-center">
-                                        <div class="h-2 w-2 bg-blue-500 rounded-sm"></div>
-                                    </div>
-                                </div>`
-                                : ''
-                        }
-                    </div>
-                `;
+            if (isBooked) {
+                const schedule = getScheduleForTime(day, time);
+                const block = document.createElement('div');
+
+                block.className = 'absolute inset-0 bg-red-300 rounded opacity-80 cursor-pointer';
+                block.addEventListener('mouseenter', e => {
+                    showTooltip(e, `
+                        <div class="font-semibold">
+                            ${formatDate(day, 'EEEE, MMMM d, yyyy')}
+                        </div>
+                        <div>${schedule.start} – ${schedule.end}</div>
+                    `);
+                });
+                block.addEventListener('mousemove', showTooltip);
+                block.addEventListener('mouseleave', hideTooltip);
+
+                block.addEventListener('click', () => {
+                    openEditModal(schedule);
+                });
+                block.title = 'Already scheduled';
+                cell.appendChild(block);
+            }
+
+            if (isAvailable && !isBooked) {
+                const block = document.createElement('div');
+                block.className = 'absolute inset-0 bg-blue-200 rounded';
+                block.style.height = `${state.duration / 30 * 32}px`;
+                block.style.zIndex = 5;
+                cell.appendChild(block);
             }
 
             row.appendChild(cell);
@@ -507,13 +652,28 @@ function renderSchedCalendar() {
 
         timeGrid.appendChild(row);
     });
+
     scrollToAvailability("09:00", "17:00");
+}
+
+
+async function loadSchedulesForWeek() {
+    const weekStart = formatDateYMD(state.currentWeekStart);
+
+    const res = await fetch(`/api/schedules?week_start=${weekStart}`);
+    if (!res.ok) return;
+
+    const data = await res.json();
+    if (data.success) {
+        state.savedSchedules = data.schedules || {};
+    }
 }
 
 
 async function initScheduler() {
     try {
         await loadAvailability();
+        await loadSchedulesForWeek();
         renderAvailabilitySchedule();
         renderSchedCalendar();
     } catch (err) {
@@ -565,57 +725,75 @@ function toggleDay(dayKey) {
     renderSchedCalendar();
 }
 
-function openBookingModal(date, time) {
-    state.selectedDate = date;
-    state.selectedTime = time;
-
-    const [hour, minute] = time.split(':').map(Number);
-    const totalMinutes = hour * 60 + minute + state.duration;
-    const endHour = Math.floor(totalMinutes / 60);
-    const endMinute = totalMinutes % 60;
-    const endTime = `${endHour}:${endMinute.toString().padStart(2, '0')}`;
-
-    document.getElementById('modalDate').textContent = formatDate(date, 'EEEE, MMMM d, yyyy');
-    document.getElementById('modalTime').querySelector('span').textContent = `${time} - ${endTime} (${state.duration} min)`;
-    document.getElementById('modalTitle').textContent = state.title || '';
-    document.getElementById('modalTitle').style.display = state.title ? 'block' : 'none';
-
-    document.getElementById('bookingModal').classList.remove('hidden');
+function formatDateYMD(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
 }
 
-function closeBookingModal() {
-    document.getElementById('bookingModal').classList.add('hidden');
-    document.getElementById('bookingForm').reset();
-    state.selectedDate = null;
-    state.selectedTime = null;
-}
+async function saveSlots() {
+    setSavingState(true);
 
-async function loadBookedAppointments() {
     try {
-        const res = await fetch("/api/appointments");
+        await saveAvailability();
 
-        if (!res.ok) {
-            console.error("Appointments API failed:", res.status);
+        const weekStart = state.currentWeekStart;
+        const dayMap = [
+            'sunday', 'monday', 'tuesday',
+            'wednesday', 'thursday', 'friday', 'saturday'
+        ];
+
+        const requests = [];
+
+        for (let i = 0; i < 7; i++) {
+            const date = addDays(weekStart, i);
+            const dayKey = dayMap[date.getDay()];
+            const avail = state.availability[dayKey];
+
+            if (!avail || !avail.available) continue;
+
+            requests.push(
+                fetch("/doctor/scheduler", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        date: formatDateYMD(date),
+                        start_time: avail.start,
+                        end_time: avail.end,
+                        duration: state.duration
+                    })
+                }).then(res => res.json())
+            );
+        }
+
+        if (!requests.length) {
+            alert("No available days in this week.");
+            setSavingState(false);
             return;
         }
 
-        const text = await res.text();
+        const results = await Promise.all(requests);
 
-        if (!text.startsWith("{")) {
-            console.error("Appointments API returned HTML:", text);
-            return;
+        const created = results.filter(r => r.created === true).length;
+        const skipped = results.filter(r => r.skipped === true).length;
+
+        if (created && skipped) {
+            alert(`Saved availability. ${created} created, ${skipped} already existed.`);
+        } else if (created) {
+            alert("Weekly availability saved.");
+        } else {
+            alert("All slots already exist.");
         }
 
-        const data = JSON.parse(text);
+        window.location.href = "/doctor/doctors_schedule";
 
-        if (data.success) {
-            window.bookedAppointments = data.appointments;
-        }
     } catch (err) {
-        console.error("Error loading appointments:", err);
+        console.error(err);
+        alert("Something went wrong while saving. Please try again.");
+        setSavingState(false);
     }
 }
-
 
 
 // Initialization
@@ -624,7 +802,6 @@ async function bootScheduler() {
     state.currentWeekStart = getStartOfWeek(selectedDate);
 
     await initScheduler();
-    await loadBookedAppointments();
 
     // ===== Event Listeners =====
     const durationEl = document.getElementById('duration');
@@ -642,56 +819,6 @@ async function bootScheduler() {
         });
     }
 
-    const cancelBtn = document.getElementById('cancelBooking');
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', closeBookingModal);
-    }
-
-    const bookingForm = document.getElementById('bookingForm');
-    if (bookingForm) {
-        bookingForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const submitBtn = bookingForm.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Booking...';
-
-            const bookingData = {
-                date: state.selectedDate.toISOString().split('T')[0],
-                time: state.selectedTime,
-                duration: state.duration,
-                title: state.title,
-                name: document.getElementById('userName').value,
-                email: document.getElementById('userEmail').value,
-                notes: document.getElementById('userNotes').value
-            };
-
-            try {
-                const response = await fetch('/api/appointments', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(bookingData)
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    alert('Appointment booked successfully!');
-                    await loadBookedAppointments();
-                    renderSchedCalendar();
-                    closeBookingModal();
-                } else {
-                    alert(data.message || 'Failed to book appointment');
-                }
-            } catch (error) {
-                console.error('Error booking appointment:', error);
-                alert('Failed to book appointment. Please try again.');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Confirm Booking';
-            }
-        });
-    }
 }
 
 /* ===== SAFE EXECUTION ===== */

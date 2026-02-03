@@ -5,3 +5,4 @@ from .dashboard import *
 from .doctors import *
 from .patients import *
 from .reports import *
+from .misc import *

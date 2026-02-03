@@ -1,12 +1,21 @@
 from datetime import datetime, date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Integer, String, Date, Time, ForeignKey, DateTime
+from sqlalchemy import Integer, String, Date, Time, ForeignKey, DateTime, UniqueConstraint
 from app.extensions import db
 
 
 
 class Doctor_Schedule(db.Model):
     __tablename__ = "doctor_schedule"
+    __table_args__ = (
+        UniqueConstraint(
+            "doctor_id",
+            "vacant_date",
+            "start_time",
+            "end_time",
+            name="uq_doctor_slot"
+        ),
+    )
 
     doctor_schedule_id: Mapped[int] = mapped_column(
         Integer, primary_key=True, autoincrement=True
@@ -23,7 +32,8 @@ class Doctor_Schedule(db.Model):
 
     status: Mapped[str] = mapped_column(
         String(20), default="available"
-    )  # available | booked | blocked
+    )
+    
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow

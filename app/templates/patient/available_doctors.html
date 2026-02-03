@@ -71,7 +71,7 @@
                                 {{ doctor.phone }}
                             </td>
                             <td class="px-6 py-4 text-sm text-center">
-                                <a href="{{ url_for('viewAvailableTime', doctor_id=doctor.doctor_id) }}"
+                                <a href="{{ url_for('patient.viewAvailableTime', doctor_id=doctor.doctor_id) }}"
                                 class="px-4 py-2 rounded-lg bg-blue-600 text-white font-medium 
                                         hover:bg-blue-700 hover:shadow transition">
                                     View Schedule

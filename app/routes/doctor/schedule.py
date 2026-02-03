@@ -1,12 +1,13 @@
-from flask import render_template
+from flask import render_template, jsonify
 from flask import session, redirect, url_for, flash, request
 from app.models.doctor import Doctor
 from app.models.doctor_schedule import Doctor_Schedule
+from app.services.generateSaveSlot import generate_and_save_slots
 from app import db
 from . import doctor_bp
 
 
-@doctor_bp.route('/schedule', methods=['GET', 'POST'])
+@doctor_bp.route('/doctors_schedule', methods=['GET', 'POST'])
 def doctors_schedule():
     if 'role' not in session or session['role'] != 'doctor':
         return redirect(url_for('misc.unauthorized'))
@@ -20,29 +21,7 @@ def doctors_schedule():
         flash("Please complete your doctor profile first.", "warning")
         return redirect(url_for('misc.unauthorized'))
 
-    if request.method == 'POST':
-        selected_date = request.form['preferred_date']
-        start_time = request.form['start_time']
-        end_time = request.form['end_time']
-        duration = int(request.form['duration'])
-
-        slots_created = generate_and_save_slots(
-            doctor_id=doctor.doctor_id,
-            selected_date=selected_date,
-            start_time=start_time,
-            end_time=end_time,
-            duration_minutes=duration
-        )
-
-        flash(f"{slots_created} slots successfully created.", "success")
-        return redirect(url_for('doctor.doctors_schedule'))
-
-    schedules = Doctor_Schedule.query.filter_by(
-        doctor_id=doctor.doctor_id
-    ).order_by(
-        Doctor_Schedule.date,
-        Doctor_Schedule.start_time
-    ).all()
+    schedules = Doctor_Schedule.query.filter_by(doctor_id=user_id).first()
 
     return render_template(
         'doctor/calendar.html',
@@ -50,23 +29,39 @@ def doctors_schedule():
         doctor=doctor
     )
 
-
-@doctor_bp.route('/scheduler')
+@doctor_bp.route('/scheduler', methods=['POST'])
 def scheduler():
     if 'role' not in session or session['role'] != 'doctor':
-        return redirect(url_for('misc.unauthorized'))
+        return jsonify(success=False, error="Unauthorized"), 403
 
-    user_id = session.get('user_id')
+    doctor = Doctor.query.filter_by(
+        account_id=session.get('user_id')
+    ).first()
 
-    doctor = Doctor.query.filter_by(account_id=user_id).first_or_404()
+    if not doctor:
+        return jsonify(success=False, error="Doctor not found"), 404
 
-    selected_date = request.args.get('date')
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify(success=False, error="Invalid JSON"), 400
 
-    return render_template(
-        'doctor/scheduler.html',
-        doctor=doctor,
-        selected_date=selected_date
+    try:
+        slots_created = generate_and_save_slots(
+            doctor_id=doctor.doctor_id,
+            selected_date=data['date'],
+            start_time=data['start_time'],
+            end_time=data['end_time'],
+            duration_minutes=int(data['duration'])
+        )
+    except Exception as e:
+        return jsonify(success=False, error=str(e)), 500
+
+    return jsonify(
+        success=True,
+        slots_created=slots_created
     )
+
+
 
 
 @doctor_bp.route('/delete_schedule/<int:doctor_schedule_id>', methods=['POST'])

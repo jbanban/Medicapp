@@ -1,7 +1,9 @@
 from flask import Flask
 from .config import Config
-from .extensions import db, migrate
+from .extensions import db, migrate, cache
 from .routes import register_blueprints
+
+
 
 def create_app():
     app = Flask(
@@ -13,10 +15,8 @@ def create_app():
 
     db.init_app(app)
     migrate.init_app(app, db)
+    cache.init_app(app)
 
     register_blueprints(app)
-
-    with app.app_context():
-        db.create_all()
 
     return app

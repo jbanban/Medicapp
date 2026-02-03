@@ -5,6 +5,7 @@
 <div class="w-full flex bg-gray-100">
 
     {% include 'admin/admin_sidebar.html' %}
+    {% include 'base/notification.html' %}
 
     <!-- MAIN CONTENT -->
     <div class="flex-1 p-8">
@@ -34,7 +35,7 @@
                     {{ 'Edit Doctor Account' if edit_account else 'Create Doctor Account' }}
                 </h2>
 
-                <form method="POST" class="space-y-4">
+                <form id="accountForm" method="POST" class="space-y-4">
 
                 {% if edit_account %}
                     <input type="hidden" name="account_id" value="{{ edit_account.account_id }}">
@@ -60,7 +61,8 @@
                 </div>
 
                 <button type="submit"
-                    class="w-full py-2 bg-blue-600 text-white font-semibold rounded-xl shadow hover:bg-blue-700 transition">
+                    class="w-full py-2 bg-blue-600 text-white font-semibold rounded-xl shadow hover:bg-blue-700 transition"
+                    onclick="refreshAccounts()">
                     {{ 'Update Account' if edit_account else 'Create Account' }}
                 </button>
 
@@ -99,34 +101,12 @@
                                 </tr>
                             </thead>
 
-                            <tbody id="results" class="divide-y divide-gray-100 bg-white">
-                                {% for account in accounts %}
-                                <tr class="hover:bg-blue-50 transition">
-                                    <td class="px-6 py-4 text-sm font-medium text-gray-800">
-                                        {{ account.username }}
-                                    </td>
-                                    <td class="px-6 py-4 text-sm">
-                                        {% if account.doctor %}
-                                            <span class="px-3 py-1 rounded-full text-xs font-medium
-                                                        bg-green-100 text-green-700">
-                                            Profile Complete
-                                            </span>
-                                        {% else %}
-                                            <a href="{{ url_for('admin.create_doctor_profile', account_id=account.account_id) }}" 
-                                                class="px-3 py-1 rounded-full text-xs font-medium w-28 bg-red-200
-                                                        text-black-700 item-center hover:bg-red-300 flex gap-3">
-                                                No Profile <img src="{{ url_for('static', filename='img/pen.png')}}" alt="pen" class="w-4">
-                                            </a>
-                                        {% endif %}
-                                    </td>
-                                    <td class="px-6 py-4 text-sm flex gap-4">
-                                        <a href="{{ url_for('admin.admin_doctors', account_id=account.account_id) }}"
-                                            class="text-blue-600 hover:text-blue-800 font-medium">
-                                            Edit
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
+                            <tbody id="results" class="divide-y divide-gray-100 bg-white transition-opacity duration-300">
+                                {% include 'admin/partials/accounts_table_body.html' %}
+                                <div id="loadingSpinner" class="hidden flex justify-center items-center py-6">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+                                    <span class="ml-3 text-sm text-gray-600">Loading data...</span>
+                                </div>
                             </tbody>
 
                         </table>
@@ -210,4 +190,52 @@
 
     </div>
 </div>
+
+<script>
+document.getElementById("accountForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+
+    const response = await fetch(this.action, {
+        method: "POST",
+        body: formData
+    });
+
+    const result = await response.json();
+
+    // Trigger Alpine notification
+    document.querySelector('[x-data]').__x.$data.show(
+        result.message,
+        result.category
+    );
+
+    if (result.success) {
+        this.reset(); // optional
+    }
+});
+
+const refreshUrl = "{{ url_for('admin.refresh_accounts') }}";
+
+function refreshAccounts() {
+    const spinner = document.getElementById('loadingSpinner');
+    const results = document.getElementById('results');
+
+    spinner.classList.remove('hidden');
+
+    fetch(refreshUrl)
+        .then(res => {
+            if (!res.ok) throw new Error("Route not found");
+            return res.text();
+        })
+        .then(html => {
+            results.innerHTML = html;
+        })
+        .finally(() => {
+            spinner.classList.add('hidden');
+        });
+}
+</script>
+
 {% endblock %}
+

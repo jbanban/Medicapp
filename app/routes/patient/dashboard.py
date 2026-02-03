@@ -3,7 +3,7 @@ from flask import render_template, session, redirect, url_for, flash
 from app.models.patient import Patient
 from app.models.appointment import Appointment
 from app.models.account import Account
-from app.security.crypto import decrypt_value, safe_decrypt
+from app.services.patient_cache import get_patient_cache
 from . import patient_bp
 
 
@@ -18,19 +18,8 @@ def patient_dashboard():
         flash("Finish your profile first!","warning")
         return redirect(url_for('patient.create_profile'))
     
-    decrypted_patient = {
-        "patient_id": patient.patient_id,   # ✅ ADD THIS
+    decrypted_patient = get_patient_cache(patient.patient_id)
 
-        "firstname": decrypt_value(patient.firstname),
-        "middlename": safe_decrypt(patient.middlename),
-        "lastname": decrypt_value(patient.lastname),
-
-        "full_name": " ".join(filter(None, [
-            decrypt_value(patient.firstname),
-            safe_decrypt(patient.middlename),
-            decrypt_value(patient.lastname)
-        ])),
-    }
     appointments = Appointment.query.filter_by(patient_id=user_id).all()
     doctors = Account.query.filter_by(role='doctor').all()
 

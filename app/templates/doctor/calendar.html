@@ -211,10 +211,13 @@
 /* ================================
    GLOBAL CALENDAR STATE
 ================================ */
+const availabilityByDate = {};
+
 const calendarState = {
     currentDate: new Date(),
     view: "month" // month | week
 };
+
 const months = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
@@ -274,6 +277,13 @@ function renderMiniCalendar(month, year) {
     }
 }
 
+function formatDateYMD(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+}
+
 
 function renderCalendar(month, year) {
     calendarGrid.innerHTML = "";
@@ -287,11 +297,6 @@ function renderCalendar(month, year) {
     const startDay = firstOfMonth.getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const today = new Date();
-
-    // for (let i = 0; i < totalCells; i++) {
-    //     const cellDate = new Date(year, month, i - startDay + 1);
-    //     const isToday = cellDate.toDateString() === today.toDateString();
-    // }
 
     // ===== DAY HEADERS =====
     for (let i = 0; i < 7; i++) {
@@ -311,7 +316,9 @@ function renderCalendar(month, year) {
         const cellDate = new Date(year, month, i - startDay + 1);
         const isCurrentMonth = cellDate.getMonth() === month;
         const isToday = cellDate.toDateString() === today.toDateString();
-        const formattedDate = cellDate.toISOString().split("T")[0];
+        const formattedDate = formatDateYMD(cellDate);
+        const slotCount = availabilityByDate[formattedDate] || 0;
+        const hasAvailability = slotCount > 0;
         const day = cellDate.getDate();
 
         calendarGrid.innerHTML += `
@@ -329,6 +336,19 @@ function renderCalendar(month, year) {
                     ">
                         ${day}
                     </span>
+
+                    ${
+                        hasAvailability
+                            ? `
+                            <div class="flex items-center gap-1">
+                                <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+                                <span class="text-[10px] font-semibold text-blue-600">
+                                    ${slotCount}
+                                </span>
+                            </div>
+                            `
+                            : ``
+                    }
                 </div>
 
                 <!-- Event space -->
@@ -336,6 +356,18 @@ function renderCalendar(month, year) {
             </div>
         `;
     }
+}
+async function loadMonthAvailability(year, month) {
+    availabilityByDate.clear?.();
+
+    const res = await fetch(`/api/doctor/doctors_schedule?year=${year}&month=${month + 1}`);
+    if (!res.ok) return;
+
+    const data = await res.json();
+
+    data.forEach(item => {
+        availabilityByDate[item.date] = item.slots;
+    });
 }
 
 
@@ -419,11 +451,16 @@ function getStartOfWeek(date) {
 /* ================================
    MAIN RENDER SWITCH
 ================================ */
-function render() {
+async function render() {
     updateHeaderTitle();
 
     if (calendarState.view === "month") {
-        window.renderCalendar?.(
+        await loadMonthAvailability(
+            calendarState.currentDate.getFullYear(),
+            calendarState.currentDate.getMonth()
+        );
+
+        renderCalendar(
             calendarState.currentDate.getMonth(),
             calendarState.currentDate.getFullYear()
         );

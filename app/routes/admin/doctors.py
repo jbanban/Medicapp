@@ -1,11 +1,11 @@
-from flask import render_template, request, redirect, url_for, flash
-from app.models import Account, Doctor, doctor
+from flask import render_template, request, redirect, url_for, flash, jsonify
+from app.models import Account, Doctor
 from app.extensions import db
 from werkzeug.security import generate_password_hash
-from app.security.crypto import encrypt_value, decrypt_value, safe_decrypt
 from app.services.empty_to_none import empty_to_none
+from app.security.crypto import decrypt_value, safe_decrypt
+from app.extensions import cache
 from . import admin_bp
-
 
 @admin_bp.route('/admin_doctors', methods=['GET', 'POST'])
 def admin_doctors():
@@ -13,7 +13,7 @@ def admin_doctors():
     edit_account = Account.query.get(account_id) if account_id else None
 
     if request.method == 'POST':
-        account_id = request.form.get('account_id')
+        account_id = request.form.get('account_id=')
         username = request.form['username']
         password = request.form.get('password')
 
@@ -21,16 +21,29 @@ def admin_doctors():
         if account_id:
             account = Account.query.get(account_id)
             account.username = username
+
             if password:
                 account.password = generate_password_hash(password)
+
             db.session.commit()
-            flash("Account updated successfully!", "success")
+
+            return jsonify({
+                "success": True,
+                "message": "Account updated successfully",
+                "data": {
+                    "id": account.id,
+                    "username": account.username,
+                    "role": account.role
+                }
+            }), 200
 
         # CREATE
         else:
             if Account.query.filter_by(username=username).first():
-                flash("Username already exists!", "danger")
-                return redirect(url_for('admin.admin_doctors'))
+                return jsonify({
+                    "success": False,
+                    "message": "Username already exists"
+                }), 400
 
             new_account = Account(
                 username=username,
@@ -39,9 +52,16 @@ def admin_doctors():
             )
             db.session.add(new_account)
             db.session.commit()
-            flash("Doctor account created!", "success")
 
-        return redirect(url_for('admin.admin_doctors'))
+            return jsonify({
+                "success": True,
+                "message": "Doctor account created successfully",
+                "data": {
+                    "id": new_account.account_id,
+                    "username": new_account.username,
+                    "role": new_account.role
+                }
+            }), 201
     
     doctors = Doctor.query.all()
         

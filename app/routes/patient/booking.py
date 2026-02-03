@@ -2,7 +2,7 @@ from flask import render_template, request, session, redirect, url_for, flash
 from app.models.patient import Patient
 from app.models.doctor import Doctor
 from app.models.appointment import Appointment
-from app.security.crypto import decrypt_value, safe_decrypt
+from app.services.patient_cache import get_patient_cache
 from app import db
 from . import patient_bp
 
@@ -35,19 +35,9 @@ def request_appointment():
         return redirect(url_for('patient.request_appointment'))
     
     patient = Patient.query.filter_by(account_id=user_id).first()
-    decrypted_patient = {
-        "patient_id": patient.patient_id,
+    
+    decrypted_patient = get_patient_cache(patient.patient_id)
 
-        "firstname": decrypt_value(patient.firstname),
-        "middlename": safe_decrypt(patient.middlename),
-        "lastname": decrypt_value(patient.lastname),
-
-        "full_name": " ".join(filter(None, [
-            decrypt_value(patient.firstname),
-            safe_decrypt(patient.middlename),
-            decrypt_value(patient.lastname)
-        ])),
-    }
     return render_template('patient/request_appointment.html', 
                            doctors=doctors,
                            patient=decrypted_patient

@@ -26,16 +26,22 @@ def generate_and_save_slots(
 
         slot = DoctorSchedule(
             doctor_id=doctor_id,
-            date=date_obj,
+            vacant_date=date_obj,
             start_time=start_dt.time(),
             end_time=slot_end.time(),
             status='available'
         )
 
+
         slots.append(slot)
         start_dt = slot_end  # move to next slot
 
-    db.session.bulk_save_objects(slots)
-    db.session.commit()
+    try:
+        db.session.bulk_save_objects(slots)
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        
+        return 0
 
     return len(slots)

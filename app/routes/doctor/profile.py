@@ -1,9 +1,9 @@
-from flask import render_template, session, redirect, url_for, request, flash
+from flask import render_template, session, redirect, url_for, request, flash, current_app
 from app.models.doctor import Doctor
+from app.services.file_uploads import allowed_image, validate_file_size
 from werkzeug.utils import secure_filename
 from app import db
 import os
-from app.services.file_uploads import allowed_image, validate_file_size
 from . import doctor_bp
 
 
@@ -61,22 +61,23 @@ def upload_doctor_photo(doctor_id):
         file_path = os.path.join(upload_folder, new_filename)
 
         if doctor.profile_image:
-            old_path = os.path.join('static', doctor.profile_image)
+            old_path = os.path.join(
+                current_app.root_path,
+                'static', 
+                doctor.profile_image)
             if os.path.exists(old_path):
-                try:
-                    os.remove(old_path)
-                except:
-                    pass
+                os.remove(old_path)
 
-        file.save(file_path)
-
-        doctor.profile_image = f"uploads/doctors/{new_filename}"
-        db.session.commit()
 
         flash("Profile picture updated!", "success")
 
     else:
         flash("Invalid file type. Only JPG and PNG allowed.", "danger")
+        
+    file.save(file_path)
+
+    doctor.profile_image = f"uploads/doctors/{new_filename}"
+    db.session.commit()
 
     return redirect(url_for('doctor.doctor_profile', doctor_id=doctor_id))
 

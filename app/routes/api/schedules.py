@@ -1,9 +1,11 @@
-from flask import jsonify, request
+from flask import jsonify, request, session
+from datetime import date, datetime, timedelta
 from app.models.doctor_schedule import Doctor_Schedule
+from app.models.doctor import Doctor
 from app import db
 from . import api_bp
 
-
+#This is nothing
 @api_bp.route("/open-slot", methods=["POST"])
 def open_slot():
     data = request.json
@@ -29,3 +31,97 @@ def open_slot():
     db.session.commit()
 
     return jsonify({"success": True})
+
+@api_bp.route("/doctor/doctors_schedule", methods=["GET"])
+def get_doctor_month_schedule():
+    year = request.args.get("year", type=int)
+    month = request.args.get("month", type=int)
+
+    if not year or not month:
+        return jsonify({"error": "year and month are required"}), 400
+
+    # First day of month
+    start_date = date(year, month, 1)
+
+    # First day of next month
+    if month == 12:
+        end_date = date(year + 1, 1, 1)
+    else:
+        end_date = date(year, month + 1, 1)
+
+    user_id = session.get('user_id')
+
+    doctor = Doctor.query.filter_by(account_id=user_id).first() 
+
+    rows = (
+        db.session.query(
+            Doctor_Schedule.vacant_date,
+            db.func.count().label("slots")
+        )
+        .filter(
+            Doctor_Schedule.doctor_id == doctor.doctor_id,
+            Doctor_Schedule.vacant_date >= start_date,
+            Doctor_Schedule.vacant_date < end_date,
+            Doctor_Schedule.status == "available"
+        )
+        .group_by(Doctor_Schedule.vacant_date)
+        .order_by(Doctor_Schedule.vacant_date)
+        .all()
+    )
+
+    
+    return jsonify([
+    {
+        "date": row.vacant_date.isoformat(),
+        "slots": row.slots
+    }
+    for row in rows
+])
+
+@api_bp.route('/schedules', methods=['GET'])
+def get_week_schedules():
+    week_start_str = request.args.get('week_start')
+
+    if not week_start_str:
+        return jsonify({
+            "success": False,
+            "message": "week_start is required"
+        }), 400
+
+    try:
+        week_start = datetime.strptime(week_start_str, "%Y-%m-%d").date()
+    except ValueError:
+        return jsonify({
+            "success": False,
+            "message": "Invalid date format"
+        }), 400
+
+    week_end = week_start + timedelta(days=6)
+
+    doctor_id = session.get("doctor_id")
+    if not doctor_id:
+        return jsonify({"success": False}), 401
+
+    schedules = Schedule.query.filter(
+        Schedule.doctor_id == doctor_id,
+        Schedule.date >= week_start,
+        Schedule.date <= week_end
+    ).all()
+
+    day_map = defaultdict(list)
+
+    for s in schedules:
+        weekday = s.date.strftime("%A").lower()  # monday, tuesday...
+
+        day_map[weekday].append({
+            "id": s.id,
+            "date": s.date.strftime("%Y-%m-%d"),
+            "start": s.start_time.strftime("%H:%M"),
+            "end": s.end_time.strftime("%H:%M")
+        })
+
+    return jsonify({
+        "success": True,
+        "week_start": week_start_str,
+        "schedules": day_map
+    })

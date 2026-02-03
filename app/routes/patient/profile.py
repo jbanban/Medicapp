@@ -2,14 +2,18 @@ from flask import render_template, request, redirect, url_for, flash, session, c
 from app.models.patient import Patient
 from app.models.patient_history_background import PatientHistoryBackground
 from app.models.medical_visibility import MedicalVisibility
-from app.services.file_uploads import allowed_image, validate_file_size
+from app.services.file_uploads import allowed_image
+from app.services.patient_cache import get_patient_cache 
 from app.services.empty_to_none import empty_to_none
 from app.security.crypto import encrypt_value, decrypt_value, safe_decrypt
+from app.extensions import cache
 from app import db
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import os
 from . import patient_bp
+
+
 
 
 @patient_bp.route('/patient_profile')
@@ -30,54 +34,39 @@ def patient_profile():
         patient_id=patient.patient_id
     ).first()
 
-    # ---------------- DECRYPT PATIENT DATA ----------------
-    decrypted_patient = {
-        "patient_id": patient.patient_id,   # ✅ ADD THIS
+    decrypted_patient = get_patient_cache(patient.patient_id)
 
-        "firstname": decrypt_value(patient.firstname),
-        "middlename": safe_decrypt(patient.middlename),
-        "lastname": decrypt_value(patient.lastname),
+    decrypted_patient_info = None
+    if patient:
+        decrypted_patient_info = {
+            "gender": decrypt_value(patient.gender),
+            "blood_type": safe_decrypt(patient.blood_type),
+            "civil_status": decrypt_value(patient.civil_status),
+            "birthdate": patient.birthdate,
+            "age": patient.age,
 
-        "full_name": " ".join(filter(None, [
-            decrypt_value(patient.firstname),
-            safe_decrypt(patient.middlename),
-            decrypt_value(patient.lastname)
-        ])),
-        
-        "profile_image": patient.profile_image,
+            # CURRENT ADDRESS
+            "current_house_no": safe_decrypt(patient.current_house_no),
+            "current_street": safe_decrypt(patient.current_street),
+            "current_barangay": decrypt_value(patient.current_barangay),
+            "current_city": decrypt_value(patient.current_city),
+            "current_province": decrypt_value(patient.current_province),
+            "current_zipcode": decrypt_value(patient.current_zipcode),
 
-        "gender": decrypt_value(patient.gender),
-        "blood_type": safe_decrypt(patient.blood_type),
-        "civil_status": decrypt_value(patient.civil_status),
-        "birthdate": patient.birthdate,
-        "age": patient.age,
+            # PERMANENT ADDRESS
+            "permanent_house_no": safe_decrypt(patient.permanent_house_no),
+            "permanent_street": safe_decrypt(patient.permanent_street),
+            "permanent_barangay": decrypt_value(patient.permanent_barangay),
+            "permanent_city": decrypt_value(patient.permanent_city),
+            "permanent_province": decrypt_value(patient.permanent_province),
+            "permanent_zipcode": decrypt_value(patient.permanent_zipcode),
 
-        # CONTACT
-        "email": decrypt_value(patient.email),
-        "phone": decrypt_value(patient.phone),
-
-        # CURRENT ADDRESS
-        "current_house_no": safe_decrypt(patient.current_house_no),
-        "current_street": safe_decrypt(patient.current_street),
-        "current_barangay": decrypt_value(patient.current_barangay),
-        "current_city": decrypt_value(patient.current_city),
-        "current_province": decrypt_value(patient.current_province),
-        "current_zipcode": decrypt_value(patient.current_zipcode),
-
-        # PERMANENT ADDRESS
-        "permanent_house_no": safe_decrypt(patient.permanent_house_no),
-        "permanent_street": safe_decrypt(patient.permanent_street),
-        "permanent_barangay": decrypt_value(patient.permanent_barangay),
-        "permanent_city": decrypt_value(patient.permanent_city),
-        "permanent_province": decrypt_value(patient.permanent_province),
-        "permanent_zipcode": decrypt_value(patient.permanent_zipcode),
-
-        # EMERGENCY CONTACT
-        "ec_name": decrypt_value(patient.ec_name),
-        "ec_relation": decrypt_value(patient.ec_relation),
-        "ec_phone": decrypt_value(patient.ec_phone),
-        "ec_address": decrypt_value(patient.ec_address),
-    }
+            # EMERGENCY CONTACT
+            "ec_name": decrypt_value(patient.ec_name),
+            "ec_relation": decrypt_value(patient.ec_relation),
+            "ec_phone": decrypt_value(patient.ec_phone),
+            "ec_address": decrypt_value(patient.ec_address),
+        }
 
     decrypted_history = None
     if history:
@@ -94,6 +83,7 @@ def patient_profile():
     return render_template(
         "patient/patient_profile.html",
         patient=decrypted_patient,
+        patient_info=decrypted_patient_info,
         history=decrypted_history,
         encrypted_visibility=visibility.encrypted_state if visibility else None
     )
@@ -311,33 +301,36 @@ def create_profile():
 @patient_bp.route("/image/upload/<int:patient_id>", methods=["POST"])
 def update_profile_image(patient_id):
 
-    user_id = session.get('user_id')
-    if not user_id:
-        return redirect(url_for('auth.login'))
+    user_id = session.get("user_id")
 
-    patient = Patient.query.filter_by(
-        account_id=user_id
-    ).first_or_404()
+    patient = Patient.query.get_or_404(patient_id)
+    if patient.account_id != user_id:
+        return redirect(url_for("unauthorized"))
 
     file = request.files.get("photo")
-
     if not file or file.filename == "":
         flash("No image selected.", "danger")
-        return redirect(url_for("patient.patient_profile"))
+        return redirect(url_for("patient.patient_profile", patient_id=patient_id))
 
     if not allowed_image(file.filename):
         flash("Invalid file type. Only JPG, PNG, WEBP allowed.", "danger")
-        return redirect(url_for("patient.patient_profile"))
+        return redirect(url_for("patient.patient_profile", patient_id=patient_id))
 
     ext = file.filename.rsplit(".", 1)[1].lower()
-    filename = secure_filename(f"patient_{patient.patient_id}.{ext}")
 
-    upload_folder = os.path.join("static", "uploads", "patients")
+    filename = f"patient_{patient.patient_id}.{ext}"
+    filename = secure_filename(filename)
+
+    upload_folder = os.path.join(
+        current_app.root_path,
+        "static",
+        "uploads",
+        "patients"
+    )
     os.makedirs(upload_folder, exist_ok=True)
 
     file_path = os.path.join(upload_folder, filename)
 
-    # Remove old image if exists
     if patient.profile_image:
         old_path = os.path.join(
             current_app.root_path,
@@ -353,7 +346,41 @@ def update_profile_image(patient_id):
     db.session.commit()
 
     flash("Profile picture updated successfully.", "success")
-    return redirect(url_for("patient.patient_profile"))
+    return redirect(url_for("patient.patient_profile", patient_id=patient_id))
+
+@patient_bp.route("/image/delete/<int:patient_id>", methods=["POST"])
+def delete_profile_image(patient_id):
+
+    user_id = session.get("user_id")
+
+    patient = Patient.query.get_or_404(patient_id)
+
+    # Authorization
+    if patient.account_id != user_id:
+        return redirect(url_for("unauthorized"))
+
+    # No image to delete
+    if not patient.profile_image:
+        flash("No profile image to delete.", "warning")
+        return redirect(url_for("patient.patient_profile", patient_id=patient_id))
+
+    # Build absolute file path
+    image_path = os.path.join(
+        current_app.root_path,
+        "static",
+        patient.profile_image
+    )
+
+    # Remove file if it exists
+    if os.path.exists(image_path):
+        os.remove(image_path)
+
+    # Remove reference from DB
+    patient.profile_image = None
+    db.session.commit()
+
+    flash("Profile image deleted successfully.", "success")
+    return redirect(url_for("patient.patient_profile", patient_id=patient_id))
 
 
 @patient_bp.route("/profile/update/<int:patient_id>", methods=["POST"])

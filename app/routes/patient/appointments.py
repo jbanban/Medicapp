@@ -2,12 +2,12 @@ from flask import render_template, session, redirect, url_for, request, flash
 from app.models.patient import Patient
 from app.models.appointment import Appointment
 from app.models.doctor_schedule import Doctor_Schedule
-from app.security.crypto import decrypt_value, safe_decrypt
+from app.services.patient_cache import get_patient_cache
 from app import db
 from . import patient_bp
 
 
-@patient_bp.route('/patient/appointment', methods=['GET', 'POST'])
+@patient_bp.route('/appointment', methods=['GET', 'POST'])
 def patient_appointment():
     if 'role' not in session or session['role'] != 'patient':
         return redirect(url_for('unauthorized'))
@@ -15,19 +15,8 @@ def patient_appointment():
 
     appointments = Appointment.query.filter_by(patient_id=session.get('user_id')).all()
     patient = Patient.query.filter_by(account_id=user_id).first()
-    decrypted_patient = {
-        "patient_id": patient.patient_id,
-
-        "firstname": decrypt_value(patient.firstname),
-        "middlename": safe_decrypt(patient.middlename),
-        "lastname": decrypt_value(patient.lastname),
-
-        "full_name": " ".join(filter(None, [
-            decrypt_value(patient.firstname),
-            safe_decrypt(patient.middlename),
-            decrypt_value(patient.lastname)
-        ])),
-    }
+    
+    decrypted_patient = get_patient_cache(patient.patient_id)
 
     return render_template('patient/myAppointments.html', 
                            appointments=appointments,
@@ -121,7 +110,7 @@ def book_appointment(doctor_schedule_id):
     )
 
 
-@patient_bp.route('/patient/cancel_appointment/<int:appointment_id>', methods=['POST'])
+@patient_bp.route('/cancel_appointment/<int:appointment_id>', methods=['POST'])
 def cancel_appointment(appointment_id):
     appointment = Appointment.query.get(appointment_id)
 

@@ -51,7 +51,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
                 <label class="text-sm font-medium text-gray-700 block">Date of Birth</label>
-                <input type="date" name="birthdate" value="{{ patient.birthdate }}"
+                <input type="date" name="birthdate" value="{{ patient_info.birthdate }}"
                        class="w-full rounded-xl border-gray-300 p-3 shadow-sm focus:ring-red-400">
             </div>
 
@@ -69,13 +69,13 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
                 <label class="text-sm font-medium text-gray-700 block">Blood Type</label>
-                <input type="text" name="blood_type" value="{{ patient.blood_type }}"
+                <input type="text" name="blood_type" value="{{ patient_info.blood_type }}"
                        class="w-full rounded-xl border-gray-300 p-3 shadow-sm focus:ring-red-400">
             </div>
 
             <div>
                 <label class="text-sm font-medium text-gray-700 block">Civil Status</label>
-                <input type="text" name="civil_status" value="{{ patient.civil_status }}"
+                <input type="text" name="civil_status" value="{{ patient_info.civil_status }}"
                        class="w-full rounded-xl border-gray-300 p-3 shadow-sm focus:ring-red-400">
             </div>
         </div>
@@ -87,22 +87,22 @@
             <!-- CURRENT ADDRESS -->
             <p class="text-sm font-medium text-gray-700 mb-2">Current Address</p>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input name="current_house_no" value="{{ patient.current_house_no }}"
+                <input name="current_house_no" value="{{ patient_info.current_house_no }}"
                        placeholder="House / Unit No."
                        class="form-input ">
-                <input name="current_street" value="{{ patient.current_street }}"
+                <input name="current_street" value="{{ patient_info.current_street }}"
                        placeholder="Street"
                        class="form-input">
-                <input name="current_barangay" value="{{ patient.current_barangay }}"
+                <input name="current_barangay" value="{{ patient_info.current_barangay }}"
                        placeholder="Barangay"
                        class="form-input">
-                <input name="current_city" value="{{ patient.current_city }}"
+                <input name="current_city" value="{{ patient_info.current_city }}"
                        placeholder="City / Municipality"
                        class="form-input">
-                <input name="current_province" value="{{ patient.current_province }}"
+                <input name="current_province" value="{{ patient_info.current_province }}"
                        placeholder="Province"
                        class="form-input">
-                <input name="current_zipcode" value="{{ patient.current_zipcode }}"
+                <input name="current_zipcode" value="{{ patient_info.current_zipcode }}"
                        placeholder="Zip Code"
                        class="form-input">
             </div>
@@ -110,22 +110,22 @@
             <!-- PERMANENT ADDRESS -->
             <p class="text-sm font-medium text-gray-700 mt-6 mb-2">Permanent Address</p>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input name="permanent_house_no" value="{{ patient.permanent_house_no }}"
+                <input name="permanent_house_no" value="{{ patient_info.permanent_house_no }}"
                        placeholder="House / Unit No."
                        class="form-input">
-                <input name="permanent_street" value="{{ patient.permanent_street }}"
+                <input name="permanent_street" value="{{ patient_info.permanent_street }}"
                        placeholder="Street"
                        class="form-input">
-                <input name="permanent_barangay" value="{{ patient.permanent_barangay }}"
+                <input name="permanent_barangay" value="{{ patient_info.permanent_barangay }}"
                        placeholder="Barangay"
                        class="form-input">
-                <input name="permanent_city" value="{{ patient.permanent_city }}"
+                <input name="permanent_city" value="{{ patient_info.permanent_city }}"
                        placeholder="City / Municipality"
                        class="form-input">
-                <input name="permanent_province" value="{{ patient.permanent_province }}"
+                <input name="permanent_province" value="{{ patient_info.permanent_province }}"
                        placeholder="Province"
                        class="form-input">
-                <input name="permanent_zipcode" value="{{ patient.permanent_zipcode }}"
+                <input name="permanent_zipcode" value="{{ patient_info.permanent_zipcode }}"
                        placeholder="Zip Code"
                        class="form-input">
             </div>
@@ -138,18 +138,18 @@
         <h2 class="text-xl font-semibold text-gray-800">Emergency Contact</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input name="ec_name" value="{{ patient.ec_name }}"
+            <input name="ec_name" value="{{ patient_info.ec_name }}"
                    placeholder="Contact Name"
                    class="form-input">
-            <input name="ec_relation" value="{{ patient.ec_relation }}"
+            <input name="ec_relation" value="{{ patient_info.ec_relation }}"
                    placeholder="Relation"
                    class="form-input">
-            <input name="ec_phone" value="{{ patient.ec_phone }}"
+            <input name="ec_phone" value="{{ patient_info.ec_phone }}"
                    placeholder="Contact Number"
                    class="form-input">
         </div>
 
-        <input name="ec_address" value="{{ patient.ec_address }}"
+        <input name="ec_address" value="{{ patient_info.ec_address }}"
                placeholder="Complete Address"
                class="form-input mt-3">
     </div>
