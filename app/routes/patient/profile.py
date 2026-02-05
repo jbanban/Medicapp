@@ -1,4 +1,5 @@
 from flask import render_template, request, redirect, url_for, flash, session, current_app
+from flask_login import current_user, login_required
 from app.models.patient import Patient
 from app.models.patient_history_background import PatientHistoryBackground
 from app.models.medical_visibility import MedicalVisibility
@@ -6,7 +7,6 @@ from app.services.file_uploads import allowed_image
 from app.services.patient_cache import get_patient_cache 
 from app.services.empty_to_none import empty_to_none
 from app.security.crypto import encrypt_value, decrypt_value, safe_decrypt
-from app.extensions import cache
 from app import db
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -17,12 +17,10 @@ from . import patient_bp
 
 
 @patient_bp.route('/patient_profile')
+@login_required
 def patient_profile():
-    user_id = session.get('user_id')
-    if not user_id:
-        return redirect(url_for('auth.login'))
     
-    patient = Patient.query.filter_by(account_id=user_id).first()
+    patient = Patient.query.filter_by(account_id=current_user.account_id).first()
     if not patient:
         return redirect(url_for('patient.create_profile'))
 
@@ -91,16 +89,13 @@ def patient_profile():
 
 
 @patient_bp.route('/create_profile', methods=['GET', 'POST'])
+@login_required
 def create_profile():
-    user_id = session.get('user_id')
-    if not user_id:
-        return redirect(url_for('auth.login'))
 
     # Prevent duplicate profile creation
-    existing = Patient.query.filter_by(account_id=user_id).first()
+    existing = Patient.query.filter_by(account_id=current_user.account_id).first()
     if existing:
-        flash("You already created your profile.", "warning")
-        return redirect(url_for('patient.patient_profile'))
+        return redirect(url_for('patient.patient_Dashboard'))
 
     errors = {}
 
@@ -263,7 +258,7 @@ def create_profile():
                 ec_phone=encrypt_value(ec_phone),
                 ec_address=encrypt_value(ec_address),
 
-                account_id=user_id
+                account_id=current_user.account_id
             )
 
             db.session.add(patient)
@@ -299,13 +294,13 @@ def create_profile():
 
 
 @patient_bp.route("/image/upload/<int:patient_id>", methods=["POST"])
+@login_required
 def update_profile_image(patient_id):
 
-    user_id = session.get("user_id")
 
     patient = Patient.query.get_or_404(patient_id)
-    if patient.account_id != user_id:
-        return redirect(url_for("unauthorized"))
+    if patient.account_id != current_user.account_id:
+        return redirect(url_for("misc.unauthorized"))
 
     file = request.files.get("photo")
     if not file or file.filename == "":
@@ -349,15 +344,15 @@ def update_profile_image(patient_id):
     return redirect(url_for("patient.patient_profile", patient_id=patient_id))
 
 @patient_bp.route("/image/delete/<int:patient_id>", methods=["POST"])
+@login_required
 def delete_profile_image(patient_id):
 
-    user_id = session.get("user_id")
 
     patient = Patient.query.get_or_404(patient_id)
 
     # Authorization
-    if patient.account_id != user_id:
-        return redirect(url_for("unauthorized"))
+    if patient.account_id != current_user.account_id:
+        return redirect(url_for("misc.unauthorized"))
 
     # No image to delete
     if not patient.profile_image:
@@ -384,22 +379,20 @@ def delete_profile_image(patient_id):
 
 
 @patient_bp.route("/profile/update/<int:patient_id>", methods=["POST"])
+@login_required
 def update_profile_details(patient_id):
-    user_id = session.get('user_id')
-    if not user_id:
-        return redirect(url_for('auth.login'))
         
     patient = Patient.query.filter_by(
-        account_id=user_id
+        account_id=current_user.account_id
     ).first_or_404()
     
     form = request.form
 
     try:
         # ---------------- BASIC INFO ----------------
-        patient.firstname = encrypt_value(form.get("firstname"))
-        patient.middlename = encrypt_value(form.get("middlename"))
-        patient.lastname = encrypt_value(form.get("lastname"))
+        patient.firstname = form.get("firstname")
+        patient.middlename = form.get("middlename")
+        patient.lastname = form.get("lastname")
         patient.email = encrypt_value(form.get("email"))
         patient.phone = encrypt_value(form.get("phone"))
         patient.gender = encrypt_value(form.get("gender"))

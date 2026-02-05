@@ -35,8 +35,15 @@
               <div class="text-sm text-blue-600 font-medium">
                 {{ doctor.specialization if doctor and doctor.specialization else 'Specialization' }}
               </div>
-              <div class="text-xs text-gray-500 mt-1">Rating: ★ {{ doctor.rating if doctor and doctor.rating else '—' }}</div>
-            </div>
+
+              <!-- Edit controls  -->
+              <div class="items-center mt-4 space-y-2">
+                <button id="editProfileBtn" class="px-3 py-1 bg-blue-600 text-white rounded-md text-sm">Edit</button>
+                <form action="{{ url_for('doctor.upload_doctor_photo', doctor_id=doctor.doctor_id) }}" method="POST" enctype="multipart/form-data" class="hidden" id="photoForm">
+                  <input type="file" name="photo" accept="image/*" class="text-sm">
+                  <button type="submit" class="mt-2 px-3 py-1 bg-gray-800 text-white rounded text-sm">Upload</button>
+                </form>
+              </div>
           </div>
 
           <!-- Quick info -->
@@ -49,13 +56,16 @@
               <span class="text-gray-500">Email</span>
               <a href="mailto:{{ doctor.email }}" class="text-gray-700">{{ doctor.email if doctor and doctor.email else '—' }}</a>
             </div>
+            {% set clinic = doctor.backgrounds
+            | selectattr('type', 'equalto', 'clinic')
+            | first %}
             <div class="flex justify-between">
               <span class="text-gray-500">Clinic</span>
-              <span class="text-gray-700">{{ doctor.clinic_name if doctor and doctor.clinic_name else '—' }}</span>
+              <span class="text-gray-700">{{ clinic.clinic_name if clinic and clinic.clinic_name else '—' }}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-gray-500">Location</span>
-              <span class="text-gray-700">{{ doctor.clinic_address if doctor and doctor.clinic_address else '—' }}</span>
+              <span class="text-gray-700">{{ clinic.clinic_address if clinic and clinic.clinic_address else '—' }}</span>
             </div>
           </div>
 
@@ -80,11 +90,11 @@
           <div class="text-sm text-gray-600">
             <div class="flex justify-between">
               <span>Days</span>
-              <span>{{ doctor.clinic_days if doctor and doctor.clinic_days else '—' }}</span>
+              <span>{{ clinic.clinic_days if clinic and clinic.clinic_days else '—' }}</span>
             </div>
             <div class="flex justify-between mt-1">
               <span>Hours</span>
-              <span>{{ doctor.clinic_time_start if doctor and doctor.clinic_time_start else '—' }} — {{ doctor.clinic_time_end if doctor and doctor.clinic_time_end else '—' }}</span>
+              <span>{{ clinic.clinic_hours_from if clinic and clinic.clinic_hours_from else '—' }} — {{ clinic.clinic_hours_to if clinic and clinic.clinic_hours_to else '—' }}</span>
             </div>
           </div>
         </div>
@@ -103,15 +113,6 @@
               <button data-tab="awards" class="tab-btn px-4 py-2 text-sm rounded-t-lg border-b-2 border-transparent text-gray-700 hover:text-gray-900">Awards</button>
               <button data-tab="clinic" class="tab-btn px-4 py-2 text-sm rounded-t-lg border-b-2 border-transparent text-gray-700 hover:text-gray-900">Clinic Info</button>
               <button data-tab="settings" class="tab-btn px-4 py-2 text-sm rounded-t-lg border-b-2 border-transparent text-gray-700 hover:text-gray-900">Settings</button>
-            </div>
-
-            <!-- Edit controls (top-right) -->
-            <div class="flex items-center gap-3">
-              <button id="editProfileBtn" class="px-3 py-2 bg-blue-600 text-white rounded-md text-sm">Edit</button>
-              <form action="{{ url_for('doctor.upload_doctor_photo', doctor_id=doctor.doctor_id) }}" method="POST" enctype="multipart/form-data" class="hidden" id="photoForm">
-                <input type="file" name="photo" accept="image/*" class="text-sm">
-                <button type="submit" class="mt-2 px-3 py-1 bg-gray-800 text-white rounded text-sm">Upload</button>
-              </form>
             </div>
           </div>
 
@@ -238,29 +239,41 @@
               </div>
 
               <!-- list -->
-              <ul class="space-y-3">
-                {% for q in doctor.qualifications %}
-                <li class="border rounded p-3 flex justify-between items-start">
-                  <div>
-                    <div class="font-semibold text-gray-800">{{ q.degree }}</div>
-                    <div class="text-sm text-gray-600">{{ q.institution }} {% if q.year %}• {{ q.year }}{% endif %}</div>
-                  </div>
+              {% for q in doctor.backgrounds if q.type == 'qualification' %}
+              <li class="border rounded p-3">
+                <form
+                  action="{{ url_for('doctor.update_background', bg_id=q.id, doctor_id=doctor.doctor_id) }}"
+                  method="POST"
+                  class="space-y-2"
+                >
+                  <input name="title" value="{{ q.title }}" class="w-full p-2 border rounded">
+                  <input name="organization" value="{{ q.organization }}" class="w-full p-2 border rounded">
+                  <input name="year" value="{{ q.year }}" class="w-full p-2 border rounded">
+
                   <div class="flex gap-2">
-                    <form action="{{ url_for('delete_qualification', qual_id=q.id, doctor_id=doctor.doctor_id) }}" method="POST" onsubmit="return confirm('Delete qualification?')">
-                      <button type="submit" class="text-sm text-red-600">Delete</button>
-                    </form>
+                    <button class="px-3 py-1 bg-blue-600 text-white rounded text-sm">Save</button>
                   </div>
-                </li>
-                {% else %}
-                <li class="text-sm text-gray-500">No qualifications added.</li>
-                {% endfor %}
-              </ul>
+                </form>
+
+                <form
+                  action="{{ url_for('doctor.delete_background', bg_id=q.id, doctor_id=doctor.doctor_id) }}"
+                  method="POST"
+                  class="mt-2"
+                  onsubmit="return confirm('Delete this qualification?')"
+                >
+                  <button class="text-sm text-red-600">Delete</button>
+                </form>
+              </li>
+              {% else %}
+              <li class="text-sm text-gray-500">No qualifications added.</li>
+              {% endfor %}
+
 
               <!-- Add form (hidden initially) -->
-              <form action="{{ url_for('doctor.add_qualification', doctor_id=doctor.doctor_id) }}" method="POST" id="qualificationForm" class="hidden space-y-3">
+              <form action="{{ url_for('doctor.add_background', doctor_id=doctor.doctor_id, bg_type='qualification') }}" method="POST" id="qualificationForm" class="hidden space-y-3">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <input name="degree" placeholder="Degree (e.g. MD - Harvard)" class="p-2 border rounded">
-                  <input name="institution" placeholder="Institution" class="p-2 border rounded">
+                  <input name="title" placeholder="Degree (e.g. MD - Harvard)" class="p-2 border rounded">
+                  <input name="organization" placeholder="Institution" class="p-2 border rounded">
                   <input name="year" placeholder="Year" class="p-2 border rounded">
                 </div>
                 <div class="flex gap-3">
@@ -276,32 +289,44 @@
             <div class="space-y-4">
               <div class="flex justify-between items-center">
                 <h3 class="text-lg font-semibold">Work Experience</h3>
-                <a href="#" id="addExperienceBtn" class="text-sm text-blue-600">+ Add</a>
+                <a href="#" id="addExperienceBtn" class="text-sm text-green-600">+ Add</a>
               </div>
 
-              <ul class="space-y-3">
-                {% for e in doctor.experiences %}
-                <li class="border rounded p-3 flex justify-between items-start">
-                  <div>
-                    <div class="font-semibold text-gray-800">{{ e.role }}</div>
-                    <div class="text-sm text-gray-600">{{ e.company }} • {{ e.duration }}</div>
-                  </div>
-                  <div class="flex gap-2">
-                    <form action="{{ url_for('doctor.delete_experience', exp_id=e.id, doctor_id=doctor.doctor_id) }}" method="POST" onsubmit="return confirm('Delete experience?')">
-                      <button type="submit" class="text-sm text-red-600">Delete</button>
-                    </form>
-                  </div>
-                </li>
-                {% else %}
-                <li class="text-sm text-gray-500">No work experience recorded.</li>
-                {% endfor %}
-              </ul>
+              {% for q in doctor.backgrounds if q.type == 'experience' %}
+              <li class="border rounded p-3">
+                <form
+                  action="{{ url_for('doctor.update_background', bg_id=q.id, doctor_id=doctor.doctor_id) }}"
+                  method="POST"
+                  class="space-y-2"
+                >
+                  <input name="title" value="{{ q.title }}" class="w-full p-2 border rounded">
+                  <input name="organization" value="{{ q.organization }}" class="w-full p-2 border rounded">
+                  <input name="year" value="{{ q.year }}" class="w-full p-2 border rounded">
 
-              <form action="{{ url_for('doctor.add_experience', doctor_id=doctor.doctor_id) }}" method="POST" id="experienceForm" class="hidden space-y-3">
+                  <div class="flex gap-2">
+                    <button class="px-3 py-1 bg-blue-600 text-white rounded text-sm">Update</button>
+                  </div>
+                </form>
+
+                <form
+                  action="{{ url_for('doctor.delete_background', bg_id=q.id, doctor_id=doctor.doctor_id) }}"
+                  method="POST"
+                  class="mt-2"
+                  onsubmit="return confirm('Delete this experience?')"
+                >
+                  <button class="text-sm text-red-600">Delete</button>
+                </form>
+              </li>
+              {% else %}
+              <li class="text-sm text-gray-500">No experiences added.</li>
+              {% endfor %}
+
+
+              <form action="{{ url_for('doctor.add_background', doctor_id=doctor.doctor_id, bg_type='experience') }}" method="POST" id="experienceForm" class="hidden space-y-3">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <input name="role" placeholder="Role/Position" class="p-2 border rounded">
-                  <input name="company" placeholder="Company / Hospital" class="p-2 border rounded">
-                  <input name="duration" placeholder="Duration (e.g. 2015-2019)" class="p-2 border rounded">
+                  <input name="title" placeholder="Role/Position" class="p-2 border rounded">
+                  <input name="organization" placeholder="Company / Hospital" class="p-2 border rounded">
+                  <input name="year" placeholder="Year of Experience" class="p-2 border rounded">
                 </div>
                 <div class="flex gap-3">
                   <button class="px-3 py-2 bg-blue-600 text-white rounded">Add</button>
@@ -319,25 +344,42 @@
                 <a href="#" id="addAwardBtn" class="text-sm text-blue-600">+ Add</a>
               </div>
 
-              <ul class="space-y-3">
-                {% for a in doctor.awards %}
-                <li class="border rounded p-3 flex justify-between items-start">
-                  <div>
-                    <div class="font-semibold text-gray-800">{{ a.title }}</div>
-                  </div>
-                  <div class="flex gap-2">
-                    <form action="{{ url_for('doctor.delete_award', award_id=a.id, doctor_id=doctor.doctor_id) }}" method="POST" onsubmit="return confirm('Delete award?')">
-                      <button type="submit" class="text-sm text-red-600">Delete</button>
-                    </form>
-                  </div>
-                </li>
-                {% else %}
-                <li class="text-sm text-gray-500">No awards recorded.</li>
-                {% endfor %}
-              </ul>
+              {% for q in doctor.backgrounds if q.type == 'qualification' %}
+              <li class="border rounded p-3">
+                <form
+                  action="{{ url_for('doctor.update_background', bg_id=q.id, doctor_id=doctor.doctor_id) }}"
+                  method="POST"
+                  class="space-y-2"
+                >
+                  <input name="title" value="{{ q.title }}" class="w-full p-2 border rounded">
+                  <input name="organization" value="{{ q.organization }}" class="w-full p-2 border rounded">
+                  <input name="year" value="{{ q.year }}" class="w-full p-2 border rounded">
 
-              <form action="{{ url_for('doctor.add_award', doctor_id=doctor.doctor_id) }}" method="POST" id="awardForm" class="hidden space-y-3">
-                <input name="title" placeholder="Award or Certification title" class="p-2 border rounded w-full">
+                  <div class="flex gap-2">
+                    <button class="px-3 py-1 bg-blue-600 text-white rounded text-sm">Save</button>
+                  </div>
+                </form>
+
+                <form
+                  action="{{ url_for('doctor.delete_background', bg_id=q.id, doctor_id=doctor.doctor_id) }}"
+                  method="POST"
+                  class="mt-2"
+                  onsubmit="return confirm('Delete this qualification?')"
+                >
+                  <button class="text-sm text-red-600">Delete</button>
+                </form>
+              </li>
+              {% else %}
+              <li class="text-sm text-gray-500">No qualifications added.</li>
+              {% endfor %}
+
+
+              <form action="{{ url_for('doctor.add_background', doctor_id=doctor.doctor_id, bg_type='award') }}" method="POST" id="awardForm" class="hidden space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <input name="title" placeholder="Award or Certification title" class="p-2 border rounded w-full">
+                  <input name="organization" placeholder="Issuing Organization" class="p-2 border rounded w-full mt-2">
+                  <input name="year" placeholder="Year received" class="p-2 border rounded w-full mt-2">
+                </div>
                 <div class="flex gap-3">
                   <button class="px-3 py-2 bg-blue-600 text-white rounded">Add</button>
                   <button type="button" id="cancelAward" class="px-3 py-2 bg-gray-200 rounded">Cancel</button>
@@ -347,31 +389,35 @@
           </section>
 
           <!-- Clinic Info -->
+           {% set clinic = doctor.backgrounds
+            | selectattr('type', 'equalto', 'clinic')
+            | first %}
+
           <section data-panel="clinic" class="tab-panel hidden">
             <form action="{{ url_for('doctor.update_clinic_info', doctor_id=doctor.doctor_id) }}" method="POST">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm text-gray-600">Clinic Name</label>
-                  <input name="clinic_name" class="w-full mt-1 p-2 border rounded" value="{{ doctor.clinic_name if doctor else '' }}">
+                  <input name="clinic_name" class="w-full mt-1 p-2 border rounded" value="{{ clinic.clinic_name if clinic else '' }}">
                 </div>
                 <div>
                   <label class="block text-sm text-gray-600">Clinic Address</label>
-                  <input name="clinic_address" class="w-full mt-1 p-2 border rounded" value="{{ doctor.clinic_address if doctor else '' }}">
+                  <input name="clinic_address" class="w-full mt-1 p-2 border rounded" value="{{ clinic.clinic_address if clinic else '' }}">
                 </div>
 
                 <div>
                   <label class="block text-sm text-gray-600">Clinic Days</label>
-                  <input name="clinic_days" class="w-full mt-1 p-2 border rounded" value="{{ doctor.clinic_days if doctor else '' }}" placeholder="e.g. Mon, Tue, Fri">
+                  <input name="clinic_days" class="w-full mt-1 p-2 border rounded" value="{{ clinic.clinic_days if clinic else '' }}" placeholder="e.g. Mon, Tue, Fri">
                 </div>
 
                 <div class="flex gap-2">
                   <div class="flex-1">
                     <label class="block text-sm text-gray-600">From</label>
-                    <input name="clinic_time_start" class="w-full mt-1 p-2 border rounded" value="{{ doctor.clinic_time_start if doctor else '' }}" placeholder="08:00">
+                    <input name="clinic_hours_from" class="w-full mt-1 p-2 border rounded" value="{{ clinic.clinic_hours_from if clinic else '' }}" placeholder="08:00">
                   </div>
                   <div class="flex-1">
                     <label class="block text-sm text-gray-600">To</label>
-                    <input name="clinic_time_end" class="w-full mt-1 p-2 border rounded" value="{{ doctor.clinic_time_end if doctor else '' }}" placeholder="17:00">
+                    <input name="clinic_hours_to" class="w-full mt-1 p-2 border rounded" value="{{ clinic.clinic_hours_to if clinic else '' }}" placeholder="17:00">
                   </div>
                 </div>
               </div>
@@ -391,7 +437,11 @@
                     <div class="font-medium">Public Profile</div>
                     <div class="text-sm text-gray-500">Allow patients to view your public profile</div>
                   </div>
-                  <input type="checkbox" name="public_profile" {% if doctor and doctor.public_profile %}checked{% endif %}>
+                  <input
+                    type="checkbox"
+                    name="public_profile"
+                    {% if session.get('public_profile') %}checked{% endif %}
+                  >
                 </div>
 
                 <div class="flex items-center justify-between p-4 border rounded">
@@ -399,7 +449,11 @@
                     <div class="font-medium">Accept Appointments</div>
                     <div class="text-sm text-gray-500">Open for online bookings</div>
                   </div>
-                  <input type="checkbox" name="accept_appointments" {% if doctor and doctor.accept_appointments %}checked{% endif %}>
+                  <input
+                    type="checkbox"
+                    name="accept_appointments"
+                    {% if session.get('accept_appointments') %}checked{% endif %}
+                  >
                 </div>
 
                 <div class="mt-4 mb-6">
@@ -479,7 +533,7 @@
       if (photoForm) photoForm.classList.toggle('hidden', !editing);
 
       // change edit button text
-      editBtn.textContent = editing ? 'Close Edit' : 'Edit';
+      editBtn.textContent = editing ? 'Cancel' : 'Edit';
       editBtn.classList.toggle('bg-red-600', editing);
       editBtn.classList.toggle('bg-blue-600', !editing);
     });

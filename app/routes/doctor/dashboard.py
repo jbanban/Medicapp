@@ -1,18 +1,15 @@
-from flask import render_template, session, redirect, url_for, flash
+from flask import render_template, redirect, url_for, flash
+from flask_login import current_user, login_required
 from app.models.doctor import Doctor
 from app.models.appointment import Appointment
 from . import doctor_bp
 
 
 @doctor_bp.route('/dashboard')
+@login_required
 def doctor_dashboard():
-    if 'role' not in session or session['role'] != 'doctor':
-        return redirect(url_for('misc.unauthorized'))
 
-    user_id = session.get('user_id')
-
-    doctor = Doctor.query.filter_by(account_id=user_id).first()
-
+    doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
     if not doctor:
         flash("Please complete your doctor profile.", "warning")
         return redirect(url_for('auth.login'))

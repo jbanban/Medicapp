@@ -1,0 +1,53 @@
+<!-- Notification Container -->
+<div
+    x-data="flashLikeNotifications()"
+    @notify.window="push($event.detail)"
+    class="fixed top-4 right-4 z-50 space-y-3"
+>
+    <template x-for="(note, index) in notes" :key="index">
+        <div
+            x-show="note.show"
+            x-transition
+            x-init="setTimeout(() => close(index), 4000)"
+            class="px-4 py-3 rounded-lg shadow-xl flex items-center justify-between w-80 text-white"
+            :class="{
+                'bg-green-500': note.type === 'success',
+                'bg-yellow-500': note.type === 'warning',
+                'bg-red-500': note.type === 'danger' || note.type === 'error',
+                'bg-blue-500': note.type === 'info'
+            }"
+        >
+            <span class="text-sm font-medium" x-text="note.message"></span>
+
+            <button
+                @click="close(index)"
+                class="text-white hover:text-gray-200"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    </template>
+</div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('Notifications', () => ({
+        notes: [],
+
+        push({ message, type = 'info' }) {
+            this.notes.push({
+                message,
+                type,
+                show: true
+            });
+        },
+
+        close(index) {
+            this.notes.splice(index, 1);
+        }
+    }))
+})
+</script>

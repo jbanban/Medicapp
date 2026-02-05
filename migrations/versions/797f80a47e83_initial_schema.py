@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: 541fe64a9808
+Revision ID: 797f80a47e83
 Revises: 
-Create Date: 2026-01-29 15:33:56.638771
+Create Date: 2026-02-04 08:19:00.527323
 
 """
 from alembic import op
@@ -10,8 +10,9 @@ import sqlalchemy as sa
 from app.security.encrypted_column import EncryptedColumn
 
 
+
 # revision identifiers, used by Alembic.
-revision = '541fe64a9808'
+revision = '797f80a47e83'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -22,8 +23,9 @@ def upgrade():
     op.create_table('account',
     sa.Column('account_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('username', sa.String(length=100), nullable=False),
-    sa.Column('password', sa.String(length=100), nullable=False),
+    sa.Column('password_hash', sa.String(length=255), nullable=False),
     sa.Column('role', sa.String(length=20), nullable=False),
+    sa.Column('active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('account_id'),
     sa.UniqueConstraint('username')
@@ -37,34 +39,26 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('patient_id')
     )
-    op.create_table('user',
-    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('username', sa.String(length=50), nullable=False),
-    sa.Column('password', sa.String(length=100), nullable=False),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('id'),
-    sa.UniqueConstraint('username')
-    )
     op.create_table('doctor',
     sa.Column('doctor_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('account_id', sa.Integer(), nullable=False),
-    sa.Column('firstname', EncryptedColumn(), nullable=False),
-    sa.Column('middlename', EncryptedColumn(), nullable=True),
-    sa.Column('lastname', EncryptedColumn(), nullable=False),
+    sa.Column('firstname', sa.String(length=50), nullable=False),
+    sa.Column('middlename', sa.String(length=50), nullable=True),
+    sa.Column('lastname', sa.String(length=50), nullable=False),
     sa.Column('age', sa.Integer(), nullable=False),
-    sa.Column('bloodtype', EncryptedColumn(), nullable=True),
-    sa.Column('height', EncryptedColumn(), nullable=True),
-    sa.Column('weight', EncryptedColumn(), nullable=True),
-    sa.Column('specialization', EncryptedColumn(), nullable=True),
-    sa.Column('gender', EncryptedColumn(), nullable=False),
-    sa.Column('dob', EncryptedColumn(), nullable=False),
-    sa.Column('pob', EncryptedColumn(), nullable=False),
-    sa.Column('civilstatus', EncryptedColumn(), nullable=False),
-    sa.Column('degree', EncryptedColumn(), nullable=False),
-    sa.Column('nationality', EncryptedColumn(), nullable=False),
-    sa.Column('religion', EncryptedColumn(), nullable=False),
-    sa.Column('phone', EncryptedColumn(), nullable=False),
-    sa.Column('email', EncryptedColumn(), nullable=False),
+    sa.Column('bloodtype', sa.String(length=10), nullable=True),
+    sa.Column('height', sa.String(length=10), nullable=True),
+    sa.Column('weight', sa.String(length=10), nullable=True),
+    sa.Column('specialization', sa.String(length=100), nullable=True),
+    sa.Column('gender', sa.String(length=10), nullable=False),
+    sa.Column('dob', sa.String(length=10), nullable=False),
+    sa.Column('pob', sa.String(length=100), nullable=False),
+    sa.Column('civilstatus', sa.String(length=20), nullable=False),
+    sa.Column('degree', sa.String(length=100), nullable=False),
+    sa.Column('nationality', sa.String(length=100), nullable=False),
+    sa.Column('religion', sa.String(length=100), nullable=False),
+    sa.Column('phone', sa.String(length=20), nullable=False),
+    sa.Column('email', sa.String(length=100), nullable=False),
     sa.Column('profile_image', sa.String(length=255), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['account_id'], ['account.account_id'], ),
@@ -74,9 +68,9 @@ def upgrade():
     op.create_table('patient',
     sa.Column('patient_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('account_id', sa.Integer(), nullable=False),
-    sa.Column('firstname', EncryptedColumn(), nullable=False),
-    sa.Column('middlename', EncryptedColumn(), nullable=True),
-    sa.Column('lastname', EncryptedColumn(), nullable=False),
+    sa.Column('firstname', sa.String(length=50), nullable=False),
+    sa.Column('middlename', sa.String(length=50), nullable=True),
+    sa.Column('lastname', sa.String(length=50), nullable=False),
     sa.Column('gender', EncryptedColumn(), nullable=False),
     sa.Column('birthdate', sa.Date(), nullable=False),
     sa.Column('age', sa.Integer(), nullable=False),
@@ -181,7 +175,6 @@ def downgrade():
     op.drop_table('appointment')
     op.drop_table('patient')
     op.drop_table('doctor')
-    op.drop_table('user')
     op.drop_table('medical_visibility')
     op.drop_table('account')
     # ### end Alembic commands ###

@@ -1,5 +1,7 @@
 
 from flask import render_template, session, redirect, url_for, flash
+from flask_login import current_user, login_required
+from flask_migrate import current
 from app.models.patient import Patient
 from app.models.appointment import Appointment
 from app.models.account import Account
@@ -8,19 +10,17 @@ from . import patient_bp
 
 
 @patient_bp.route('/dashboard')
+@login_required
 def patient_dashboard():
-    if 'role' not in session or session['role'] != 'patient':
-        return redirect(url_for('unauthorized'))
-    user_id = session.get('user_id')
-
-    patient = Patient.query.filter_by(account_id=user_id).first()
+    
+    patient = Patient.query.filter_by(account_id=current_user.account_id).first()
     if not patient:
         flash("Finish your profile first!","warning")
         return redirect(url_for('patient.create_profile'))
     
     decrypted_patient = get_patient_cache(patient.patient_id)
 
-    appointments = Appointment.query.filter_by(patient_id=user_id).all()
+    appointments = Appointment.query.filter_by(patient_id=patient.patient_id).all()
     doctors = Account.query.filter_by(role='doctor').all()
 
     return render_template('patient/patient_dashboard.html',

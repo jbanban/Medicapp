@@ -1,18 +1,16 @@
 from flask import render_template, session, redirect, url_for
+from flask_login import current_user, login_required
 from app.models.doctor import Doctor
 from app.models.appointment import Appointment
 from app import db
 from . import doctor_bp
 
 
-@doctor_bp.route('/appointments')  
+@doctor_bp.route('/appointments')
+@login_required
 def doctors_appointment():
-    if 'role' not in session or session['role'] != 'doctor':
-        return redirect(url_for('unauthorized'))
 
-    user_id = session.get('user_id')
-
-    doctor = Doctor.query.filter_by(account_id=user_id).first()
+    doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
     if not doctor:
         return redirect(url_for('unauthorized'))
 
@@ -27,6 +25,7 @@ def doctors_appointment():
     )
 
 @doctor_bp.route('/accept_appointment/<int:appointment_id>', methods=['POST'])
+@login_required
 def accept_appointment(appointment_id):
     appointment = Appointment.query.get(appointment_id)
     if not appointment:
@@ -36,6 +35,7 @@ def accept_appointment(appointment_id):
     return redirect(url_for('doctor.doctors_appointment'))
 
 @doctor_bp.route('/reject_appointment/<int:appointment_id>', methods=['POST'])
+@login_required
 def reject_appointment(appointment_id):
     appointment = Appointment.query.get(appointment_id)
     if not appointment:
@@ -45,6 +45,7 @@ def reject_appointment(appointment_id):
     return redirect(url_for('doctor.doctors_appointment'))
 
 @doctor_bp.route('/done_appointment/<int:appointment_id>', methods=['POST'])
+@login_required
 def done_appointment(appointment_id):
     appointment = Appointment.query.get(appointment_id)
     if not appointment:

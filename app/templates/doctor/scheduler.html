@@ -149,37 +149,36 @@
         </main>
         <div id="editModal"
             class="fixed inset-0 bg-black/40 hidden z-50 flex items-center justify-center">
-        <div class="bg-white rounded-lg w-80 p-4 space-y-3">
-            <h3 class="text-lg font-semibold">Edit Schedule</h3>
+            <div class="bg-white rounded-lg w-80 p-4 space-y-3">
+                <h3 class="text-lg font-semibold">Edit Schedule</h3>
 
-            <div class="text-sm text-gray-600" id="editDate"></div>
+                <div class="text-sm text-gray-600" id="editDate"></div>
 
-            <div class="flex gap-2">
-            <input id="editStart" type="time"
-                    class="flex-1 border rounded px-2 py-1">
-            <input id="editEnd" type="time"
-                    class="flex-1 border rounded px-2 py-1">
-            </div>
+                <div class="flex gap-2">
+                    <input id="editStart" type="time"
+                            class="flex-1 border rounded px-2 py-1">
+                    <input id="editEnd" type="time"
+                        class="flex-1 border rounded px-2 py-1">
+                </div>
 
-            <div class="flex justify-between pt-3">
-            <button
-                onclick="deleteSchedule()"
-                class="text-red-600 text-sm hover:underline">
-                Delete
-            </button>
-
-            <div class="space-x-2">
-                <button onclick="closeEditModal()"
-                        class="px-3 py-1 text-sm">
-                Cancel
+                <div class="flex justify-between pt-3">
+                <button
+                    onclick="deleteSchedule()"
+                    class="text-red-600 text-sm hover:underline">
+                    Delete
                 </button>
-                <button onclick="saveScheduleEdit()"
-                        class="bg-blue-600 text-white px-3 py-1 rounded text-sm">
-                Save
-                </button>
+
+                <div class="space-x-2">
+                    <button onclick="closeEditModal()"
+                            class="px-3 py-1 text-sm">
+                    Cancel
+                    </button>
+                    <button onclick="saveScheduleEdit()"
+                            class="bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                    Save
+                    </button>
+                </div>
             </div>
-            </div>
-        </div>
         </div>
 
     </div>

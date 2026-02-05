@@ -84,7 +84,7 @@
                             >
                                 <option disabled selected>-- Select a doctor --</option>
                                 {% for doctor in doctors %}
-                                    <option value="{{ doctor.doctor_id }}">{{ doctor.firstname }} {{ doctor.lastname }}</option>
+                                    <option value="{{ doctor.doctor_id }}"> {{ doctor.firstname | upper }} {{ doctor.lastname | upper }} ({{ doctor.specialization }})</option>
                                 {% endfor %}
                             </select>
                         </div>

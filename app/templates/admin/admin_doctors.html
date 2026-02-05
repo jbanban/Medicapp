@@ -5,7 +5,6 @@
 <div class="w-full flex bg-gray-100">
 
     {% include 'admin/admin_sidebar.html' %}
-    {% include 'base/notification.html' %}
 
     <!-- MAIN CONTENT -->
     <div class="flex-1 p-8">
@@ -101,7 +100,7 @@
                                 </tr>
                             </thead>
 
-                            <tbody id="results" class="divide-y divide-gray-100 bg-white transition-opacity duration-300">
+                            <tbody id="accountsResults" class="divide-y divide-gray-100 bg-white transition-opacity duration-300">
                                 {% include 'admin/partials/accounts_table_body.html' %}
                                 <div id="loadingSpinner" class="hidden flex justify-center items-center py-6">
                                     <div class="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
@@ -143,7 +142,7 @@
                             </tr>
                         </thead>
 
-                        <tbody id="results" class="divide-y divide-gray-100 bg-white">
+                        <tbody id="doctorsResults" class="divide-y divide-gray-100 bg-white">
                             {% for doctor in doctors %}
                             <tr class="hover:bg-blue-50 transition">
 
@@ -190,29 +189,43 @@
 
     </div>
 </div>
-
 <script>
-document.getElementById("accountForm").addEventListener("submit", async function (e) {
-    e.preventDefault();
+document.addEventListener("DOMContentLoaded", () => {
 
-    const formData = new FormData(this);
+    const form = document.getElementById("accountForm");
+    if (!form) {
+        console.warn("accountForm not found");
+        return;
+    }
 
-    const response = await fetch(this.action, {
-        method: "POST",
-        body: formData
+    form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        let response, result;
+
+        try {
+            response = await fetch(this.action, {
+                method: "POST",
+                body: formData
+            });
+
+            result = await response.json();
+
+        } catch (error) {
+            alert("Server error. Please check console.");
+            return;
+        }
+
+        alert(result.message);
+
+        if (result.success) {
+            this.reset();
+            refreshAccounts();
+        }
     });
 
-    const result = await response.json();
-
-    // Trigger Alpine notification
-    document.querySelector('[x-data]').__x.$data.show(
-        result.message,
-        result.category
-    );
-
-    if (result.success) {
-        this.reset(); // optional
-    }
 });
 
 const refreshUrl = "{{ url_for('admin.refresh_accounts') }}";
@@ -235,6 +248,19 @@ function refreshAccounts() {
             spinner.classList.add('hidden');
         });
 }
+
+function safeNotify(message, category = "info") { 
+    const el = document.querySelector('[x-data]'); 
+    if (!el || !el.__x) { 
+        console.warn("Alpine notification target not found"); 
+        alert(message); 
+        return; 
+    } 
+    
+    el.__x.$data.show(message, category); 
+
+}
+
 </script>
 
 {% endblock %}

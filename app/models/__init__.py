@@ -7,4 +7,3 @@ from .medical_record import MedicalRecord
 from .medical_visibility import MedicalVisibility
 from .doctor_schedule import Doctor_Schedule
 from .payment import PaymentRecord
-from .user import User

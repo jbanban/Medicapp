@@ -1,4 +1,5 @@
 from flask import render_template, request, session, redirect, url_for, flash
+from flask_login import current_user, login_required
 from app.models.patient import Patient
 from app.models.doctor import Doctor
 from app.models.appointment import Appointment
@@ -8,11 +9,9 @@ from . import patient_bp
 
 
 @patient_bp.route('/request_appointment', methods=['GET', 'POST'])
+@login_required
 def request_appointment():
-    if 'role' not in session or session['role'] != 'patient':
-        return redirect(url_for('unauthorized'))
-    user_id = session.get('user_id')
-
+    user_id = current_user.account_id
     doctors = Doctor.query.all()
 
     if request.method == 'POST':
@@ -45,6 +44,7 @@ def request_appointment():
 
 
 @patient_bp.route('/patient/reschedule_appointment/<int:appointment_id>', methods=['GET', 'POST'])
+@login_required
 def reschedule_appointment(appointment_id):
     if 'role' not in session or session['role'] != 'patient':
         return redirect(url_for('unauthorized'))

@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from datetime import datetime, date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Integer, Date, DateTime, ForeignKey
+from sqlalchemy import String, Integer, Date, DateTime, ForeignKey
 from app.extensions import db
 from app.security.encrypted_column import EncryptedColumn
 
@@ -26,9 +26,9 @@ class Patient(db.Model):
     )
 
     # ---------------- BASIC INFORMATION ----------------
-    firstname: Mapped[str] = mapped_column(EncryptedColumn(), nullable=False)
-    middlename: Mapped[str | None] = mapped_column(EncryptedColumn(), nullable=True)
-    lastname: Mapped[str] = mapped_column(EncryptedColumn(), nullable=False)
+    firstname: Mapped[str] = mapped_column(String(50), nullable=False)
+    middlename: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    lastname: Mapped[str] = mapped_column(String(50), nullable=False)
     gender: Mapped[str] = mapped_column(EncryptedColumn(), nullable=False)
 
     birthdate: Mapped[date] = mapped_column(Date, nullable=False)
