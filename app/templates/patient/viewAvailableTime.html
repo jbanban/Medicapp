@@ -417,7 +417,7 @@ function renderCalendar(month, year) {
                     <div
                         class="flex items-center gap-2 text-xs text-blue-700 cursor-pointer hover:underline"
                         onclick="openBookModal(
-                            ${s.id},
+                            ${s.doctor_schedule_id},
                             '${formattedDate}',
                             '${s.start} - ${s.end}',
                             '{{ doctor.firstname }} {{ doctor.lastname }}',

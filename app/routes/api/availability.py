@@ -38,7 +38,8 @@ def doctor_month_availability(doctor_id):
         data.setdefault(date, []).append({
             "doctor_schedule_id": s.doctor_schedule_id,
             "start": s.start_time.strftime('%I:%M %p').lstrip('0'),
-            "end": s.end_time.strftime('%I:%M %p').lstrip('0')
+            "end": s.end_time.strftime('%I:%M %p').lstrip('0'),
+            "status": s.status
         })
 
     return jsonify(data)

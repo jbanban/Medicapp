@@ -82,54 +82,154 @@
 
         <!-- ================= ADDRESS SECTION ================= -->
         <div class="pt-8 border-t">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Address Information</h3>
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">Address Information</h3>
 
-            <!-- CURRENT ADDRESS -->
-            <p class="text-sm font-medium text-gray-700 mb-2">Current Address</p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input name="current_house_no" value="{{ patient_info.current_house_no }}"
-                       placeholder="House / Unit No."
-                       class="form-input ">
-                <input name="current_street" value="{{ patient_info.current_street }}"
-                       placeholder="Street"
-                       class="form-input">
-                <input name="current_barangay" value="{{ patient_info.current_barangay }}"
-                       placeholder="Barangay"
-                       class="form-input">
-                <input name="current_city" value="{{ patient_info.current_city }}"
-                       placeholder="City / Municipality"
-                       class="form-input">
-                <input name="current_province" value="{{ patient_info.current_province }}"
-                       placeholder="Province"
-                       class="form-input">
-                <input name="current_zipcode" value="{{ patient_info.current_zipcode }}"
-                       placeholder="Zip Code"
-                       class="form-input">
-            </div>
+              <!-- CURRENT ADDRESS -->
+              <p class="text-sm font-medium text-gray-700 mb-2">Current Address</p>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-            <!-- PERMANENT ADDRESS -->
-            <p class="text-sm font-medium text-gray-700 mt-6 mb-2">Permanent Address</p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input name="permanent_house_no" value="{{ patient_info.permanent_house_no }}"
-                       placeholder="House / Unit No."
-                       class="form-input">
-                <input name="permanent_street" value="{{ patient_info.permanent_street }}"
-                       placeholder="Street"
-                       class="form-input">
-                <input name="permanent_barangay" value="{{ patient_info.permanent_barangay }}"
-                       placeholder="Barangay"
-                       class="form-input">
-                <input name="permanent_city" value="{{ patient_info.permanent_city }}"
-                       placeholder="City / Municipality"
-                       class="form-input">
-                <input name="permanent_province" value="{{ patient_info.permanent_province }}"
-                       placeholder="Province"
-                       class="form-input">
-                <input name="permanent_zipcode" value="{{ patient_info.permanent_zipcode }}"
-                       placeholder="Zip Code"
-                       class="form-input">
-            </div>
-        </div>
+                     <!-- House / Unit No -->
+                     <div class="relative">
+                     <input type="text" name="current_house_no" value="{{ patient_info.current_house_no }}"
+                            id="current_house_no"
+                            class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-base border-1 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                            placeholder=" " />
+                     <label for="current_house_no"
+                            class="absolute text-sm text-body duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-neutral-primary px-2 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
+                            House / Unit No.
+                     </label>
+                     </div>
+
+                     <!-- Street -->
+                     <div class="relative">
+                     <input type="text" name="current_street" value="{{ patient_info.current_street }}"
+                            id="current_street"
+                            class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-base border-1 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                            placeholder=" " />
+                     <label for="current_street" class="absolute text-sm text-body duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-neutral-primary px-2 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
+                            Street
+                     </label>
+                     </div>
+
+                     <!-- Barangay -->
+                     <div class="relative">
+                     <input type="text" name="current_barangay" value="{{ patient_info.current_barangay }}"
+                            id="current_barangay"
+                            class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-base border-1 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                            placeholder=" " />
+                     <label for="current_barangay" class="absolute text-sm text-body duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-neutral-primary px-2 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
+                            Barangay
+                     </label>
+                     </div>
+
+                     <!-- City -->
+                     <div class="relative">
+                     <input type="text" name="current_city" value="{{ patient_info.current_city }}"
+                            id="current_city"
+                            class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-base border-1 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                            placeholder=" " />
+                     <label for="current_city" class="absolute text-sm text-body duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-neutral-primary px-2 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
+                            City / Municipality
+                     </label>
+                     </div>
+
+                     <!-- Province -->
+                     <div class="relative">
+                     <input type="text" name="current_province" value="{{ patient_info.current_province }}"
+                            id="current_province"
+                            class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-base border-1 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                            placeholder=" " />
+                     <label for="current_province" class="absolute text-sm text-body duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-neutral-primary px-2 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
+                            Province
+                     </label>
+                     </div>
+
+                     <!-- Zip Code -->
+                     <div class="relative">
+                     <input type="text" name="current_zipcode" value="{{ patient_info.current_zipcode }}"
+                            id="current_zipcode"
+                            class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-base border-1 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                            placeholder=" " />
+                     <label for="current_zipcode" class="absolute text-sm text-body duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-neutral-primary px-2 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
+                            Zip Code
+                     </label>
+                     </div>
+
+              </div>
+
+              <!-- PERMANENT ADDRESS -->
+              <p class="text-sm font-medium text-gray-700 mt-6 mb-2">Permanent Address</p>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                     
+                     <!-- House / Unit No -->
+                     <div class="relative">
+                     <input type="text" name="permanent_house_no" value="{{ patient_info.permanent_house_no }}"
+                            id="permanent_house_no"
+                            class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-base border-1 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                            placeholder=" " />
+                     <label for="permanent_house_no"
+                            class="absolute text-sm text-body duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-neutral-primary px-2 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
+                            House / Unit No.
+                     </label>
+                     </div>
+
+                     <!-- Street -->
+                     <div class="relative">
+                     <input type="text" name="permanent_street" value="{{ patient_info.permanent_street }}"
+                            id="permanent_street"
+                            class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-base border-1 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                            placeholder=" " />
+                     <label for="permanent_street" class="absolute text-sm text-body duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-neutral-primary px-2 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
+                            Street
+                     </label>
+                     </div>
+
+                     <!-- Barangay -->
+                     <div class="relative">
+                     <input type="text" name="permanent_barangay" value="{{ patient_info.permanent_barangay }}"
+                            id="permanent_barangay"
+                            class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-base border-1 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                            placeholder=" " />
+                     <label for="permanent_barangay" class="absolute text-sm text-body duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-neutral-primary px-2 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
+                            Barangay
+                     </label>
+                     </div>
+
+                     <!-- City -->
+                     <div class="relative">
+                     <input type="text" name="permanent_city" value="{{ patient_info.permanent_city }}"
+                            id="permanent_city"
+                            class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-base border-1 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                            placeholder=" " />
+                     <label for="permanent_city" class="absolute text-sm text-body duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-neutral-primary px-2 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
+                            City / Municipality
+                     </label>
+                     </div>
+
+                     <!-- Province -->
+                     <div class="relative">
+                     <input type="text" name="permanent_province" value="{{ patient_info.permanent_province }}"
+                            id="permanent_province"
+                            class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-base border-1 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                            placeholder=" " />
+                     <label for="permanent_province" class="absolute text-sm text-body duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-neutral-primary px-2 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
+                            Province
+                     </label>
+                     </div>
+
+                     <!-- Zip Code -->
+                     <div class="relative">
+                     <input type="text" name="permanent_zipcode" value="{{ patient_info.permanent_zipcode }}"
+                            id="permanent_zipcode"
+                            class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-base border-1 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                            placeholder=" " />
+                     <label for="permanent_zipcode" class="absolute text-sm text-body duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-neutral-primary px-2 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
+                            Zip Code
+                     </label>
+                     </div>
+              </div>
+              </div>
+
 
     </div>
 
@@ -137,27 +237,50 @@
     <div class="mt-12 pt-8 border-t border-gray-200">
         <h2 class="text-xl font-semibold text-gray-800">Emergency Contact</h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <input name="ec_name" value="{{ patient_info.ec_name }}"
-                   placeholder="Contact Name"
-                   class="form-input">
-            <input name="ec_relation" value="{{ patient_info.ec_relation }}"
-                   placeholder="Relation"
-                   class="form-input">
-            <input name="ec_phone" value="{{ patient_info.ec_phone }}"
-                   placeholder="Contact Number"
-                   class="form-input">
-        </div>
-
-        <input name="ec_address" value="{{ patient_info.ec_address }}"
-               placeholder="Complete Address"
-               class="form-input mt-3">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4 ">
+              <div class="relative">
+                     <input type="text" name="ec_name" value="{{ patient_info.ec_name }}"
+                            id="ec_name"
+                            class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-base border-1 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                            placeholder=" " />
+                     <label for="ec_name" class="absolute text-sm text-body duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-neutral-primary px-2 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
+                            Contact Name
+                     </label>
+              </div>
+              <div class="relative">
+                     <input type="text" name="ec_relation" value="{{ patient_info.ec_relation }}"
+                            id="ec_relation"
+                            class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-base border-1 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                            placeholder=" " />
+                     <label for="ec_relation" class="absolute text-sm text-body duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-neutral-primary px-2 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
+                            Relationship
+                     </label>
+              </div>
+              <div class="relative">
+                     <input type="text" name="ec_phone" value="{{ patient_info.ec_phone }}"
+                            id="ec_phone"
+                            class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-base border-1 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                            placeholder=" " />
+                     <label for="ec_phone" class="absolute text-sm text-body duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-neutral-primary px-2 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
+                            Contact Number
+                     </label>
+              </div>
+       </div>
+       <div class="relative mt-4">
+              <input type="text" name="ec_address" value="{{ patient_info.ec_address }}"
+                     id="ec_address"
+                     class="block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-base border-1 border-default-medium appearance-none focus:outline-none focus:ring-0 focus:border-brand peer"
+                     placeholder=" " />
+              <label for="ec_address" class="absolute text-sm text-body duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-neutral-primary px-2 peer-focus:text-fg-brand peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
+                     Complete Address
+              </label>
+       </div>
     </div>
 
     <!-- SAVE BUTTON -->
     <div class="flex justify-end pt-6">
         <button type="submit"
-                class="px-6 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition">
+                class="px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-green-600 transition">
             Save Changes
         </button>
     </div>

@@ -1,5 +1,7 @@
-from flask import Blueprint, render_template, redirect, url_for, session, request
+from flask import Blueprint, render_template, redirect, url_for, request
+from flask_login import login_required, current_user
 from app.models import Doctor, Patient
+from app.services.patient_cache import get_patient_cache
 
 misc_bp = Blueprint("misc", __name__)
 
@@ -23,12 +25,14 @@ def search():
 
 
 @misc_bp.route('/about')
+@login_required
 def about():
 
     doctor = Doctor.query.first()
-    patient = Patient.query.first()
+    patient = Patient.query.filter_by(account_id=current_user.account_id).first()
 
-    return render_template('about.html', doctor=doctor, patient=patient)
+    decrypted_patient = get_patient_cache(patient.patient_id)
+    return render_template('about.html', doctor=doctor, patient=decrypted_patient)
 
 @misc_bp.route('/logout')
 def logout():
