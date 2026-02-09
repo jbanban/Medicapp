@@ -16,6 +16,7 @@ class Appointment(db.Model):
     reason: Mapped[str] = mapped_column(EncryptedColumn(), nullable=True)
     notes: Mapped[str | None] = mapped_column(EncryptedColumn(), nullable=True)
     status: Mapped[str] = mapped_column(String(20))
+    type: Mapped[str] = mapped_column(String(30))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     patient: Mapped["Patient"] = relationship(back_populates="appointments")
