@@ -10,7 +10,7 @@ class MedicalRecord(db.Model):
     record_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     patient_id: Mapped[int] = mapped_column(ForeignKey("patient.patient_id"))
     doctor_id: Mapped[int] = mapped_column(ForeignKey("doctor.doctor_id"))
-    schedule_id: Mapped[int] = mapped_column(ForeignKey("doctor_schedule.doctor_schedule_id"))
+    appointment_id: Mapped[int] = mapped_column(ForeignKey("appointment.appointment_id"))
     visit_date: Mapped[str] = mapped_column(String(10))
     diagnosis: Mapped[str] = mapped_column(String)
     notes: Mapped[str] = mapped_column(String)
@@ -18,4 +18,4 @@ class MedicalRecord(db.Model):
 
     patient: Mapped["Patient"] = relationship(back_populates="records")
     doctor: Mapped["Doctor"] = relationship(back_populates="records")
-    doctor_schedule: Mapped["Doctor_Schedule"] = relationship(back_populates="record")
+    appointment: Mapped["Appointment"] = relationship(back_populates="records")

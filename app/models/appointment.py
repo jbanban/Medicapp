@@ -11,6 +11,10 @@ class Appointment(db.Model):
     appointment_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     patient_id: Mapped[int] = mapped_column(ForeignKey("patient.patient_id"))
     doctor_id: Mapped[int] = mapped_column(ForeignKey("doctor.doctor_id"))
+    doctor_schedule_id: Mapped[int] = mapped_column(
+        ForeignKey("doctor_schedule.doctor_schedule_id"),
+        nullable=True
+    )
     appointment_date: Mapped[str] = mapped_column(String(10))
     appointment_time: Mapped[str] = mapped_column(String(10))
     reason: Mapped[str] = mapped_column(EncryptedColumn(), nullable=True)
@@ -22,3 +26,5 @@ class Appointment(db.Model):
     patient: Mapped["Patient"] = relationship(back_populates="appointments")
     doctor: Mapped["Doctor"] = relationship(back_populates="appointments")
     payments: Mapped[list["PaymentRecord"]] = relationship(back_populates="appointment")
+    records: Mapped[list["MedicalRecord"]] = relationship(back_populates="appointment")
+    schedule: Mapped["Doctor_Schedule"] = relationship(back_populates="appointments")

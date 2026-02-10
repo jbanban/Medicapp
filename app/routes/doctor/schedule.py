@@ -25,7 +25,6 @@ def doctors_schedule():
 @doctor_bp.route('/scheduler', methods=['POST'])
 @login_required
 def scheduler():
-    print(type(current_user))
 
     doctor = Doctor.query.filter_by(
         account_id=current_user.account_id

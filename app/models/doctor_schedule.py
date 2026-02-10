@@ -41,4 +41,4 @@ class Doctor_Schedule(db.Model):
 
     # Relationships
     doctor = relationship("Doctor", back_populates="doctor_schedule")
-    record = relationship("MedicalRecord", back_populates="doctor_schedule")
+    appointments: Mapped[list["Appointment"]] = relationship(back_populates="schedule",cascade="all, delete-orphan")

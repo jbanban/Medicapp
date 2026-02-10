@@ -1,202 +1,223 @@
 {% extends 'base/layout.html' %}
 {% block title %}Calendar | MEDICAPP{% endblock %}
 {% block content %}
-<div class="flex bg-gray-100 w-full">
+<div class="flex bg-gradient-to-br from-gray-50 to-gray-100 w-full min-h-screen">
     
     <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col">
 
     
     <!-- SHARED CALENDAR HEADER -->
-    <header class="flex items-center justify-between px-4 py-2 border-b bg-white">
+    <header class="flex items-center justify-between px-6 py-4 border-b bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50">
 
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-6">
 
             <!-- Logo -->
-            <div class="flex items-center gap-2">
-                <a href="{{ url_for('doctor.doctor_dashboard') }}" class="flex items-center">
-                    <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                        <img src="{{ url_for('static', filename='img/logo.png')}}" alt="logo" >
+            <div class="flex items-center gap-3">
+                <a href="{{ url_for('doctor.doctor_dashboard') }}" class="flex items-center gap-2 group">
+                    <div class="w-44 h-12 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition">
+                        <img src="{{ url_for('static', filename='img/logo-name-removebg-preview.png')}}" alt="logo" class="w-44 h-12">
                     </div>
-                    <span class="text-xl font-medium text-gray-700">MEDICAPP</span>
                 </a>
             </div>
 
             <!-- Today Button -->
             <button id="todayBtn"
-                    class="px-5 py-2 border border-gray-300 rounded-full hover:bg-gray-50 text-sm font-medium">
+                    class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-sm hover:shadow text-sm font-semibold">
                 Today
             </button>
 
             <!-- Navigation Arrows -->
-            <div class="flex items-center">
+            <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
                 <!-- PREVIOUS -->
-                <button id="prevBtn" class="p-2 hover:bg-gray-100 rounded-full">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                <button id="prevBtn" class="p-2 hover:bg-white rounded-md transition group">
+                    <svg class="w-5 h-5 text-gray-600 group-hover:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                             d="M15 19l-7-7 7-7"/>
                     </svg>
                 </button>
 
                 <!-- NEXT -->
-                <button id="nextBtn" class="p-2 hover:bg-gray-100 rounded-full">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                <button id="nextBtn" class="p-2 hover:bg-white rounded-md transition group">
+                    <svg class="w-5 h-5 text-gray-600 group-hover:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                             d="M9 5l7 7-7 7"/>
                     </svg>
                 </button>
             </div>
 
-            <div class="flex items-baseline gap-3 text-xl font-normal text-gray-700">
+            <!-- Current Month/Week Display -->
+            <div class="flex items-baseline gap-3 text-xl font-bold text-gray-900">
                 <span id="monthTitle" class="hidden"></span>
-                <span id="weekNumber" class="hidden text-gray-500"></span>
-                <span id="headerTitle" class="hidden"></span>
+                <span id="weekNumber" class="hidden text-blue-600 text-lg"></span>
+                <span id="headerTitle" class="hidden text-base font-semibold text-gray-600"></span>
             </div>
 
         </div>
 
-        <!-- View Switch -->
-        <div class="relative">
-            <div class="flex items-center gap-2">
-                <button class="p-2 hover:bg-gray-100 rounded-full">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- View Controls -->
+        <div class="flex items-center gap-3">
+            <!-- Quick Action Icons -->
+            <div class="flex items-center gap-2 pr-3 border-r border-gray-200">
+                <button class="p-2 hover:bg-gray-100 rounded-lg transition" title="Search">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                 </button>
-                <button class="p-2 hover:bg-gray-100 rounded-full">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" stroke-width="2"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16v-4m0-4h.01"/>
+                <button class="p-2 hover:bg-gray-100 rounded-lg transition" title="Refresh">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>
                 </button>
+            </div>
 
-                <button class="p-2 hover:bg-gray-100 rounded-full">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                </button>
-
-                <!-- View Toggle Button -->
-                <div class="relative">
-                    <button id="viewToggleBtn"
-                            class="px-4 py-2 border border-gray-300 rounded-full hover:bg-gray-50 text-sm font-medium flex items-center gap-1">
-                        <span id="currentViewLabel">Month</span>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </button>
-
-                    <!-- Dropdown -->
-                    <div id="viewDropdown"
-                        class="hidden absolute mt-2 w-32 bg-white border rounded-lg shadow z-50">
-                        <button data-view="month"
-                                class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-                            Month
-                        </button>
-                        <button data-view="week"
-                                class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-                            Week
-                        </button>
-                        <button data-view="day"
-                                class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">
-                            Day
-                        </button>
-                    </div>
-                </div>
-
-                <button class="p-2 hover:bg-gray-100 rounded-lg border border-gray-300">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- View Toggle Button -->
+            <div class="relative">
+                <button id="viewToggleBtn"
+                        class="px-5 py-2.5 border border-gray-200 bg-white rounded-lg hover:bg-gray-50 transition text-sm font-semibold flex items-center gap-2 shadow-sm">
+                    <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                </button>
-
-                <button class="p-2 hover:bg-gray-100 rounded-full">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    <span id="currentViewLabel" class="text-gray-700">Month</span>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
 
-                <button class="p-2 hover:bg-gray-100 rounded-full">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                    </svg>
-                </button>
+                <!-- Dropdown -->
+                <div id="viewDropdown"
+                    class="hidden absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
+                    <button data-view="month"
+                            class="block w-full text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition flex items-center gap-2">
+                        <i class="fas fa-calendar-alt w-4"></i>
+                        Month View
+                    </button>
+                    <button data-view="week"
+                            class="block w-full text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition flex items-center gap-2">
+                        <i class="fas fa-calendar-week w-4"></i>
+                        Week View
+                    </button>
+                    <button data-view="day"
+                            class="block w-full text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition flex items-center gap-2">
+                        <i class="fas fa-calendar-day w-4"></i>
+                        Day View
+                    </button>
+                </div>
             </div>
         </div>
 
     </header>
 
-    <div class="calendarContent">
+    <div class="calendarContent flex-1">
         <!-- Main Content -->
-        <div id="monthView" class="flex">
+        <div id="monthView" class="flex h-full">
             <!-- Sidebar -->
-            <aside class="w-72 border-r border-gray-200 p-4 sticky top-0 h-screen bg-white overflow-y-auto">
+            <aside class="w-80 border-r border-gray-200 bg-white flex flex-col h-[calc(100vh-73px)] sticky top-[73px]">
+                
+                <div class="p-6 flex-1 overflow-y-auto">
+                    <!-- Create Button -->
+                    <button onclick="openCreateModal()" class="w-full flex items-center justify-center gap-3 px-6 py-4 mb-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl shadow-md hover:shadow-lg transition-all hover:scale-[1.02] group">
+                        <svg class="w-5 h-5 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        <span class="font-semibold text-base">Create Appointment</span>
+                    </button>
 
-                <!-- Create Button -->
-                <button class="flex items-center gap-3 px-4 py-3 mb-4 bg-white border border-gray-300 rounded-full shadow-sm hover:shadow-md">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    <span class="font-medium">Create</span>
-                </button>
+                    <!-- Mini Calendar -->
+                    <div class="mb-8 bg-gray-50 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-sm font-bold text-gray-900">Quick View</h3>
+                            <button class="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Day labels -->
+                        <div class="grid grid-cols-7 gap-1 text-center text-xs font-bold text-gray-500 mb-3">
+                            <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+                        </div>
 
-                <!-- Mini Calendar -->
-                <div class="mb-6">
-                    <!-- Day labels -->
-                    <div class="grid grid-cols-7 gap-1 text-center text-xs font-medium text-gray-600 mb-2">
-                        <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+                        <div id="miniCalendarDays" class="grid grid-cols-7 gap-1 text-center text-sm"></div>
                     </div>
 
-                    <div id="miniCalendarDays" class="grid grid-cols-7 gap-1 text-center text-sm"></div>
+                    <!-- My Calendars Section -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between px-2 py-3 mb-3">
+                            <h3 class="text-sm font-bold text-gray-900">My Calendars</h3>
+                            <button class="p-1.5 hover:bg-gray-100 rounded-lg transition">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg cursor-pointer transition group">
+                                <input type="checkbox" checked class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-2 focus:ring-blue-500">
+                                <div class="flex items-center gap-2 flex-1">
+                                    <div class="w-3 h-3 bg-blue-600 rounded-full"></div>
+                                    <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">My Schedule</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg cursor-pointer transition group">
+                                <input type="checkbox" checked class="w-4 h-4 text-green-600 rounded border-gray-300 focus:ring-2 focus:ring-green-500">
+                                <div class="flex items-center gap-2 flex-1">
+                                    <div class="w-3 h-3 bg-green-600 rounded-full"></div>
+                                    <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">Appointments</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg cursor-pointer transition group">
+                                <input type="checkbox" checked class="w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-2 focus:ring-purple-500">
+                                <div class="flex items-center gap-2 flex-1">
+                                    <div class="w-3 h-3 bg-purple-600 rounded-full"></div>
+                                    <span class="text-sm font-medium text-gray-700 group-hover:text-gray-900">Tasks</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-100">
+                        <h4 class="text-xs font-bold text-gray-700 mb-3">This Week</h4>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-gray-600">Appointments</span>
+                                <span class="text-sm font-bold text-blue-700">12</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-gray-600">Available Slots</span>
+                                <span class="text-sm font-bold text-green-700">8</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-gray-600">Pending</span>
+                                <span class="text-sm font-bold text-amber-700">3</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- My calendars -->
-                <div class="mb-4">
-                    <div class="flex items-center justify-between px-2 py-2">
-                        <span class="text-sm font-medium">My calendars</span>
-                        <button class="p-1 hover:bg-gray-100 rounded">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
+                <!-- Footer -->
+                <div class="p-4 border-t border-gray-200 bg-gray-50">
+                    <div class="flex items-center justify-center gap-3 text-xs text-gray-500">
+                        <a href="#" class="hover:text-blue-600 transition">Terms</a>
+                        <span>•</span>
+                        <a href="#" class="hover:text-blue-600 transition">Privacy</a>
+                        <span>•</span>
+                        <a href="#" class="hover:text-blue-600 transition">Help</a>
                     </div>
-                    <div class="space-y-1">
-                        <label class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded cursor-pointer">
-                            <input type="checkbox" checked class="w-4 h-4 text-blue-600 rounded">
-                            <span class="text-sm">jenel eric</span>
-                        </label>
-                        <label class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded cursor-pointer">
-                            <input type="checkbox" checked class="w-4 h-4 text-green-600 rounded">
-                            <span class="text-sm">Birthdays</span>
-                        </label>
-                        <label class="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 rounded cursor-pointer">
-                            <input type="checkbox" checked class="w-4 h-4 text-blue-600 rounded">
-                            <span class="text-sm">Tasks</span>
-                        </label>
-                    </div>
-                </div>
-
-
-                <!-- Footer Links -->
-                <div class="flex items-center gap-2 px-2 text-xs text-gray-600">
-                    <a href="#" class="hover:underline">Terms</a>
-                    <span>-</span>
-                    <a href="#" class="hover:underline">Privacy</a>
                 </div>
             </aside>
         
             <!-- Calendar Grid -->
-            <div class="flex-1 overflow-x-auto bg-gray-50">
+            <div class="flex-1 overflow-x-auto">
 
-                <!-- Day Headers (JS will fill this) -->
-                <div id="dayHeaders" class="grid grid-cols-7 bg-white border-b border-gray-200 sticky top-0 z-20">
+                <!-- Day Headers -->
+                <div id="dayHeaders" class="grid grid-cols-7 bg-white border-b-2 border-gray-200 sticky top-0 z-20">
                 </div>
 
                 <!-- Calendar Days Grid -->
-                <div id="calendarGrid" class="grid grid-cols-7 auto-rows-[minmax(120px,1fr)] bg-white">
+                <div id="calendarGrid" class="grid grid-cols-7 auto-rows-[minmax(140px,1fr)]">
                 </div>
             </div>
         </div>
@@ -205,9 +226,73 @@
             {% include 'doctor/scheduler.html' %}
         </div>
     </div>
+</div>
 {% endblock %}
+
 {% block scripts %}
 <script>
+/* ================================
+   TOOLTIP FOR AVAILABILITY
+================================ */
+const availabilityTooltip = document.createElement('div');
+availabilityTooltip.id = 'availabilityTooltip';
+availabilityTooltip.className = 'fixed z-50 hidden bg-gray-900 text-white text-sm rounded-lg px-4 py-3 shadow-xl pointer-events-none';
+document.body.appendChild(availabilityTooltip);
+
+function showAvailabilityTooltip(event, dateString) {
+    const date = new Date(dateString);
+    const availData = availabilityByDate[dateString];
+    
+    const formattedDate = date.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        month: 'long', 
+        day: 'numeric', 
+        year: 'numeric' 
+    });
+    
+    // Build time information
+    let timeInfo = '';
+    if (availData) {
+        const slots = availData.slots || 0;
+        const startTime = availData.startTime;
+        const endTime = availData.endTime;
+        
+        timeInfo = `<div class="mt-2 pt-2 border-t border-gray-700">
+            <div class="flex items-center gap-2 text-xs text-gray-300 mb-1">
+                <i class="fas fa-calendar-check"></i>
+                <span>${slots} slot${slots !== 1 ? 's' : ''} available</span>
+            </div>`;
+        
+        if (startTime && endTime) {
+            timeInfo += `
+            <div class="flex items-center gap-2 text-xs text-green-300 font-semibold">
+                <i class="fas fa-clock"></i>
+                <span>${startTime} - ${endTime}</span>
+            </div>`;
+        }
+        
+        timeInfo += `</div>`;
+    }
+    
+    availabilityTooltip.innerHTML = `
+        <div class="font-semibold mb-1">
+            <i class="fas fa-calendar-day mr-2"></i>${formattedDate}
+        </div>
+        <div class="text-xs text-gray-300">
+            Click to view weekly schedule
+        </div>
+        ${timeInfo}
+    `;
+    
+    availabilityTooltip.style.left = event.pageX + 12 + "px";
+    availabilityTooltip.style.top = event.pageY + 12 + "px";
+    availabilityTooltip.classList.remove("hidden");
+}
+
+function hideAvailabilityTooltip() {
+    availabilityTooltip.classList.add("hidden");
+}
+
 /* ================================
    GLOBAL CALENDAR STATE
 ================================ */
@@ -263,14 +348,21 @@ function renderMiniCalendar(month, year) {
 
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
 
+    // Empty cells before month starts
     for (let i = 0; i < firstDay; i++) {
         container.innerHTML += `<div></div>`;
     }
 
+    // Days of the month
     for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(year, month, d);
+        const isToday = date.toDateString() === today.toDateString();
+        
         container.innerHTML += `
-            <div class="py-1 rounded hover:bg-blue-100 cursor-pointer">
+            <div class="py-2 rounded-lg hover:bg-blue-100 cursor-pointer transition font-medium
+                ${isToday ? 'bg-blue-600 text-white hover:bg-blue-700' : 'text-gray-700'}">
                 ${d}
             </div>
         `;
@@ -284,7 +376,6 @@ function formatDateYMD(date) {
     return `${y}-${m}-${d}`;
 }
 
-
 function renderCalendar(month, year) {
     calendarGrid.innerHTML = "";
     dayHeaders.innerHTML = "";
@@ -292,7 +383,7 @@ function renderCalendar(month, year) {
     updateTitle();
     renderMiniCalendar(month, year);
 
-    const days = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+    const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
     const firstOfMonth = new Date(year, month, 1);
     const startDay = firstOfMonth.getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -301,10 +392,13 @@ function renderCalendar(month, year) {
     // ===== DAY HEADERS =====
     for (let i = 0; i < 7; i++) {
         dayHeaders.innerHTML += `
-            <div
-                class="border-r border-gray-200 last:border-r-0 text-center py-3
-                       text-xs font-medium text-gray-600">
-                ${days[i]}
+            <div class="border-r border-gray-200 last:border-r-0 text-center py-4 px-2">
+                <div class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">
+                    ${days[i].substring(0, 3)}
+                </div>
+                <div class="text-sm font-semibold text-gray-700">
+                    ${days[i]}
+                </div>
             </div>
         `;
     }
@@ -317,22 +411,23 @@ function renderCalendar(month, year) {
         const isCurrentMonth = cellDate.getMonth() === month;
         const isToday = cellDate.toDateString() === today.toDateString();
         const formattedDate = formatDateYMD(cellDate);
-        const slotCount = availabilityByDate[formattedDate] || 0;
+        const availData = availabilityByDate[formattedDate];
+        const slotCount = availData?.slots || 0;
         const hasAvailability = slotCount > 0;
         const day = cellDate.getDate();
 
         calendarGrid.innerHTML += `
             <div
-                class="relative border-t border-r border-gray-200 last:border-r-0 p-2
-                       cursor-pointer transition-colors group
-                       ${isCurrentMonth ? "bg-white" : "bg-gray-50"}
-                       hover:bg-blue-50"
+                class="relative border-t border-r border-gray-200 last:border-r-0 p-3
+                       cursor-pointer transition-all group
+                       ${isCurrentMonth ? "bg-white hover:bg-blue-50" : "bg-gray-50/50 hover:bg-gray-100"}
+                       ${isToday ? "bg-blue-50 border-2 border-blue-500" : ""}"
                 onclick="openWeekFromDate('${formattedDate}')"
             >
-                <div class="flex justify-between items-start mb-1">
-                    <span class="text-xs font-medium
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-sm font-bold transition-colors
                         ${!isCurrentMonth ? "text-gray-400" : "text-gray-700"}
-                        ${isToday ? "bg-blue-600 text-white rounded-full w-6 h-6 inline-flex items-center justify-center" : ""}
+                        ${isToday ? "bg-blue-600 text-white rounded-full w-8 h-8 inline-flex items-center justify-center shadow-md" : "group-hover:text-blue-600"}
                     ">
                         ${day}
                     </span>
@@ -340,9 +435,9 @@ function renderCalendar(month, year) {
                     ${
                         hasAvailability
                             ? `
-                            <div class="flex items-center gap-1">
-                                <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
-                                <span class="text-[10px] font-semibold text-blue-600">
+                            <div class="flex items-center gap-1.5 bg-blue-100 px-2 py-1 rounded-full">
+                                <span class="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
+                                <span class="text-xs font-bold text-blue-700">
                                     ${slotCount}
                                 </span>
                             </div>
@@ -351,14 +446,31 @@ function renderCalendar(month, year) {
                     }
                 </div>
 
-                <!-- Event space -->
-                <div class="space-y-1"></div>
+                <!-- Event space placeholder -->
+                <div class="space-y-1 mt-2">
+                    ${
+                        hasAvailability
+                            ? `
+                        <div 
+                            class="text-xs text-gray-600 bg-green-50 border-l-2 border-green-500 px-2 py-1 rounded cursor-pointer hover:bg-green-100 transition group relative"
+                            onmouseenter="showAvailabilityTooltip(event, '${formattedDate}')"
+                            onmouseleave="hideAvailabilityTooltip()"
+                        >
+                            <i class="fas fa-calendar-check text-green-600 mr-1"></i>
+                            <span class="group-hover:font-semibold transition">Available</span>
+                        </div>
+                        `
+                            : ""
+                    }
+                </div>
             </div>
         `;
     }
 }
+
 async function loadMonthAvailability(year, month) {
-    availabilityByDate.clear?.();
+    // Clear previous data
+    Object.keys(availabilityByDate).forEach(key => delete availabilityByDate[key]);
 
     const res = await fetch(`/api/doctor/doctors_schedule?year=${year}&month=${month + 1}`);
     if (!res.ok) return;
@@ -366,10 +478,13 @@ async function loadMonthAvailability(year, month) {
     const data = await res.json();
 
     data.forEach(item => {
-        availabilityByDate[item.date] = item.slots;
+        availabilityByDate[item.date] = {
+            slots: item.slots,
+            startTime: item.start_time || null,
+            endTime: item.end_time || null
+        };
     });
 }
-
 
 // ===== Schedule navigation =====
 const schedulerUrl = "{{ url_for('doctor.scheduler') }}";
@@ -387,7 +502,6 @@ function openWeekFromDate(dateString) {
 
     showView("week");
 }
-
 
 function getWeekNumber(date) {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -438,7 +552,6 @@ function updateHeaderTitle() {
     }
 }
 
-
 function getStartOfWeek(date) {
     const d = new Date(date);
     const day = d.getDay(); // 0 = Sunday
@@ -446,7 +559,6 @@ function getStartOfWeek(date) {
     d.setHours(0, 0, 0, 0);
     return d;
 }
-
 
 /* ================================
    MAIN RENDER SWITCH
@@ -472,7 +584,6 @@ async function render() {
             window.renderSchedCalendar?.();
         }
     }
-
 }
 
 /* ================================
@@ -533,7 +644,10 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         viewDropdown.querySelectorAll("button").forEach(btn => {
-            btn.onclick = () => showView(btn.dataset.view);
+            btn.onclick = () => {
+                showView(btn.dataset.view);
+                viewDropdown.classList.add("hidden");
+            };
         });
 
         document.addEventListener("click", () => {
@@ -544,6 +658,8 @@ document.addEventListener("DOMContentLoaded", () => {
     /* ---------- INITIAL LOAD ---------- */
     showView("month");
 });
+
+// Auto-switch to week view if URL parameter is set
 (function autoSwitchToWeek() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("view") === "week" && params.has("date")) {
@@ -561,6 +677,477 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 })();
 
+/* ================================
+   CREATE APPOINTMENT MODAL
+================================ */
+let currentStep = 1;
+
+function openCreateModal() {
+    document.getElementById('createAppointmentModal').classList.remove('hidden');
+    resetModal();
+    setMinDate();
+}
+
+function closeCreateModal() {
+    document.getElementById('createAppointmentModal').classList.add('hidden');
+    resetModal();
+}
+
+function resetModal() {
+    currentStep = 1;
+    document.getElementById('appointmentDate').value = '';
+    document.getElementById('startTime').value = '';
+    document.getElementById('endTime').value = '';
+    document.getElementById('appointmentDuration').value = '60';
+    document.getElementById('datePreview').classList.add('hidden');
+    goToStep(1);
+}
+
+function setMinDate() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('appointmentDate').min = today;
+}
+
+function goToStep(step) {
+    currentStep = step;
+    
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const nextBtn = document.getElementById('nextBtn');
+    const backBtn = document.getElementById('backBtn');
+    const saveBtn = document.getElementById('saveScheduleBtn');
+    const stepIndicator1 = document.getElementById('stepIndicator1');
+    const stepIndicator2 = document.getElementById('stepIndicator2');
+    const stepConnector = document.getElementById('stepConnector');
+    
+    if (step === 1) {
+        // Show step 1
+        step1.classList.remove('hidden');
+        step2.classList.add('hidden');
+        nextBtn.classList.remove('hidden');
+        backBtn.classList.add('hidden');
+        saveBtn.classList.add('hidden');
+        
+        // Update indicators
+        stepIndicator1.querySelector('div').className = 'w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm';
+        stepIndicator1.querySelector('span').className = 'text-sm font-semibold text-blue-600';
+        stepIndicator2.querySelector('div').className = 'w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold text-sm';
+        stepIndicator2.querySelector('span').className = 'text-sm font-medium text-gray-500';
+        stepConnector.className = 'w-12 h-0.5 bg-gray-300';
+        
+    } else if (step === 2) {
+        const dateValue = document.getElementById('appointmentDate').value;
+        
+        if (!dateValue) {
+            alert('Please select a date first');
+            return;
+        }
+        
+        // Show step 2
+        step1.classList.add('hidden');
+        step2.classList.remove('hidden');
+        nextBtn.classList.add('hidden');
+        backBtn.classList.remove('hidden');
+        saveBtn.classList.remove('hidden');
+        
+        // Update selected date display
+        const date = new Date(dateValue + 'T00:00:00');
+        const formattedDate = date.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+        document.getElementById('selectedDateDisplay').textContent = formattedDate;
+        
+        // Update indicators
+        stepIndicator1.querySelector('div').className = 'w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center font-bold text-sm';
+        stepIndicator1.querySelector('span').className = 'text-sm font-semibold text-green-600';
+        stepIndicator2.querySelector('div').className = 'w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm';
+        stepIndicator2.querySelector('span').className = 'text-sm font-semibold text-blue-600';
+        stepConnector.className = 'w-12 h-0.5 bg-blue-600';
+        
+        updateSummary();
+    }
+}
+
+function updateSummary() {
+    const dateValue = document.getElementById('appointmentDate').value;
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const duration = document.getElementById('appointmentDuration').value;
+    
+    if (dateValue) {
+        const date = new Date(dateValue + 'T00:00:00');
+        document.getElementById('summaryDate').textContent = date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+    }
+    
+    if (startTime && endTime) {
+        document.getElementById('summaryTime').textContent = `${startTime} - ${endTime}`;
+        
+        // Calculate number of slots
+        const [startHour, startMin] = startTime.split(':').map(Number);
+        const [endHour, endMin] = endTime.split(':').map(Number);
+        const startMinutes = startHour * 60 + startMin;
+        const endMinutes = endHour * 60 + endMin;
+        const totalMinutes = endMinutes - startMinutes;
+        const slots = Math.floor(totalMinutes / parseInt(duration));
+        
+        document.getElementById('summarySlots').textContent = `${slots} appointment${slots !== 1 ? 's' : ''}`;
+    } else {
+        document.getElementById('summaryTime').textContent = '-';
+        document.getElementById('summarySlots').textContent = '-';
+    }
+    
+    if (duration) {
+        const durationText = duration === '60' ? '1 hour' : 
+                            duration === '90' ? '1.5 hours' :
+                            duration === '120' ? '2 hours' :
+                            `${duration} minutes`;
+        document.getElementById('summaryDuration').textContent = durationText;
+    }
+}
+
+async function saveSchedule() {
+    const dateValue = document.getElementById('appointmentDate').value;
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const duration = document.getElementById('appointmentDuration').value;
+    
+    // Validation
+    if (!dateValue || !startTime || !endTime) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    // Validate time range
+    const [startHour, startMin] = startTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
+    const startMinutes = startHour * 60 + startMin;
+    const endMinutes = endHour * 60 + endMin;
+    
+    if (endMinutes <= startMinutes) {
+        alert('End time must be after start time');
+        return;
+    }
+    
+    const totalMinutes = endMinutes - startMinutes;
+    if (totalMinutes < parseInt(duration)) {
+        alert('Time range is too short for the selected appointment duration');
+        return;
+    }
+    
+    // Show loading state
+    const saveBtn = document.getElementById('saveScheduleBtn');
+    const saveBtnText = document.getElementById('saveBtnText');
+    const spinner = document.getElementById('saveScheduleSpinner');
+    
+    saveBtn.disabled = true;
+    saveBtnText.textContent = 'Saving...';
+    spinner.classList.remove('hidden');
+    
+    try {
+        const response = await fetch('/doctor/scheduler', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                date: dateValue,
+                start_time: startTime,
+                end_time: endTime,
+                duration: parseInt(duration)
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Success
+            const date = new Date(dateValue + 'T00:00:00');
+            const formattedDate = date.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            
+            if (data.created) {
+                alert(`✓ Schedule created successfully!\n\n${formattedDate}\n${startTime} - ${endTime}`);
+            } else if (data.skipped) {
+                alert(`Schedule already exists for ${formattedDate}`);
+            }
+            
+            closeCreateModal();
+            
+            // Reload the calendar
+            await render();
+        } else {
+            alert(data.message || 'Failed to save schedule. Please try again.');
+        }
+        
+    } catch (error) {
+        console.error('Error saving schedule:', error);
+        alert('An error occurred while saving. Please try again.');
+    } finally {
+        // Reset button state
+        saveBtn.disabled = false;
+        saveBtnText.textContent = 'Save Schedule';
+        spinner.classList.add('hidden');
+    }
+}
+
+</script>
+
+<!-- Create Appointment Modal HTML -->
+<div id="createAppointmentModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-[60] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-2xl shadow-2xl transform transition-all">
+        
+        <!-- Modal Header -->
+        <div class="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-900">Create Appointment Schedule</h3>
+                    <p class="text-sm text-gray-600 mt-1">Set up a new availability slot</p>
+                </div>
+                <button onclick="closeCreateModal()" class="p-2 hover:bg-white rounded-lg transition">
+                    <i class="fas fa-times text-gray-500 text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <div class="flex items-center justify-center gap-4">
+                <div id="stepIndicator1" class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+                        1
+                    </div>
+                    <span class="text-sm font-semibold text-blue-600">Select Date</span>
+                </div>
+                <div class="w-12 h-0.5 bg-gray-300" id="stepConnector"></div>
+                <div id="stepIndicator2" class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold text-sm">
+                        2
+                    </div>
+                    <span class="text-sm font-medium text-gray-500">Select Time</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="px-6 py-6">
+            
+            <!-- Step 1: Date Selection -->
+            <div id="step1" class="space-y-6">
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-calendar-alt text-blue-600 text-2xl"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-900 mb-2">Choose a Date</h4>
+                    <p class="text-sm text-gray-600">Select the date for your appointment availability</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-3">
+                        <i class="fas fa-calendar text-blue-600 mr-2"></i>Appointment Date
+                    </label>
+                    <input 
+                        type="date" 
+                        id="appointmentDate"
+                        onchange="handleDateChange()"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base font-semibold"
+                    />
+                </div>
+
+                <!-- Date Preview -->
+                <div id="datePreview" class="hidden bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-4">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-check-circle text-blue-600 text-xl"></i>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-600 uppercase">Selected Date</p>
+                            <p id="datePreviewText" class="text-lg font-bold text-gray-900"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Time Selection -->
+            <div id="step2" class="hidden space-y-6">
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-clock text-purple-600 text-2xl"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-900 mb-2">Set Time Range</h4>
+                    <p class="text-sm text-gray-600">Define when you'll be available on <span id="selectedDateDisplay" class="font-semibold text-blue-600"></span></p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-3">
+                            <i class="fas fa-play text-green-600 mr-2"></i>Start Time
+                        </label>
+                        <input 
+                            type="time" 
+                            id="startTime"
+                            onchange="updateSummary()"
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base font-semibold"
+                            style="color-scheme: light;"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-3">
+                            <i class="fas fa-stop text-red-600 mr-2"></i>End Time
+                        </label>
+                        <input 
+                            type="time" 
+                            id="endTime"
+                            onchange="updateSummary()"
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base font-semibold"
+                            style="color-scheme: light;"
+                        />
+                    </div>
+                </div>
+
+                <!-- Duration Selection -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-3">
+                        <i class="fas fa-hourglass-half text-amber-600 mr-2"></i>Appointment Duration
+                    </label>
+                    <select 
+                        id="appointmentDuration"
+                        onchange="updateSummary()"
+                        class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base font-semibold bg-white"
+                    >
+                        <option value="30">30 minutes</option>
+                        <option value="45">45 minutes</option>
+                        <option value="60" selected>1 hour</option>
+                        <option value="90">1.5 hours</option>
+                        <option value="120">2 hours</option>
+                    </select>
+                </div>
+
+                <!-- Time Preview -->
+                <div id="timePreview" class="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-200 rounded-xl p-4">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-info-circle text-green-600 text-xl mt-1"></i>
+                        <div class="flex-1">
+                            <p class="text-xs font-semibold text-gray-600 uppercase mb-2">Schedule Summary</p>
+                            <div class="space-y-1 text-sm">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-calendar text-gray-600"></i>
+                                    <span class="font-semibold">Date:</span>
+                                    <span id="summaryDate" class="text-gray-700">-</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-clock text-gray-600"></i>
+                                    <span class="font-semibold">Time:</span>
+                                    <span id="summaryTime" class="text-gray-700">-</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-hourglass-half text-gray-600"></i>
+                                    <span class="font-semibold">Duration:</span>
+                                    <span id="summaryDuration" class="text-gray-700">-</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-users text-gray-600"></i>
+                                    <span class="font-semibold">Slots:</span>
+                                    <span id="summarySlots" class="text-blue-700 font-bold">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-5 bg-gray-50 border-t border-gray-200 flex justify-between items-center rounded-b-2xl">
+            <button
+                id="backBtn"
+                onclick="goToStep(1)"
+                class="hidden px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-200 rounded-lg transition flex items-center gap-2"
+            >
+                <i class="fas fa-arrow-left"></i>
+                Back
+            </button>
+            
+            <div class="flex-1"></div>
+
+            <div class="flex gap-3">
+                <button 
+                    onclick="closeCreateModal()"
+                    class="px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-200 rounded-lg transition"
+                >
+                    Cancel
+                </button>
+                
+                <button 
+                    id="nextBtn"
+                    onclick="goToStep(2)"
+                    class="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition shadow-sm hover:shadow flex items-center gap-2"
+                >
+                    <span>Next</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+
+                <button 
+                    id="saveScheduleBtn"
+                    onclick="saveSchedule()"
+                    class="hidden px-6 py-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg text-sm font-semibold hover:from-green-700 hover:to-green-800 transition shadow-sm hover:shadow flex items-center gap-2"
+                >
+                    <i class="fas fa-save"></i>
+                    <span id="saveBtnText">Save Schedule</span>
+                    
+                    <!-- Spinner -->
+                    <svg
+                        id="saveScheduleSpinner"
+                        class="hidden w-4 h-4 animate-spin text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                    >
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// Handle date change
+function handleDateChange() {
+    const dateInput = document.getElementById('appointmentDate');
+    if (dateInput.value) {
+        const date = new Date(dateInput.value + 'T00:00:00');
+        const formatted = date.toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            month: 'long', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+        document.getElementById('datePreviewText').textContent = formatted;
+        document.getElementById('datePreview').classList.remove('hidden');
+    } else {
+        document.getElementById('datePreview').classList.add('hidden');
+    }
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('createAppointmentModal');
+    if (event.target === modal) {
+        closeCreateModal();
+    }
+});
+
 </script>
 {% endblock %}
-
