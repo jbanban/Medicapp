@@ -4,6 +4,7 @@ from flask import jsonify, render_template, request
 from sqlalchemy import extract
 from app.models.account import Account
 from app.models.appointment import Appointment
+from app.models.doctor import Doctor
 from app.models.payment import PaymentRecord
 from app.utils.admin_only import admin_required
 from . import admin_bp
@@ -57,6 +58,8 @@ def doctors_revenue_summary(data):
     doctor_id = data.get("doctor_id")
     month = data.get("month")  # YYYY-MM
 
+    doctor = Doctor.query.get(doctor_id)
+    
     year, month_num = month.split("-")
 
     appointments = (
@@ -83,7 +86,7 @@ def doctors_revenue_summary(data):
     total_revenue = sum(a.amount for a in appointments)
 
     return jsonify({
-        "doctor_id": doctor_id,
+        "doctor": doctor.firstname if doctor else "Unknown",
         "month": month,
         "rows": rows,
         "total": total_revenue

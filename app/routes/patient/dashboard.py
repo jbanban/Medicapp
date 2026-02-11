@@ -25,8 +25,14 @@ def patient_dashboard():
     appointments = Appointment.query.filter_by(patient_id=patient.patient_id).all()
     doctors = Account.query.filter_by(role='doctor').all()
 
-    upcoming = Appointment.query.filter(Appointment.appointment_date >= today) \
-                     .order_by(Appointment.appointment_date.asc())
+    upcoming = Appointment.query \
+        .filter(
+            Appointment.patient_id == patient.patient_id,
+            Appointment.appointment_date >= today
+        ) \
+        .order_by(Appointment.appointment_date.asc()) \
+        .all()
+
 
     return render_template('patient/patient_dashboard.html',
                            patient=decrypted_patient, 

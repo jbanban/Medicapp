@@ -1,48 +1,270 @@
 <!-- MEDICAL DETAILS CARD -->
-<div class="flex justify-between items-center mb-6">
-    <h2 class="text-2xl font-bold text-gray-800">Medical Details</h2>
-</div>
+<div class="bg-white shadow-lg rounded-xl p-6">
 
-<div class="bg-white shadow rounded-lg px-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">
+        Medical History
+    </h2>
 
-    {% macro field(label, value, key) %}
-    <div class="border-l-4 border-blue-500 pl-4 mt-4">
+    <div class="space-y-4">
 
-        <p class="text-sm text-gray-500">{{ label }}</p>
-
-        <div class="flex items-center gap-4">
-
-            <p
-            class="text-lg font-semibold transition"
-            :class="isHidden('{{ key }}') ? 'blur-sm select-none' : ''"
-            >
-            {{ value or 'None' }}
-            </p>
-
-            <button
-            type="button"
-            @click="toggle('{{ key }}')"
-            class="p-2 hover:text-blue-600"
-            >
-            <i :class="isHidden('{{ key }}') ? 'ri-eye-line' : 'ri-eye-off-line'"></i>
-            </button>
-
+        {% macro field(label, value, field_key) %}
+        <div class="border rounded-lg p-4 hover:bg-gray-50 transition">
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-3 mb-2">
+                        <h3 class="text-sm font-semibold text-gray-700">{{ label }}</h3>
+                        <button 
+                            type="button"
+                            onclick="toggleVisibility('{{ field_key }}')"
+                            data-field="{{ field_key }}"
+                            class="visibility-toggle focus:outline-none focus:ring-2 focus:ring-blue-500 rounded p-1 transition-colors hover:bg-gray-200 flex-shrink-0">
+                            <!-- Eye Icon (Visible) -->
+                            <svg class="w-5 h-5 text-green-600 eye-visible" 
+                                 fill="none" 
+                                 stroke="currentColor" 
+                                 viewBox="0 0 24 24">
+                                <path stroke-linecap="round" 
+                                      stroke-linejoin="round" 
+                                      stroke-width="2" 
+                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" 
+                                      stroke-linejoin="round" 
+                                      stroke-width="2" 
+                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                            <!-- Eye Slash Icon (Hidden) -->
+                            <svg class="w-5 h-5 text-red-600 eye-hidden hidden" 
+                                 fill="none" 
+                                 stroke="currentColor" 
+                                 viewBox="0 0 24 24">
+                                <path stroke-linecap="round" 
+                                      stroke-linejoin="round" 
+                                      stroke-width="2" 
+                                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="field-content" data-field="{{ field_key }}">
+                        <p class="text-gray-600 text-sm whitespace-pre-wrap break-words">{{ value or "Not specified" }}</p>
+                    </div>
+                </div>
+            </div>
         </div>
+        {% endmacro %}
+
+        <!-- RENDER FIELDS -->
+        {{ field("Past Medical History", history.pastMedicalHistory, "pastMedicalHistory") }}
+        {{ field("Been Hospitalized?", history.beenHospitalized, "beenHospitalized") }}
+        {{ field("Had Surgery?", history.hadSurgery, "hadSurgery") }}
+        {{ field("Allergies", history.allergies, "allergies") }}
+        {{ field("Ongoing Medications", history.ongoingMedications, "ongoingMedications") }}
+        {{ field("Family History", history.familyHistory, "familyHistory") }}
+        {{ field("Social History", history.socialHistory, "socialHistory") }}
+        {{ field("Immunizations", history.immunizations, "immunizations") }}
+        {{ field("Recent Travel History", history.recentTravelHistory, "recentTravelHistory") }}
+        {{ field("Other Relevant Information", history.otherRelevantInfo, "otherRelevantInfo") }}
 
     </div>
-    {% endmacro %}
 
-
-    <!-- RENDER FIELDS -->
-    {{ field("Past Medical History", history.pastMedicalHistory, "pastMedicalHistory") }}
-    {{ field("Been Hospitalized?", history.beenHospitalized, "beenHospitalized") }}
-    {{ field("Had Surgery?", history.hadSurgery, "hadSurgery") }}
-    {{ field("Allergies", history.allergies, "allergies") }}
-    {{ field("Ongoing Medications", history.ongoingMedications, "ongoingMedications") }}
-    {{ field("Family History", history.familyHistory, "familyHistory") }}
-    {{ field("Social History", history.socialHistory, "socialHistory") }}
-    {{ field("Immunizations", history.immunizations, "immunizations") }}
-    {{ field("Recent Travel History", history.recentTravelHistory, "recentTravelHistory") }}
-    {{ field("Other Relevant Information", history.otherRelevantInfo, "otherRelevantInfo") }}
+    <div class="mt-6 flex items-center justify-between pt-4 border-t">
+        <div class="flex items-center gap-4 text-sm text-gray-600">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                <span>Visible</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                </svg>
+                <span>Hidden (Blurred)</span>
+            </div>
+        </div>
+        <button
+            type="button"
+            onclick="saveAllVisibility()"
+            id="saveButton"
+            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg">
+            Save All Settings
+        </button>
+    </div>
 
 </div>
+
+<style>
+    .field-content.blurred {
+        filter: blur(5px);
+        user-select: none;
+        pointer-events: none;
+    }
+    
+    .field-content {
+        transition: filter 0.3s ease;
+    }
+</style>
+
+<script>
+// Initialize state if not already present
+if (!window.state) {
+    window.state = {
+        hiddenFields: {}
+    };
+}
+
+const patientId = {{ patient.patient_id }};
+let hiddenFields = {};
+
+document.addEventListener("DOMContentLoaded", loadVisibility);
+
+async function loadVisibility() {
+    try {
+        const response = await fetch(
+            "{{ url_for('patient.get_medical_visibility', patient_id=patient.patient_id) }}"
+        );
+        hiddenFields = await response.json();
+        updateUIFromState();
+    } catch (error) {
+        console.error('Error loading visibility:', error);
+    }
+}
+
+async function toggleVisibility(key) {
+    // Toggle the state
+    hiddenFields[key] = !hiddenFields[key];
+    
+    // Update UI immediately
+    updateToggleButton(key);
+    updateFieldBlur(key);
+    
+    // Save to backend
+    await saveVisibility(key);
+}
+
+function updateToggleButton(field) {
+    const button = document.querySelector(`button[data-field="${field}"]`);
+    if (!button) return;
+    
+    const eyeVisible = button.querySelector('.eye-visible');
+    const eyeHidden = button.querySelector('.eye-hidden');
+    
+    if (hiddenFields[field]) {
+        // Field is visible (true means visible)
+        eyeVisible.classList.remove('hidden');
+        eyeHidden.classList.add('hidden');
+    } else {
+        // Field is hidden (false/undefined means hidden)
+        eyeVisible.classList.add('hidden');
+        eyeHidden.classList.remove('hidden');
+    }
+}
+
+function updateFieldBlur(field) {
+    const content = document.querySelector(`.field-content[data-field="${field}"]`);
+    if (!content) return;
+    
+    if (hiddenFields[field]) {
+        // Visible - remove blur
+        content.classList.remove('blurred');
+    } else {
+        // Hidden - add blur
+        content.classList.add('blurred');
+    }
+}
+
+function updateUIFromState() {
+    Object.keys(hiddenFields).forEach(field => {
+        updateToggleButton(field);
+        updateFieldBlur(field);
+    });
+    
+    // Also update fields that might not be in hiddenFields yet (default to hidden)
+    const allFields = document.querySelectorAll('.field-content[data-field]');
+    allFields.forEach(content => {
+        const field = content.getAttribute('data-field');
+        if (!(field in hiddenFields)) {
+            hiddenFields[field] = false; // Default to hidden
+            updateToggleButton(field);
+            updateFieldBlur(field);
+        }
+    });
+}
+
+async function saveVisibility(key) {
+    try {
+        const response = await fetch(
+            "{{ url_for('patient.update_medical_visibility', patient_id=patient.patient_id) }}",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(hiddenFields)
+            }
+        );
+
+        const data = await response.json();
+        console.log('Visibility saved:', data);
+    } catch (error) {
+        console.error('Error saving visibility:', error);
+    }
+}
+
+async function saveAllVisibility() {
+    try {
+        const response = await fetch(
+            "{{ url_for('patient.update_medical_visibility', patient_id=patient.patient_id) }}",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(hiddenFields)
+            }
+        );
+
+        const data = await response.json();
+        console.log('All visibility settings saved:', data);
+        
+        // Show success feedback
+        showSaveSuccess();
+    } catch (error) {
+        console.error('Error saving visibility:', error);
+        showSaveError();
+    }
+}
+
+function showSaveSuccess() {
+    const button = document.getElementById('saveButton');
+    const originalText = button.textContent;
+    button.textContent = '✓ Saved Successfully!';
+    button.classList.add('bg-green-600');
+    button.classList.remove('bg-blue-600');
+    
+    setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove('bg-green-600');
+        button.classList.add('bg-blue-600');
+    }, 2000);
+}
+
+function showSaveError() {
+    const button = document.getElementById('saveButton');
+    const originalText = button.textContent;
+    button.textContent = '✗ Save Failed';
+    button.classList.add('bg-red-600');
+    button.classList.remove('bg-blue-600');
+    
+    setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove('bg-red-600');
+        button.classList.add('bg-blue-600');
+    }, 2000);
+}
+
+function isHidden(key) {
+    // If value is false (hidden) or undefined, return true (should blur)
+    return !hiddenFields[key];
+}
+</script>

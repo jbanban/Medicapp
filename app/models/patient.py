@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.models.appointment import Appointment
     from app.models.medical_record import MedicalRecord
     from app.models.patient_history_background import PatientHistoryBackground
+    from app.models.medical_visibility import MedicalVisibility
 
 
 class Patient(db.Model):
@@ -81,6 +82,12 @@ class Patient(db.Model):
         uselist=False,
         cascade="all, delete-orphan"
     )
+    medical_visibility: Mapped["MedicalVisibility"] = relationship(
+        back_populates="patient",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+
 
     # ---------------- HELPERS ----------------
     @property

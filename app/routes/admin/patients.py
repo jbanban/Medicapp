@@ -18,7 +18,6 @@ def patients_list():
 
     decrypted_patients = [get_patient_cache(p.patient_id) for p in patients]
 
-    print(f"Decrypted Patients: {decrypted_patients}")  # Debugging line
     return render_template('admin/patients.html', 
                            patients=decrypted_patients,
                            )

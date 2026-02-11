@@ -74,7 +74,7 @@
                             <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+12%</span>
                         </div>
                         <p class="text-sm text-gray-600 font-medium">Total Patients</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-1">1,248</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-1">{{ totals.total_patients }}</p>
                         <p class="text-xs text-gray-500 mt-2">156 active this month</p>
                     </div>
                 </div>
@@ -106,7 +106,7 @@
                             <span class="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-1 rounded-full">8 today</span>
                         </div>
                         <p class="text-sm text-gray-600 font-medium">Appointments</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-1">432</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-1">{{ totals.total_booked_appointments }}</p>
                         <p class="text-xs text-gray-500 mt-2">64 pending confirmation</p>
                     </div>
                 </div>
@@ -122,8 +122,8 @@
                             <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+23%</span>
                         </div>
                         <p class="text-sm text-gray-600 font-medium">Total Revenue</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-1">$45,231</p>
-                        <p class="text-xs text-gray-500 mt-2">$12,430 this month</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-1">&#8369; {{ total_amount }}</p>
+                        <p class="text-xs text-gray-500 mt-2">&#8369; {{ total_amount_this_month }} this month</p>
                     </div>
                 </div>
 

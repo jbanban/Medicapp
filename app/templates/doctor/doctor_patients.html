@@ -68,13 +68,13 @@
                     </thead>
 
                     <tbody class="divide-y divide-gray-100">
-                        {% for appointment in appointments %}
+                        {% for patient, appointment in patients %}
                         <tr class="hover:bg-blue-50 transition">
 
                             <!-- Patient -->
                             <td class="px-6 py-4 text-sm font-medium text-gray-800">
-                                {{ appointment.patient.firstname }}
-                                {{ appointment.patient.lastname }}
+                                {{ patient.firstname }}
+                                {{ patient.lastname }}
                             </td>
 
                             <!-- Schedule -->
@@ -112,7 +112,7 @@
                             <!-- Action -->
                             <td class="px-6 py-4 text-center">
                                 {% if appointment.status != 'Done' %}
-                                <form action="{{ url_for('done_appointment',
+                                <form action="{{ url_for('doctor.done_appointment',
                                                         appointment_id=appointment.appointment_id) }}"
                                       method="POST">
                                     <button

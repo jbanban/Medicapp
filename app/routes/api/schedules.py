@@ -80,6 +80,7 @@ def get_doctor_month_schedule():
 
 @api_bp.route('/schedules', methods=['GET'])
 def get_week_schedules():
+    
     week_start_str = request.args.get('week_start')
 
     if not week_start_str:
