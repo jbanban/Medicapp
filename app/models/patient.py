@@ -55,8 +55,15 @@ class Patient(db.Model):
     permanent_zipcode: Mapped[str] = mapped_column(EncryptedColumn(), nullable=False)
 
     # ---------------- CONTACT INFORMATION ----------------
-    phone: Mapped[str] = mapped_column(EncryptedColumn(), nullable=False)
-    email: Mapped[str | None] = mapped_column(EncryptedColumn(), nullable=True)
+    phone: Mapped[str] = mapped_column(nullable=False)
+    phone_otp: Mapped[str | None] = mapped_column(EncryptedColumn(), nullable=True)
+    phone_otp_expiry: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    phone_verified: Mapped[bool] = mapped_column(default=False, nullable=False)
+
+    email: Mapped[str | None] = mapped_column(nullable=True)
+    email_otp: Mapped[str | None] = mapped_column(EncryptedColumn(), nullable=True)
+    email_otp_expiry: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    email_verified: Mapped[bool] = mapped_column(default=False, nullable=False)
 
     # ---------------- EMERGENCY CONTACT ----------------
     ec_name: Mapped[str | None] = mapped_column(EncryptedColumn(), nullable=True)

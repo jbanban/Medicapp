@@ -7,5 +7,6 @@ from .appointments import *
 from .booking import *
 from .availableDoctors import *
 from .visibility import *
+from .verification import *
 # from .medical_records import *
 # from .prescriptions import *

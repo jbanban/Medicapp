@@ -1,4 +1,4 @@
-from flask import json, jsonify, render_template, request, redirect, url_for, flash, session, current_app
+from flask import render_template, request, redirect, url_for, flash, current_app
 from flask_login import current_user, login_required
 from app.models.appointment import Appointment
 from app.models.patient import Patient
@@ -8,12 +8,12 @@ from app.services.file_uploads import allowed_image
 from app.services.patient_cache import get_patient_cache 
 from app.services.empty_to_none import empty_to_none
 from app.security.crypto import encrypt_value, decrypt_value, safe_decrypt
-from app import db
-from datetime import datetime
 from werkzeug.utils import secure_filename
+from datetime import datetime
+from app import db
 import os
+
 from . import patient_bp
-from app.routes import patient
 
 
 
@@ -85,10 +85,11 @@ def patient_profile():
 
     return render_template(
         "patient/patient_profile.html",
-        patient=decrypted_patient,
+        decrypted_patient=decrypted_patient,
         patient_info=decrypted_patient_info,
         history=decrypted_history,
-        visibility=visibility
+        visibility=visibility,
+        patient=patient
     )
 
 
@@ -255,8 +256,8 @@ def create_profile():
                 permanent_province=encrypt_value(permanent_province),
                 permanent_zipcode=encrypt_value(permanent_zipcode),
 
-                phone=encrypt_value(phone),
-                email=encrypt_value(email),
+                phone=phone,
+                email=email,
 
                 ec_name=encrypt_value(ec_name),
                 ec_relation=encrypt_value(ec_relation),
@@ -414,8 +415,8 @@ def update_profile_details(patient_id):
         patient.firstname = form.get("firstname")
         patient.middlename = form.get("middlename")
         patient.lastname = form.get("lastname")
-        patient.email = encrypt_value(form.get("email"))
-        patient.phone = encrypt_value(form.get("phone"))
+        patient.email = form.get("email")
+        patient.phone = form.get("phone")
         patient.gender = encrypt_value(form.get("gender"))
         patient.blood_type = encrypt_value(form.get("blood_type"))
         patient.civil_status = encrypt_value(form.get("civil_status"))

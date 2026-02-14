@@ -1,6 +1,6 @@
 from flask import Flask
 from .config import Config
-from .extensions import db, migrate, cache, login_manager, jwt
+from .extensions import db, migrate, cache, login_manager, jwt, mail
 from .routes import register_blueprints
 
 
@@ -11,6 +11,7 @@ def create_app():
         static_url_path="/static"
     )
     app.config.from_object(Config)
+    mail.init_app(app)
 
     db.init_app(app)
     migrate.init_app(app, db)
