@@ -254,5 +254,35 @@ document.getElementById('verificationForm').addEventListener('submit', function(
         </span>
     `;
 });
+
+window.addEventListener('load', function () {
+    startCooldown();
+});
+
+function startCooldown() {
+    const resendBtn = document.getElementById('resendBtn');
+    const timer = document.getElementById('timer');
+    const countdown = document.getElementById('countdown');
+
+    resendBtn.disabled = true;
+    resendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    timer.classList.remove('hidden');
+
+    let cooldownTime = 60;
+    countdown.textContent = cooldownTime;
+
+    const interval = setInterval(() => {
+        cooldownTime--;
+        countdown.textContent = cooldownTime;
+
+        if (cooldownTime <= 0) {
+            clearInterval(interval);
+            resendBtn.disabled = false;
+            resendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            timer.classList.add('hidden');
+        }
+    }, 1000);
+}
+
 </script>
 {% endblock %}

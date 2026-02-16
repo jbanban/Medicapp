@@ -1,0 +1,331 @@
+<!-- APPOINTMENT VISIBILITY CARD -->
+<div class="bg-white shadow-lg rounded-xl p-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">
+        Appointment Visibility Settings
+    </h2>
+
+    <div class="space-y-4" role="list">
+        <!-- Reusable Field Component -->
+        {% macro appointment_field(label, field_key, appointment) %}
+        <div class="border rounded-lg p-4 hover:bg-gray-50 transition-colors duration-200" role="listitem">
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex-1 min-w-0">
+                    <!-- Title + Toggle -->
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-semibold text-gray-700">
+                            {{ label }}
+                        </h3>
+
+                        <button 
+                            type="button"
+                            onclick="toggleVisibility('{{ field_key }}')"
+                            data-field="{{ field_key }}"
+                            aria-label="Toggle visibility for {{ label }}"
+                            aria-pressed="false"
+                            class="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg p-1.5 hover:bg-gray-200 transition-colors">
+                            
+                            <!-- Visible Icon -->
+                            <svg class="w-5 h-5 text-green-600 eye-visible transition-opacity" 
+                                aria-hidden="true"
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" 
+                                      stroke-linejoin="round" 
+                                      stroke-width="2"
+                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" 
+                                      stroke-linejoin="round" 
+                                      stroke-width="2"
+                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+
+                            <!-- Hidden Icon -->
+                            <svg class="w-5 h-5 text-red-600 eye-hidden hidden transition-opacity" 
+                                aria-hidden="true"
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" 
+                                      stroke-linejoin="round" 
+                                      stroke-width="2"
+                                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="field-content space-y-2 text-sm text-gray-600 transition-all duration-300"
+                         data-field="{{ field_key }}"
+                         aria-live="polite">
+                        <p class="flex flex-wrap gap-x-2">
+                            <span class="font-medium text-gray-700">Date:</span>
+                            <span>{{ appointment.date or "Not specified" }}</span>
+                        </p>
+                        <p class="flex flex-wrap gap-x-2">
+                            <span class="font-medium text-gray-700">Diagnosis:</span>
+                            <span>{{ appointment.diagnosis or "Not specified" }}</span>
+                        </p>
+                        <p class="flex flex-wrap gap-x-2">
+                            <span class="font-medium text-gray-700">Notes:</span>
+                            <span>{{ appointment.notes or "No notes provided" }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endmacro %}
+
+        <!-- Appointment Fields -->
+        {% for appt in appointments %}
+            {{ appointment_field(
+                "Appointment on " ~ appt.date,
+                appt.appointment_id|string,
+                appt
+            ) }}
+        {% endfor %}
+
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t">
+        <div class="flex items-center gap-4 text-sm text-gray-600" role="status" aria-label="Visibility legend">
+            <span class="flex items-center gap-2">
+                <span class="w-3 h-3 bg-green-600 rounded-full" aria-hidden="true"></span> 
+                <span>Visible</span>
+            </span>
+            <span class="flex items-center gap-2">
+                <span class="w-3 h-3 bg-red-600 rounded-full" aria-hidden="true"></span> 
+                <span>Hidden</span>
+            </span>
+        </div>
+
+        <button
+            type="button"
+            onclick="saveAllVisibility()"
+            id="saveButton"
+            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:bg-blue-800 transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+            Save All Settings
+        </button>
+    </div>
+</div>
+
+<style>
+/* Blur effect for hidden content */
+.field-content.blurred {
+    filter: blur(5px);
+    user-select: none;
+    pointer-events: none;
+    opacity: 0.6;
+    transition: filter 0.3s ease, opacity 0.3s ease;
+}
+
+/* Smooth icon transitions */
+.eye-visible,
+.eye-hidden {
+    transition: opacity 0.2s ease;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .field-content,
+    .eye-visible,
+    .eye-hidden,
+    button {
+        transition: none !important;
+    }
+}
+
+/* Focus visible for keyboard navigation */
+button:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+</style>
+
+<script>
+// Modern JavaScript with better practices
+const AppointmentVisibility = {
+    // Store visibility state
+    state: new Map(),
+
+    /**
+     * Toggle visibility for a specific field
+     * @param {string} fieldKey - The field identifier
+     */
+    toggleVisibility(fieldKey) {
+        const button = document.querySelector(`button[data-field="${fieldKey}"]`);
+        const content = document.querySelector(`.field-content[data-field="${fieldKey}"]`);
+        const eyeVisible = button.querySelector('.eye-visible');
+        const eyeHidden = button.querySelector('.eye-hidden');
+
+        if (!button || !content) return;
+
+        // Toggle state
+        const isCurrentlyVisible = !content.classList.contains('blurred');
+        const newState = !isCurrentlyVisible;
+
+        // Update UI
+        content.classList.toggle('blurred');
+        eyeVisible.classList.toggle('hidden');
+        eyeHidden.classList.toggle('hidden');
+        
+        // Update ARIA
+        button.setAttribute('aria-pressed', newState.toString());
+        
+        // Store state
+        this.state.set(fieldKey, newState);
+
+        // Announce to screen readers
+        this.announceChange(fieldKey, newState);
+    },
+
+    /**
+     * Announce visibility change to screen readers
+     */
+    announceChange(fieldKey, isVisible) {
+        const announcement = document.createElement('div');
+        announcement.setAttribute('role', 'status');
+        announcement.setAttribute('aria-live', 'polite');
+        announcement.className = 'sr-only';
+        announcement.textContent = `${fieldKey} is now ${isVisible ? 'visible' : 'hidden'}`;
+        document.body.appendChild(announcement);
+        
+        setTimeout(() => announcement.remove(), 1000);
+    },
+
+    /**
+     * Save all visibility settings
+     */
+    async saveAllVisibility() {
+        const saveButton = document.getElementById('saveButton');
+        
+        try {
+            // Disable button during save
+            saveButton.disabled = true;
+            saveButton.textContent = 'Saving...';
+
+            // Prepare data
+            const settings = Object.fromEntries(this.state);
+
+            // Make API call (replace with your actual endpoint)
+            const response = await fetch("{{ url_for('patient.update_appointment_visibility',  patient_id=patient.patient_id) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(settings)
+            });
+
+            if (!response.ok) throw new Error('Save failed');
+
+            // Success feedback
+            this.showSuccessFeedback(saveButton);
+            
+        } catch (error) {
+            console.error('Save error:', error);
+            this.showErrorFeedback(saveButton);
+        }
+    },
+
+    /**
+     * Show success feedback
+     */
+    showSuccessFeedback(button) {
+        button.textContent = '✓ Saved!';
+        button.classList.add('bg-green-600', 'hover:bg-green-700');
+        button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        
+        setTimeout(() => {
+            button.textContent = 'Save All Settings';
+            button.classList.remove('bg-green-600', 'hover:bg-green-700');
+            button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            button.disabled = false;
+        }, 2000);
+    },
+
+    /**
+     * Show error feedback
+     */
+    showErrorFeedback(button) {
+        button.textContent = '✗ Error - Try Again';
+        button.classList.add('bg-red-600', 'hover:bg-red-700');
+        button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        
+        setTimeout(() => {
+            button.textContent = 'Save All Settings';
+            button.classList.remove('bg-red-600', 'hover:bg-red-700');
+            button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            button.disabled = false;
+        }, 2000);
+    },
+
+    /**
+     * Initialize the component
+     */
+    init() {
+        // Load saved state if available
+        this.loadSavedState();
+    },
+
+    /**
+     * Load previously saved state
+     */
+    async loadSavedState() {
+        try {
+            const response = await fetch(
+                "{{ url_for('patient.get_appointment_visibility', patient_id=patient.patient_id) }}"
+            );
+
+            if (!response.ok) return;
+
+            const savedSettings = await response.json();
+
+            Object.entries(savedSettings).forEach(([key, isVisible]) => {
+
+                const button = document.querySelector(`button[data-field="${key}"]`);
+                const content = document.querySelector(`.field-content[data-field="${key}"]`);
+
+                if (!button || !content) return;
+
+                const eyeVisible = button.querySelector('.eye-visible');
+                const eyeHidden = button.querySelector('.eye-hidden');
+
+                if (!isVisible) {
+                    content.classList.add('blurred');
+                    eyeVisible.classList.add('hidden');
+                    eyeHidden.classList.remove('hidden');
+                    button.setAttribute('aria-pressed', "false");
+                } else {
+                    content.classList.remove('blurred');
+                    eyeVisible.classList.remove('hidden');
+                    eyeHidden.classList.add('hidden');
+                    button.setAttribute('aria-pressed', "true");
+                }
+
+                this.state.set(key, isVisible);
+            });
+
+        } catch (error) {
+            console.error('Failed to load saved settings:', error);
+        }
+    }
+
+};
+
+// Global functions for onclick handlers (backwards compatibility)
+function toggleVisibility(fieldKey) {
+    AppointmentVisibility.toggleVisibility(fieldKey);
+}
+
+function saveAllVisibility() {
+    AppointmentVisibility.saveAllVisibility();
+}
+
+// Initialize on DOM ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => AppointmentVisibility.init());
+} else {
+    AppointmentVisibility.init();
+}
+</script>

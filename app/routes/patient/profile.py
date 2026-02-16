@@ -1,13 +1,14 @@
 from flask import render_template, request, redirect, url_for, flash, current_app
 from flask_login import current_user, login_required
-from app.models.appointment import Appointment
 from app.models.patient import Patient
+from app.models.appointment import Appointment
+from app.models.account import Account
 from app.models.patient_history_background import PatientHistoryBackground
 from app.models.medical_visibility import MedicalVisibility
+from app.models.appointment_visibility import AppointmentVisibility
 from app.services.file_uploads import allowed_image
 from app.services.patient_cache import get_patient_cache 
 from app.services.empty_to_none import empty_to_none
-from app.security.crypto import encrypt_value, decrypt_value, safe_decrypt
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from app import db
@@ -16,6 +17,12 @@ import os
 from . import patient_bp
 
 
+def calculated_age(birthdate):
+    return (
+        datetime.today().year - birthdate.year
+        - ((datetime.today().month, datetime.today().day)
+           < (birthdate.month, birthdate.day))
+    )
 
 
 @patient_bp.route('/patient_profile')
@@ -39,56 +46,89 @@ def patient_profile():
     decrypted_patient_info = None
     if patient:
         decrypted_patient_info = {
-            "gender": decrypt_value(patient.gender),
-            "blood_type": safe_decrypt(patient.blood_type),
-            "civil_status": decrypt_value(patient.civil_status),
+            "gender": patient.gender,
+            "blood_type": patient.blood_type,
+            "civil_status": patient.civil_status,
             "birthdate": patient.birthdate,
             "age": patient.age,
 
             # CURRENT ADDRESS
-            "current_house_no": safe_decrypt(patient.current_house_no),
-            "current_street": safe_decrypt(patient.current_street),
-            "current_barangay": decrypt_value(patient.current_barangay),
-            "current_city": decrypt_value(patient.current_city),
-            "current_province": decrypt_value(patient.current_province),
-            "current_zipcode": decrypt_value(patient.current_zipcode),
+            "current_house_no": patient.current_house_no,
+            "current_street": patient.current_street,
+            "current_barangay": patient.current_barangay,
+            "current_city": patient.current_city,
+            "current_province": patient.current_province,
+            "current_zipcode": patient.current_zipcode,
 
             # PERMANENT ADDRESS
-            "permanent_house_no": safe_decrypt(patient.permanent_house_no),
-            "permanent_street": safe_decrypt(patient.permanent_street),
-            "permanent_barangay": decrypt_value(patient.permanent_barangay),
-            "permanent_city": decrypt_value(patient.permanent_city),
-            "permanent_province": decrypt_value(patient.permanent_province),
-            "permanent_zipcode": decrypt_value(patient.permanent_zipcode),
+            "permanent_house_no": patient.permanent_house_no,
+            "permanent_street": patient.permanent_street,
+            "permanent_barangay": patient.permanent_barangay,
+            "permanent_city": patient.permanent_city,
+            "permanent_province": patient.permanent_province,
+            "permanent_zipcode": patient.permanent_zipcode,
 
             # EMERGENCY CONTACT
-            "ec_name": decrypt_value(patient.ec_name),
-            "ec_relation": decrypt_value(patient.ec_relation),
-            "ec_phone": decrypt_value(patient.ec_phone),
-            "ec_address": decrypt_value(patient.ec_address),
+            "ec_name": patient.ec_name,
+            "ec_relation": patient.ec_relation,
+            "ec_phone": patient.ec_phone,
+            "ec_address": patient.ec_address,
         }
 
     decrypted_history = None
     if history:
         decrypted_history = {
-            "pastMedicalHistory": decrypt_value(history.pastMedicalHistory),
-            "beenHospitalized": decrypt_value(history.beenHospitalized),
-            "hadSurgery": decrypt_value(history.hadSurgery),
-            "allergies": decrypt_value(history.allergies),
-            "ongoingMedications": decrypt_value(history.ongoingMedications),
-            "familyHistory": decrypt_value(history.familyHistory),
+            "pastMedicalHistory": history.pastMedicalHistory,
+            "beenHospitalized": history.beenHospitalized,
+            "hadSurgery": history.hadSurgery,
+            "allergies": history.allergies,
+            "ongoingMedications": history.ongoingMedications,
+            "familyHistory": history.familyHistory,
         }
 
-    visibility = MedicalVisibility.query.filter_by(
+    M_visibility = MedicalVisibility.query.filter_by(
         patient_id=patient.patient_id
     ).first()
+
+    A_visibility = AppointmentVisibility.query.filter_by(
+        patient_id=patient.patient_id
+    ).first()
+
+    appointments = Appointment.query.filter(
+        Appointment.patient_id == patient.patient_id,
+        Appointment.status.in_(["Done", "Paid"])
+    ).all()
+    
+    result = []
+
+    for appt in appointments:
+
+        record = appt.record
+
+        if not record:
+            result.append({
+                "appointment_id": appt.appointment_id,
+                "date": None,
+                "diagnosis": None,
+                "notes": None,
+            })
+            continue
+
+        result.append({
+            "appointment_id": appt.appointment_id,
+            "date": record.visit_date,
+            "diagnosis": record.diagnosis,
+            "notes": record.notes,
+        })
 
     return render_template(
         "patient/patient_profile.html",
         decrypted_patient=decrypted_patient,
         patient_info=decrypted_patient_info,
         history=decrypted_history,
-        visibility=visibility,
+        visibility_M=M_visibility,
+        visibility_A=A_visibility,
+        appointments=result,
         patient=patient
     )
 
@@ -114,7 +154,6 @@ def create_profile():
         lastname = form.get('lastname', '').strip()
         gender = form.get('gender', '').strip()
         birthdate_str = form.get('birthdate', '').strip()
-        age = form.get('age', '').strip()
         blood_type = form.get('blood_type', '').strip()
         civil_status = form.get('civil_status', '').strip()
 
@@ -231,46 +270,46 @@ def create_profile():
         # ---------------- SAVE TO DATABASE ----------------
         try:
             patient = Patient(
-                firstname=encrypt_value(firstname),
-                middlename=safe_decrypt(middlename),
-                lastname=encrypt_value(lastname),
-                gender=encrypt_value(gender),
-                birthdate=birthdate,  # optional: keep plaintext for queries
-                age=age,
-                blood_type=safe_decrypt(blood_type),
-                civil_status=encrypt_value(civil_status),
+                firstname=firstname,
+                middlename=middlename,
+                lastname=lastname,
+                gender=gender, 
+                birthdate=birthdate,
+                age=calculated_age(birthdate),
+                blood_type=blood_type, 
+                civil_status=civil_status,
 
-                # CURRENT ADDRESS
-                current_house_no=safe_decrypt(current_house_no),
-                current_street=safe_decrypt(current_street),
-                current_barangay=encrypt_value(current_barangay),
-                current_city=encrypt_value(current_city),
-                current_province=encrypt_value(current_province),
-                current_zipcode=encrypt_value(current_zipcode),
+                current_house_no=current_house_no,
+                current_street=current_street,
+                current_barangay=current_barangay,
+                current_city=current_city,
+                current_province=current_province,
+                current_zipcode=current_zipcode,
 
-                # PERMANENT ADDRESS
-                permanent_house_no=safe_decrypt(permanent_house_no),
-                permanent_street=safe_decrypt(permanent_street),
-                permanent_barangay=encrypt_value(permanent_barangay),
-                permanent_city=encrypt_value(permanent_city),
-                permanent_province=encrypt_value(permanent_province),
-                permanent_zipcode=encrypt_value(permanent_zipcode),
+                permanent_house_no=permanent_house_no,
+                permanent_street=permanent_street,
+                permanent_barangay=permanent_barangay,
+                permanent_city=permanent_city,
+                permanent_province=permanent_province,
+                permanent_zipcode=permanent_zipcode,
 
                 phone=phone,
                 email=email,
 
-                ec_name=encrypt_value(ec_name),
-                ec_relation=encrypt_value(ec_relation),
-                ec_phone=encrypt_value(ec_phone),
-                ec_address=encrypt_value(ec_address),
+                ec_name=ec_name,
+                ec_relation=ec_relation,
+                ec_phone=ec_phone,
+                ec_address=ec_address,
 
                 account_id=current_user.account_id
             )
+
             db.session.add(patient)
             db.session.flush()
 
             # ---------------- CREATE DEFAULT VISIBILITY ----------------
             visibility = MedicalVisibility(
+                patient_id=patient.patient_id,
                 pastMedicalHistory=False,
                 beenHospitalized=False,
                 hadSurgery=False,
@@ -287,12 +326,12 @@ def create_profile():
             # ----------- CREATE MEDICAL HISTORY ------------
             history = PatientHistoryBackground(
                 patient_id=patient.patient_id,
-                pastMedicalHistory=encrypt_value(pastMedicalHistory),
-                beenHospitalized=encrypt_value(beenHospitalized),
-                hadSurgery=encrypt_value(hadSurgery),
-                allergies=encrypt_value(allergies),
-                ongoingMedications=encrypt_value(ongoingMedications),
-                familyHistory=encrypt_value(familyHistory),
+                pastMedicalHistory=pastMedicalHistory,
+                beenHospitalized=beenHospitalized,
+                hadSurgery=hadSurgery,
+                allergies=allergies,
+                ongoingMedications=ongoingMedications,
+                familyHistory=familyHistory,
             )
 
             db.session.add(history)
@@ -305,6 +344,7 @@ def create_profile():
             db.session.rollback()
             flash("An unexpected error occurred. Please try again.", "danger")
             print("CREATE PROFILE ERROR:", e)
+
 
     # ---------------- GET REQUEST ----------------
     return render_template(
@@ -417,9 +457,9 @@ def update_profile_details(patient_id):
         patient.lastname = form.get("lastname")
         patient.email = form.get("email")
         patient.phone = form.get("phone")
-        patient.gender = encrypt_value(form.get("gender"))
-        patient.blood_type = encrypt_value(form.get("blood_type"))
-        patient.civil_status = encrypt_value(form.get("civil_status"))
+        patient.gender = form.get("gender")
+        patient.blood_type = form.get("blood_type")
+        patient.civil_status = form.get("civil_status")
 
         birthdate = form.get("birthdate")
         if birthdate:
@@ -431,26 +471,26 @@ def update_profile_details(patient_id):
             )
 
         # ---------------- CURRENT ADDRESS ----------------
-        patient.current_house_no = encrypt_value(form.get("current_house_no"))
-        patient.current_street = encrypt_value(form.get("current_street"))
-        patient.current_barangay = encrypt_value(form.get("current_barangay"))
-        patient.current_city = encrypt_value(form.get("current_city"))
-        patient.current_province = encrypt_value(form.get("current_province"))
-        patient.current_zipcode = encrypt_value(form.get("current_zipcode"))
+        patient.current_house_no = form.get("current_house_no")
+        patient.current_street = form.get("current_street")
+        patient.current_barangay = form.get("current_barangay")
+        patient.current_city = form.get("current_city")
+        patient.current_province = form.get("current_province")
+        patient.current_zipcode = form.get("current_zipcode")
 
         # ---------------- PERMANENT ADDRESS ----------------
-        patient.permanent_house_no = encrypt_value(form.get("permanent_house_no"))
-        patient.permanent_street = encrypt_value(form.get("permanent_street"))
-        patient.permanent_barangay = encrypt_value(form.get("permanent_barangay"))
-        patient.permanent_city = encrypt_value(form.get("permanent_city"))
-        patient.permanent_province = encrypt_value(form.get("permanent_province"))
-        patient.permanent_zipcode = encrypt_value(form.get("permanent_zipcode"))
+        patient.permanent_house_no = form.get("permanent_house_no")
+        patient.permanent_street = form.get("permanent_street")
+        patient.permanent_barangay = form.get("permanent_barangay")
+        patient.permanent_city = form.get("permanent_city")
+        patient.permanent_province = form.get("permanent_province")
+        patient.permanent_zipcode = form.get("permanent_zipcode")
 
         # ---------------- EMERGENCY CONTACT ----------------
-        patient.ec_name = encrypt_value(form.get("ec_name"))
-        patient.ec_relation = encrypt_value(form.get("ec_relation"))
-        patient.ec_phone = encrypt_value(form.get("ec_phone"))
-        patient.ec_address = encrypt_value(form.get("ec_address"))
+        patient.ec_name = form.get("ec_name")
+        patient.ec_relation = form.get("ec_relation")
+        patient.ec_phone = form.get("ec_phone")
+        patient.ec_address = form.get("ec_address")
 
         db.session.commit()
         flash("Profile details updated successfully.", "success")
@@ -462,109 +502,3 @@ def update_profile_details(patient_id):
 
     return redirect(url_for("patient.patient_profile"))
 
-
-@patient_bp.route("/view_profile/<int:patient_id>")
-@login_required
-def view_profile(patient_id):
-
-    # Get patient
-    patient = Patient.query.get_or_404(patient_id)
-
-    # Get medical history
-    history = PatientHistoryBackground.query.filter_by(
-        patient_id=patient.patient_id
-    ).first()
-
-    appointment = Appointment.query.filter_by(
-        patient_id=patient.patient_id
-    ).first()
-
-    # Decrypt main patient fields using your cache
-    decrypted_patient = get_patient_cache(patient.patient_id)
-
-    info = Patient.query.get(patient.patient_id)
-    if info:
-        decrypted_patient.update({
-            "gender": decrypt_value(info.gender),
-            "blood_type": safe_decrypt(info.blood_type),
-            "civil_status": decrypt_value(info.civil_status),
-            "birthdate": info.birthdate,
-            "age": info.age,
-            # EMERGENCY CONTACT
-            "ec_name": decrypt_value(info.ec_name),
-            "ec_relation": decrypt_value(info.ec_relation),
-            "ec_phone": decrypt_value(info.ec_phone),
-            "ec_address": decrypt_value(info.ec_address),
-            # CURRENT ADDRESS
-            "current_house_no": safe_decrypt(info.current_house_no),
-            "current_street": safe_decrypt(info.current_street),
-            "current_barangay": decrypt_value(info.current_barangay),
-            "current_city": decrypt_value(info.current_city),
-            "current_province": decrypt_value(info.current_province),
-            "current_zipcode": decrypt_value(info.current_zipcode),
-            # PERMANENT ADDRESS
-            "permanent_house_no": safe_decrypt(info.permanent_house_no),
-            "permanent_street": safe_decrypt(info.permanent_street),
-            "permanent_barangay": decrypt_value(info.permanent_barangay),
-            "permanent_city": decrypt_value(info.permanent_city),
-            "permanent_province": decrypt_value(info.permanent_province),
-            "permanent_zipcode": decrypt_value(info.permanent_zipcode),
-        })
-
-    # Decrypt medical history safely
-    decrypted_history = None
-    if history:
-        decrypted_history = {
-            "pastMedicalHistory": decrypt_value(history.pastMedicalHistory),
-            "beenHospitalized": decrypt_value(history.beenHospitalized),
-            "hadSurgery": decrypt_value(history.hadSurgery),
-            "allergies": decrypt_value(history.allergies),
-            "ongoingMedications": decrypt_value(history.ongoingMedications),
-            "familyHistory": decrypt_value(history.familyHistory),
-            "socialHistory": safe_decrypt(getattr(history, "socialHistory", None)),
-            "immunizations": safe_decrypt(getattr(history, "immunizations", None)),
-            "recentTravelHistory": safe_decrypt(getattr(history, "recentTravelHistory", None)),
-            "otherRelevantInfo": safe_decrypt(getattr(history, "otherRelevantInfo", None)),
-        }
-
-    visibility = MedicalVisibility.query.filter_by(
-        patient_id=patient.patient_id
-    ).first()
-
-    # Default: everything hidden if no record exists
-    default_state = {
-        "pastMedicalHistory": False,
-        "beenHospitalized": False,
-        "hadSurgery": False,
-        "allergies": False,
-        "ongoingMedications": False,
-        "familyHistory": False,
-        "socialHistory": False,
-        "immunizations": False,
-        "recentTravelHistory": False,
-        "otherRelevantInfo": False,
-    }
-
-    if visibility:
-        visibility_dict = {
-            "pastMedicalHistory": visibility.pastMedicalHistory,
-            "beenHospitalized": visibility.beenHospitalized,
-            "hadSurgery": visibility.hadSurgery,
-            "allergies": visibility.allergies,
-            "ongoingMedications": visibility.ongoingMedications,
-            "familyHistory": visibility.familyHistory,
-            "socialHistory": visibility.socialHistory,
-            "immunizations": visibility.immunizations,
-            "recentTravelHistory": visibility.recentTravelHistory,
-            "otherRelevantInfo": visibility.otherRelevantInfo,
-        }
-    else:
-        visibility_dict = default_state
-
-    return render_template(
-        "patient/viewProfile.html",
-        patient=decrypted_patient,
-        history=decrypted_history,
-        appointment=appointment,
-        visibility=visibility_dict
-    )

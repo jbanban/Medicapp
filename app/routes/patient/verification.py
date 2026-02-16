@@ -1,4 +1,4 @@
-from flask import redirect, render_template, request, url_for, flash
+from flask import redirect, render_template, request, url_for, flash, jsonify
 from flask_login import current_user, login_required
 from app.models.patient import Patient
 from app.services.sms_services import send_sms_otp
@@ -11,9 +11,73 @@ import random
 from . import patient_bp
 
 
+# ===============================
+# START VERIFICATION (Generate + Send OTP)
+# ===============================
+@patient_bp.route("/start_verification/<method>")
+@login_required
+def start_verification(method):
+
+    if method not in ["email", "sms"]:
+        flash("Invalid verification method.", "danger")
+        return redirect(url_for("patient.patient_profile"))
+
+    patient = Patient.query.filter_by(
+        account_id=current_user.account_id
+    ).first_or_404()
+
+    # Generate 6-digit OTP
+    otp = str(random.randint(100000, 999999))
+
+    hashed_otp = generate_password_hash(otp)
+    expiry_time = datetime.utcnow() + timedelta(minutes=5)
+
+    if method == "email":
+        if not patient.email:
+            flash("No email found.", "danger")
+            return redirect(url_for("patient.patient_profile"))
+
+        patient.email_otp = hashed_otp
+        patient.email_otp_expiry = expiry_time
+
+        send_email(
+            subject="MedicApp Email Verification Code",
+            recipients=[patient.email],
+            body=f"""
+                Hello {current_user.username},
+
+                Your verification code is:
+
+                {otp}
+
+                This code will expire in 5 minutes.
+                """
+        )
+
+    elif method == "sms":
+        if not patient.phone_number:
+            flash("No phone number found.", "danger")
+            return redirect(url_for("patient.patient_profile"))
+
+        patient.sms_otp = hashed_otp
+        patient.sms_otp_expiry = expiry_time
+
+        send_sms_otp(patient.phone_number, otp)
+
+    db.session.commit()
+
+    flash("Verification code sent successfully.", "success")
+
+    return redirect(url_for("patient.verify_page", method=method))
+
+
+# ===============================
+# VERIFICATION PAGE
+# ===============================
 @patient_bp.route("/verify/<method>", methods=["GET"])
 @login_required
 def verify_page(method):
+
     if method not in ["email", "sms"]:
         flash("Invalid verification method.", "danger")
         return redirect(url_for("patient.patient_profile"))
@@ -23,55 +87,15 @@ def verify_page(method):
         method=method
     )
 
-def send_sms_verification():
-    patient = Patient.query.filter_by(
-        account_id=current_user.account_id
-    ).first_or_404()
 
-    send_sms_otp(patient, patient.phone_number)
-
-    flash("Verification code sent to your mobile number.", "success")
-    return redirect(url_for("patient.verify_page", method="sms"))
-
-def email_verification():
-    patient = Patient.query.filter_by(
-        account_id=current_user.account_id
-    ).first_or_404()
-
-    receipt_email = patient.email
-
-    # Generate 6-digit OTP
-    otp = str(random.randint(100000, 999999))
-
-    patient.email_otp = generate_password_hash(otp)
-    patient.email_otp_expiry = datetime.utcnow() + timedelta(minutes=5)
-    db.session.commit()
-
-    body = f"""
-        Hello,
-
-        Your MedicApp email verification code is:
-
-        {otp}
-
-        This code will expire in 5 minutes.
-        """
-
-    send_email(
-        subject="MedicApp Email Verification Code",
-        recipients=[receipt_email],
-        body=body
-    )
-
-    flash("Verification code sent to your email.", "success")
-    return redirect(url_for("patient.verify_email_page"))
-
-
-
+# ===============================
+# SUBMIT OTP
+# ===============================
 @patient_bp.route("/verify/<method>", methods=["POST"])
 @login_required
 def verify_submit(method):
-    otp_input = request.form.get("otp")
+
+    otp_input = request.form.get("code")  # your input name is "code"
 
     patient = Patient.query.filter_by(
         account_id=current_user.account_id
@@ -99,7 +123,7 @@ def verify_submit(method):
         flash("Invalid OTP.", "danger")
         return redirect(url_for("patient.verify_page", method=method))
 
-    # Success
+    # SUCCESS
     if method == "email":
         patient.email_verified = True
         patient.email_otp = None
@@ -114,21 +138,41 @@ def verify_submit(method):
     flash(f"{method.upper()} verified successfully!", "success")
     return redirect(url_for("patient.patient_profile"))
 
+
+# ===============================
+# RESEND OTP (AJAX)
+# ===============================
 @patient_bp.route("/resend_otp/<method>", methods=["POST"])
 @login_required
 def resend_otp(method):
+
+    if method not in ["email", "sms"]:
+        return jsonify({"success": False}), 400
 
     patient = Patient.query.filter_by(
         account_id=current_user.account_id
     ).first_or_404()
 
-    if method == "email":
-        email_verification(patient.email)
+    otp = str(random.randint(100000, 999999))
+    hashed_otp = generate_password_hash(otp)
+    expiry_time = datetime.utcnow() + timedelta(minutes=5)
 
-    elif method == "sms":
-        send_sms_otp(patient, patient.phone)
+    if method == "email":
+        patient.email_otp = hashed_otp
+        patient.email_otp_expiry = expiry_time
+
+        send_email(
+            subject="MedicApp Email Verification Code",
+            recipients=[patient.email],
+            body=f"Your new verification code is: {otp}"
+        )
 
     else:
-        return {"success": False, "message": "Invalid method"}, 400
+        patient.sms_otp = hashed_otp
+        patient.sms_otp_expiry = expiry_time
 
-    return {"success": True}
+        send_sms_otp(patient.phone_number, otp)
+
+    db.session.commit()
+
+    return jsonify({"success": True})

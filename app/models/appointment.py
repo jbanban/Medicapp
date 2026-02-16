@@ -26,5 +26,8 @@ class Appointment(db.Model):
     patient: Mapped["Patient"] = relationship(back_populates="appointments")
     doctor: Mapped["Doctor"] = relationship(back_populates="appointments")
     payments: Mapped[list["PaymentRecord"]] = relationship(back_populates="appointment")
-    records: Mapped[list["MedicalRecord"]] = relationship(back_populates="appointment")
+    record: Mapped["MedicalRecord"] = relationship(
+        back_populates="appointment",
+        uselist=False
+    )
     schedule: Mapped["Doctor_Schedule"] = relationship(back_populates="appointments")

@@ -82,12 +82,6 @@ def doctor_dashboard():
 
     dashboard_card_totals = get_doctor_dashboard_counts(doctor.doctor_id)
 
-    for appt in appointments:
-        print("Appointment ID:", appt.appointment_id)
-        print("Patient ID from appointment:", appt.patient_id)
-        patient = Patient.query.get(appt.patient_id)
-        print("Patient found:", patient)
-
     return render_template(
         'doctor/doctor_dashboard.html',
         doctor=doctor,

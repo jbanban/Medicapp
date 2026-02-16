@@ -7,7 +7,6 @@ from app.services.patient_cache import get_patient_cache
 from . import doctor_bp
 from app import db
 
-
 @doctor_bp.route('/patients')
 @login_required
 def doctor_patients():
@@ -16,26 +15,32 @@ def doctor_patients():
     if not doctor:
         flash("Please complete your doctor profile.", "warning")
         return redirect(url_for('doctor.create_doctor_profile'))
-    
-    patients = (
+
+    records = (
         db.session.query(Patient, Appointment)
         .join(Appointment, Appointment.patient_id == Patient.patient_id)
         .filter(Appointment.doctor_id == doctor.doctor_id)
         .all()
     )
 
-    decrypted_patients = {}
+    patient_list = []
 
-    for patient, _ in patients:
-        if patient.patient_id not in decrypted_patients:
-            decrypted_patients[patient.patient_id] = get_patient_cache(patient.patient_id)
+    for patient, appointment in records:
+        decrypted = get_patient_cache(patient.patient_id)
+
+        patient_list.append({
+            "patient_id": patient.patient_id,
+            "firstname": decrypted["firstname"],
+            "lastname": decrypted["lastname"],
+            "appointment": appointment
+        })
+
+    print(decrypted)
 
     return render_template(
         "doctor/doctor_patients.html",
         doctor=doctor,
-        patients=patients,
-        decrypted_patients=decrypted_patients
+        patients=patient_list
     )
-
 
 

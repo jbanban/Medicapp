@@ -1,6 +1,7 @@
 from datetime import datetime, date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Integer, String, DateTime, ForeignKey
+from app.security.encrypted_column import EncryptedColumn
 from app.extensions import db
 
 
@@ -12,10 +13,12 @@ class MedicalRecord(db.Model):
     doctor_id: Mapped[int] = mapped_column(ForeignKey("doctor.doctor_id"))
     appointment_id: Mapped[int] = mapped_column(ForeignKey("appointment.appointment_id"))
     visit_date: Mapped[str] = mapped_column(String(10))
-    diagnosis: Mapped[str] = mapped_column(String)
-    notes: Mapped[str] = mapped_column(String)
+    diagnosis: Mapped[str] = mapped_column(EncryptedColumn(),nullable=False)
+    notes: Mapped[str] = mapped_column(EncryptedColumn(),nullable=False)
+    second_op: Mapped[str] = mapped_column(EncryptedColumn(), nullable=True)
+    third_op: Mapped[str] = mapped_column(EncryptedColumn(), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     patient: Mapped["Patient"] = relationship(back_populates="records")
     doctor: Mapped["Doctor"] = relationship(back_populates="records")
-    appointment: Mapped["Appointment"] = relationship(back_populates="records")
+    appointment: Mapped["Appointment"] = relationship(back_populates="record")

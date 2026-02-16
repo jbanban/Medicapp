@@ -192,11 +192,12 @@
                     <div class="space-y-4" id="appointmentsList">
 
                         {% for appointment in appointments %}
-                        <div class="appointment-card bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition" 
+                        <div class="appointment-card bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition"
                             data-status="{{ appointment.status }}"
                             data-patient="{{ appointment.patient_data.firstname }} {{ appointment.patient_data.lastname }}"
                             data-date="{{ appointment.appointment_date }}"
-                            data-reason="{{ appointment.reason|default('General consultation') }}">
+                            data-reason="{{ appointment.reason|default('General consultation') }}"
+                        >
                             
                             <div class="p-6">
                                 <div class="flex items-start gap-4">
@@ -237,10 +238,20 @@
                                                         <i class="fas fa-ban"></i>
                                                         Cancelled
                                                     </span>
+                                                {% elif appointment.status == 'Ongoing' %}
+                                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-orange-50 text-orange-900 border border-orange-200">
+                                                        <i class="fas fa-spinner"></i>
+                                                        Ongoing
+                                                    </span>
                                                 {% elif appointment.status == 'Done' %}
                                                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                                                         <i class="fas fa-check-double"></i>
                                                         Done
+                                                    </span>
+                                                {% elif appointment.status == 'Paid' %}
+                                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                        <i class="fas fa-money-bill-wave"></i>
+                                                        Paid
                                                     </span>
                                                 {% else %}
                                                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
@@ -285,47 +296,125 @@
                                         {% endif %}
 
                                         <!-- Action Buttons -->
-                                        {% if tab == 'today' %}
-                                        <!-- Today Tab Buttons: View Records & Check In -->
                                         <div class="flex items-center gap-3 pt-4 border-t border-gray-100">
-                                            <button type="button"
-                                                onclick="openCheckInModal(
-                                                    {{ appointment.appointment_id }},
-                                                    {{ appointment.patient_data.patient_id }},
-                                                    '{{ appointment.patient_data.firstname }} {{ appointment.patient_data.lastname }}',
-                                                    {{ appointment.doctor_schedule_id }}
-                                                )"
-                                                class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm hover:shadow">
-                                                Check In
-                                            </button>
 
-                                            <a href="{{ url_for('doctor.view_profile', patient_id=appointment.patient_data.patient_id) }}"
-                                                class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-                                                View Records
-                                            </a>
-                                        </div>
-                                        {% elif appointment.status not in ['Booked','Rejected','Cancelled','Done'] %}
-                                        <!-- Other Tabs: Accept/Reject Buttons -->
-                                        <div class="flex items-center gap-3 pt-4 border-t border-gray-100">
-                                            <form action="{{ url_for('doctor.accept_appointment', appointment_id=appointment.appointment_id) }}"
-                                                method="POST" class="flex-1">
-                                                <button type="submit"
-                                                        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition shadow-sm hover:shadow">
-                                                    <i class="fas fa-check"></i>
-                                                    Accept
-                                                </button>
-                                            </form>
+                                            {% if tab == 'today' %}
 
-                                            <form action="{{ url_for('doctor.reject_appointment', appointment_id=appointment.appointment_id) }}"
-                                                method="POST" class="flex-1">
-                                                <button type="submit"
-                                                        class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition">
-                                                    <i class="fas fa-times"></i>
-                                                    Reject
-                                                </button>
-                                            </form>
+                                                {% if appointment.status == 'Booked' %}
+
+                                                    {% if ongoing_appointment and ongoing_appointment.appointment_id != appointment.appointment_id %}
+                                                        <button class="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-500 bg-gray-200 rounded-lg cursor-not-allowed">
+                                                            Unavailable
+                                                        </button>
+                                                    {% else %}
+                                                        <form method="POST"
+                                                            action="{{ url_for('doctor.update_appointment_status',
+                                                                                appointment_id=appointment.appointment_id,
+                                                                                action='checkin') }}"
+                                                            class="flex-1">
+                                                            <button class="w-full px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+                                                                Check In
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+
+                                                {% elif appointment.status == 'Ongoing' %}
+
+                                                    <div class="w-1/3">
+                                                        <button onclick="openCheckInModal(
+                                                            {{ appointment.appointment_id }},
+                                                            {{ appointment.doctor_id }},
+                                                            {{ appointment.patient_data.patient_id }},
+                                                            '{{ appointment.patient_data.firstname }} {{ appointment.patient_data.lastname }}'
+                                                            )" 
+                                                            class="w-11/12 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+                                                            Diagnosis
+                                                        </button>
+                                                    </div>
+                                                    <form method="POST"
+                                                        action="{{ url_for('doctor.update_appointment_status',
+                                                                            appointment_id=appointment.appointment_id,
+                                                                            action='done') }}"
+                                                        class="flex-1">
+                                                        <button class="w-full px-4 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition">
+                                                            Mark as Done
+                                                        </button>
+                                                    </form>
+
+                                                {% elif appointment.status == 'Done' %}
+
+                                                    <button onclick="openPaymentModal({{ appointment.appointment_id }},
+                                                                '{{ appointment.patient_data.firstname }} {{ appointment.patient_data.lastname }}',
+                                                                'P-00{{ appointment.patient_data.patient_id }}',
+                                                                '{{ appointment.appointment_time }}');"
+                                                        class="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition">
+                                                        Process Payment
+                                                    </button>
+
+                                                {% elif appointment.status == 'Paid' %}
+
+                                                    <button class="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-500 bg-gray-200 rounded-lg cursor-not-allowed">
+                                                        Payment Completed
+                                                    </button>
+
+                                                {% endif %}
+
+                                                <!-- Always show View Records in Today -->
+                                                <a href="{{ url_for('patient.viewProfile', patient_id=appointment.patient_data.patient_id) }}"
+                                                class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                                                target="_blank">
+                                                    View Records
+                                                </a>
+
+
+                                            {% else %}
+
+                                                {% if appointment.status == 'Pending' %}
+
+                                                    <form action="{{ url_for('doctor.accept_appointment', appointment_id=appointment.appointment_id) }}"
+                                                        method="POST" class="flex-1">
+                                                        <button type="submit"
+                                                                class="w-full px-4 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition">
+                                                            Accept
+                                                        </button>
+                                                    </form>
+
+                                                    <form action="{{ url_for('doctor.reject_appointment', appointment_id=appointment.appointment_id) }}"
+                                                        method="POST" class="flex-1">
+                                                        <button type="submit"
+                                                                class="w-full px-4 py-2.5 text-sm font-semibold text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition">
+                                                            Reject
+                                                        </button>
+                                                    </form>
+
+                                                {% elif appointment.status == 'Done' %}
+
+                                                    <button onclick="openPaymentModal({{ appointment.appointment_id }},
+                                                                '{{ appointment.patient_data.firstname }} {{ appointment.patient_data.lastname }}',
+                                                                'P-00{{ appointment.patient_data.patient_id }}',
+                                                                '{{ appointment.appointment_time }}');"
+                                                        class="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition">
+                                                        Process Payment
+                                                    </button>
+
+                                                {% elif appointment.status == 'Paid' %}
+
+                                                    <button class="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-500 bg-gray-200 rounded-lg">
+                                                        Paid
+                                                    </button>
+
+                                                {% endif %}
+
+                                                <!-- Always show View Records -->
+                                                <a href="{{ url_for('patient.viewProfile', patient_id=appointment.patient_data.patient_id) }}"
+                                                class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                                                target="_blank">
+                                                    View Records
+                                                </a>
+
+                                            {% endif %}
+
                                         </div>
-                                        {% endif %}
 
                                     </div>
 
@@ -416,7 +505,7 @@
                     <!-- Hidden Fields -->
                     <input type="hidden" name="appointment_id" id="appointmentId">
                     <input type="hidden" name="patient_id" id="patientId">
-                    <input type="hidden" name="schedule_id" id="scheduleId">
+                    <input type="hidden" name="doctor_id" id="doctorId">
                     
                     <!-- Visit Date -->
                     <div>
@@ -503,6 +592,84 @@
             </form>
         </div>
     </div>
+
+    <!-- Process Payment Modal -->
+    <div id="paymentModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-bold text-gray-900">Process Payment</h2>
+                <button onclick="closePaymentModal()" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <form method="POST" id="paymentForm" class="p-6 space-y-5">
+                
+                <!-- Patient Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Patient Name</label>
+                    <input type="text" 
+                           id="paymentPatientName"
+                           readonly
+                           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
+                </div>
+
+                <!-- Patient ID -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Patient ID</label>
+                    <input type="text" 
+                           id="paymentPatientId"
+                           readonly
+                           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
+                </div>
+
+                <!-- Appointment Time -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Appointment Time</label>
+                    <input type="text" 
+                           id="paymentAppointmentTime"
+                           readonly
+                           class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
+                </div>
+
+                <!-- Consultation Fee -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Enter Consultation Fee</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">₱</span>
+                        <input type="number" 
+                               name="consultation_fee"
+                               id="consultationFee"
+                               step="0.01"
+                               min="0"
+                               placeholder="0.00"
+                               required
+                               class="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition">
+                    </div>
+                </div>
+
+            </form>
+
+            <!-- Modal Footer -->
+            <div class="flex items-center gap-3 px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
+                <button type="button" 
+                        onclick="closePaymentModal()"
+                        class="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                    Cancel
+                </button>
+                <button type="submit"
+                        form="paymentForm"
+                        class="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition shadow-sm hover:shadow">
+                    Confirm Payment
+                </button>
+            </div>
+
+        </div>
+    </div>
+
 </div>
 
 <!-- Filter & Search Script -->
@@ -540,13 +707,14 @@ document.addEventListener('DOMContentLoaded', function() {
     searchInput.addEventListener('input', filterAppointments);
 });
 
-function openCheckInModal(appointmentId, patientId, patientName, scheduleId) {
+// Check-In Modal Functions
+function openCheckInModal(appointmentId, doctorId, patientId, patientName) {
     const form = document.getElementById('checkInForm');
-    form.action = `/doctor/check-in/${appointmentId}`;
+    form.action = `/doctor/diagnosis_record/${appointmentId}`;
 
     document.getElementById('appointmentId').value = appointmentId;
+    document.getElementById('doctorId').value = doctorId;
     document.getElementById('patientId').value = patientId;
-    document.getElementById('scheduleId').value = scheduleId;
     document.getElementById('modalPatientName').textContent = patientName;
 
     const today = new Date().toISOString().split('T')[0];
@@ -556,30 +724,82 @@ function openCheckInModal(appointmentId, patientId, patientName, scheduleId) {
     document.body.style.overflow = 'hidden';
 }
 
-
-// Close Check-In Modal
 function closeCheckInModal() {
-    // Hide modal
     document.getElementById('checkInModal').classList.add('hidden');
     document.body.style.overflow = 'auto';
-    
-    // Reset form
     document.getElementById('checkInForm').reset();
 }
 
-// Close modal when clicking outside
+// Payment Modal Functions
+function openPaymentModal(appointmentId, patientName, patientId, appointmentTime) {
+    const form = document.getElementById('paymentForm');
+    form.action = `/doctor/pay_appointment/${appointmentId}`;
+
+    document.getElementById('paymentPatientName').value = patientName;
+    document.getElementById('paymentPatientId').value = patientId;
+    document.getElementById('paymentAppointmentTime').value = appointmentTime;
+    document.getElementById('consultationFee').value = '';
+
+    document.getElementById('paymentModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    
+    // Focus on the fee input
+    setTimeout(() => {
+        document.getElementById('consultationFee').focus();
+    }, 100);
+}
+
+function closePaymentModal() {
+    document.getElementById('paymentModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    document.getElementById('paymentForm').reset();
+}
+
+// Close modals when clicking outside
 document.getElementById('checkInModal').addEventListener('click', function(e) {
     if (e.target === this) {
         closeCheckInModal();
     }
 });
 
-// Close modal with Escape key
+document.getElementById('paymentModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closePaymentModal();
+    }
+});
+
+// Close modals with Escape key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeCheckInModal();
+        closePaymentModal();
     }
 });
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    const checkInModal = document.getElementById('checkInModal');
+    const paymentModal = document.getElementById('paymentModal');
+
+    if (checkInModal) {
+        checkInModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCheckInModal();
+            }
+        });
+    }
+
+    if (paymentModal) {
+        paymentModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePaymentModal();
+            }
+        });
+    }
+
+});
+
+
 </script>
 
 {% endblock %}

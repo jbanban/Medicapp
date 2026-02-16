@@ -66,37 +66,37 @@
                             </th>
                         </tr>
                     </thead>
-
+                    
                     <tbody class="divide-y divide-gray-100">
-                        {% for patient, appointment in patients %}
+                        {% for p in patients %}
                         <tr class="hover:bg-blue-50 transition">
 
                             <!-- Patient -->
-                            <td class="px-6 py-4 text-sm font-medium text-gray-800">
-                                {{ patient.firstname }}
-                                {{ patient.lastname }}
+                            <td class="px-6 py-4 text-sm font-medium text-gray-800 uppercase">
+                                {{ p.firstname }}
+                                {{ p.lastname }}
                             </td>
 
                             <!-- Schedule -->
                             <td class="px-6 py-4 text-sm text-gray-700">
-                                {{ appointment.appointment_date }}
+                                {{ p.appointment.appointment_date }}
                                 <span class="text-gray-400">•</span>
-                                {{ appointment.appointment_time }}
+                                {{ p.appointment.appointment_time }}
                             </td>
 
                             <!-- Status -->
                             <td class="px-6 py-4 text-center">
-                                {% if appointment.status == 'Pending' %}
+                                {% if p.appointment.status == 'Pending' %}
                                     <span class="px-3 py-1 rounded-full text-xs font-medium
                                                  bg-yellow-100 text-yellow-700">
                                         Pending
                                     </span>
-                                {% elif appointment.status == 'Accepted' %}
+                                {% elif p.appointment.status == 'Accepted' %}
                                     <span class="px-3 py-1 rounded-full text-xs font-medium
                                                  bg-blue-100 text-blue-700">
                                         Accepted
                                     </span>
-                                {% elif appointment.status == 'Done' %}
+                                {% elif p.appointment.status == 'Done' %}
                                     <span class="px-3 py-1 rounded-full text-xs font-medium
                                                  bg-green-100 text-green-700">
                                         Done
@@ -104,16 +104,16 @@
                                 {% else %}
                                     <span class="px-3 py-1 rounded-full text-xs font-medium
                                                  bg-gray-100 text-gray-600">
-                                        {{ appointment.status }}
+                                        {{ p.appointment.status }}
                                     </span>
                                 {% endif %}
                             </td>
 
                             <!-- Action -->
                             <td class="px-6 py-4 text-center">
-                                {% if appointment.status != 'Done' %}
+                                {% if p.appointment.status != 'Done' %}
                                 <form action="{{ url_for('doctor.done_appointment',
-                                                        appointment_id=appointment.appointment_id) }}"
+                                                        appointment_id=p.appointment.appointment_id) }}"
                                       method="POST">
                                     <button
                                         class="px-4 py-2 text-sm rounded-lg

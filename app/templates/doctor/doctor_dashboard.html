@@ -179,7 +179,11 @@
                             <h3 class="text-lg font-bold text-gray-900">Today's Schedule</h3>
                             <p class="text-sm text-gray-500 mt-1">8 appointments</p>
                         </div>
-                        <button class="text-blue-600 hover:text-blue-700 text-sm font-medium">View All</button>
+                        <a href="{{ url_for('doctor.doctors_appointment' )}}"
+                            class="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                        >
+                            View All
+                        </a>
                     </div>
 
                     <div class="space-y-4 max-h-96 overflow-y-auto pr-2">

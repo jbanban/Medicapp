@@ -120,7 +120,7 @@
 
                         <!-- Actions -->
                         <div class="mt-6 space-y-3">
-                            <a href="{{ url_for('patient.view_profile', patient_id=patient.patient_id) }}"
+                            <a href="{{ url_for('patient.viewProfile', patient_id=patient.patient_id) }}"
                                 class="w-full py-3 text-sm flex items-center justify-center gap-2
                                     bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 
                                     text-gray-700 font-medium rounded-xl transition-all shadow-sm hover:shadow"
@@ -222,7 +222,7 @@
                                             Verified
                                         </span>
                                     {% else %}
-                                        <a href="{{ url_for('patient.verify_page', method='email') }}"
+                                        <a href="{{ url_for('patient.start_verification', method='email') }}"
                                         class="px-3 py-1 text-xs bg-orange-100 text-orange-700 rounded-full font-medium hover:bg-orange-200 transition"
                                         target="_blank">
                                             Pending
@@ -321,8 +321,8 @@
                         </button>
 
                         <button
-                            @click="tab = 'document'"
-                            :class="tab === 'document'
+                            @click="tab = 'appt-visiblity'"
+                            :class="tab === 'appt-visiblity'
                                 ? 'border-blue-600 text-blue-700 bg-blue-50'
                                 : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'"
                             class="px-6 py-4 border-b-3 transition-all flex items-center gap-2"
@@ -331,7 +331,7 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                             </svg>
-                            Documents
+                            Appointment Visibility
                         </button>
                     </div>
                 </div>
@@ -352,11 +352,11 @@
                         {% include 'patient/tabs/medical_details.html' %}
                     </div>
 
-                    <div x-show="tab === 'document'" 
+                    <div x-show="tab === 'appt-visiblity'" 
                          x-transition:enter="transition ease-out duration-200"
                          x-transition:enter-start="opacity-0 transform translate-x-4"
                          x-transition:enter-end="opacity-100 transform translate-x-0">
-                        {% include 'patient/tabs/document.html' %}
+                        {% include 'patient/tabs/appointment_visibility.html' %}
                     </div>
                 </div>
             </div>

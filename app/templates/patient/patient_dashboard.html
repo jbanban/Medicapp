@@ -1,7 +1,7 @@
 {% extends 'base/layout.html' %}
 {% block title %} Patient Dashboard {% endblock %}
 {% block content %}
-<div class="flex min-h-screen bg-gray-100">
+<div class="flex w-full bg-gray-100">
   
   <!-- Sidebar -->
   {% include 'patient/patient_sidebar.html' %}
@@ -37,15 +37,6 @@
                 </svg>
                 <!-- Notification Badge -->
                 <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
-            </button>
-
-            <!-- Settings/Help -->
-            <button class="hidden sm:flex p-2 rounded-xl text-gray-600 hover:bg-gray-100 transition-all"
-                    aria-label="Settings">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
             </button>
 
             <!-- Divider -->
@@ -112,7 +103,7 @@
                         My Appointments
                     </a>
 
-                    <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                    <a href="{{ url_for('patient.patient_profile')}}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                         <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
@@ -213,38 +204,11 @@
               {% endif %}
               {% endfor %}
               <a href="{{ url_for('patient.request_appointment') }}"
-                class="text-center w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex item-center mt-12">
+                class="justify-center w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex item-center mt-12">
                 Book New Appointment
               </a>
             </div>
           </div>
-
-          <!-- Prescriptions -->
-          <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
-            <div class="p-6 border-b">
-              <h2 class="text-lg font-semibold text-gray-800">Recent Prescriptions</h2>
-              <p class="text-sm text-gray-500">Your current medications</p>
-            </div>
-            <div class="p-6 space-y-4">
-              <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-100">
-                <div class="flex items-center">
-                  <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                    <i class="fas fa-pills text-green-600"></i>
-                  </div>
-                  <div>
-                    <h3 class="font-medium text-gray-800">Amoxicillin 500mg</h3>
-                    <p class="text-sm text-gray-600">Take 1 capsule 3 times daily</p>
-                    <p class="text-xs text-gray-500">Prescribed by Dr. Johnson</p>
-                  </div>
-                </div>
-                <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>
-              </div>
-              <div class="text-center pt-2">
-                <a href="#" class="text-blue-600 hover:underline text-sm">View All Prescriptions</a>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <!-- Right Column -->
         <div class="space-y-6">
