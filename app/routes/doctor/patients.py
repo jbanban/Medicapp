@@ -1,5 +1,6 @@
 from flask import render_template, redirect, url_for, flash
 from flask_login import current_user, login_required
+from sqlalchemy import func
 from app.models.doctor import Doctor
 from app.models.patient import Patient
 from app.models.appointment import Appointment
@@ -16,12 +17,28 @@ def doctor_patients():
         flash("Please complete your doctor profile.", "warning")
         return redirect(url_for('doctor.create_doctor_profile'))
 
+    latest_subquery = (
+        db.session.query(
+            Appointment.patient_id,
+            func.max(Appointment.appointment_id).label("latest_id")
+        )
+        .filter(Appointment.doctor_id == doctor.doctor_id)
+        .group_by(Appointment.patient_id)
+        .subquery()
+    )
+
+
+    # Main query: join patient + appointment using latest date
     records = (
         db.session.query(Patient, Appointment)
         .join(Appointment, Appointment.patient_id == Patient.patient_id)
-        .filter(Appointment.doctor_id == doctor.doctor_id)
+        .join(
+            latest_subquery,
+            Appointment.appointment_id == latest_subquery.c.latest_id
+        )
         .all()
     )
+
 
     patient_list = []
 
@@ -34,8 +51,6 @@ def doctor_patients():
             "lastname": decrypted["lastname"],
             "appointment": appointment
         })
-
-    print(decrypted)
 
     return render_template(
         "doctor/doctor_patients.html",

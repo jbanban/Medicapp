@@ -316,6 +316,13 @@
                                                                 Check In
                                                             </button>
                                                         </form>
+                                                        <form action="{{ url_for('doctor.cancel_appointment', appointment_id=appointment.appointment_id) }}" method="POST">
+                                                            <button
+                                                                class="w-full text-center px-20 py-2.5 text-sm font-semibold text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition"
+                                                            >
+                                                                Cancel Appointment
+                                                            </button>
+                                                        </form>
                                                     {% endif %}
 
                                                 {% elif appointment.status == 'Ongoing' %}
@@ -679,32 +686,46 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     const appointmentCards = document.querySelectorAll('.appointment-card');
 
+    // Read URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlSearch = urlParams.get('search');
+    const urlPatient = urlParams.get('patient');
+
+    // If URL has search parameter → auto fill input
+    if (urlSearch) {
+        searchInput.value = urlSearch;
+    }
+
+    // If URL has patient parameter → auto fill input
+    if (urlPatient) {
+        searchInput.value = urlPatient;
+    }
+
     function filterAppointments() {
         const statusValue = statusFilter.value.toLowerCase();
         const searchValue = searchInput.value.toLowerCase();
 
         appointmentCards.forEach(card => {
-            const cardStatus = card.dataset.status.toLowerCase();
-            const cardPatient = card.dataset.patient.toLowerCase();
-            const cardReason = card.dataset.reason.toLowerCase();
-            const cardDate = card.dataset.date.toLowerCase();
+            const cardStatus = (card.dataset.status || '').toLowerCase();
+            const cardPatient = (card.dataset.patient || '').toLowerCase();
+            const cardReason = (card.dataset.reason || '').toLowerCase();
+            const cardDate = (card.dataset.date || '').toLowerCase();
 
             const statusMatch = statusValue === 'all' || cardStatus === statusValue;
-            const searchMatch = searchValue === '' || 
-                                cardPatient.includes(searchValue) || 
+            const searchMatch = searchValue === '' ||
+                                cardPatient.includes(searchValue) ||
                                 cardReason.includes(searchValue) ||
                                 cardDate.includes(searchValue);
 
-            if (statusMatch && searchMatch) {
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
-            }
+            card.style.display = (statusMatch && searchMatch) ? 'block' : 'none';
         });
     }
 
     statusFilter.addEventListener('change', filterAppointments);
     searchInput.addEventListener('input', filterAppointments);
+
+    // 🔥 Run once on page load (important!)
+    filterAppointments();
 });
 
 // Check-In Modal Functions

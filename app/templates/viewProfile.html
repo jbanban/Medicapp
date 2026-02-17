@@ -217,9 +217,14 @@
                                     <p class="text-sm font-bold text-gray-900">Current Address</p>
                                 </div>
                                 <p class="text-gray-700 leading-relaxed">
-                                    {{ patient.current_house_no }}, {{ patient.current_street }}<br>
-                                    {{ patient.current_barangay }}, {{ patient.current_city }}<br>
-                                    {{ patient.current_province }},  {{ patient.current_zipcode }}<br>
+                                    {{ patient.current_house_no or "" }}{% if patient.current_house_no and patient.current_street %}, {% endif %}
+                                    {{ patient.current_street or "" }}<br>
+
+                                    {{ patient.current_barangay or "" }}{% if patient.current_barangay and patient.current_city %}, {% endif %}
+                                    {{ patient.current_city or "" }}<br>
+
+                                    {{ patient.current_province or "" }}{% if patient.current_province and patient.current_zipcode %}, {% endif %}
+                                    {{ patient.current_zipcode or "" }}
                                 </p>
                             </div>
 
@@ -232,9 +237,14 @@
                                     <p class="text-sm font-bold text-gray-900">Permanent Address</p>
                                 </div>
                                 <p class="text-gray-700 leading-relaxed">
-                                    {{ patient.permanent_house_no }}, {{ patient.permanent_street }}<br>
-                                    {{ patient.permanent_barangay }}, {{ patient.permanent_city }}<br>
-                                    {{ patient.permanent_province }}, {{ patient.permanent_zipcode }}<br>
+                                    {{ patient.permanent_house_no or "" }}{% if patient.permanent_house_no and patient.permanent_street %}, {% endif %}
+                                    {{ patient.permanent_street or "" }}<br>
+
+                                    {{ patient.permanent_barangay or "" }}{% if patient.permanent_barangay and patient.permanent_city %}, {% endif %}
+                                    {{ patient.permanent_city or "" }}<br>
+
+                                    {{ patient.permanent_province or "" }}{% if patient.permanent_province and patient.permanent_zipcode %}, {% endif %}
+                                    {{ patient.permanent_zipcode or "" }}
                                 </p>
                             </div>
                         </div>
@@ -295,94 +305,75 @@
                     <div x-show="appointmentHistoryOpen" 
                          x-collapse
                          class="p-6">
+
                         <div class="space-y-4 overflow-y-auto max-h-96">
-                        {% for appt in appointments %}
-                            {% if loop.index0 < 5 %}
-                            <article class="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow duration-200">
-                                {% set bg = background_by_doctor.get(appt.doctor.doctor_id) %}
-                                <div class="flex justify-between items-start gap-6">
-                                    <!-- Left Section: Doctor Info -->
-                                    <div class="flex gap-4 flex-1">
-                                        <!-- Avatar -->
-                                        <div class="flex-shrink-0">
-                                            <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center text-2xl">
-                                                {% if appt.doctor.profile_image %}
-                                                <img src="{{ url_for('static', filename='/' ~ appt.doctor.profile_image) }}"
-                                                    alt="Dr. {{ appt.doctor.firstname }} {{ appt.doctor.lastname }}"
-                                                    class="w-full h-full object-cover rounded-full">
-                                                {% else %}
-                                                    <span class="text-blue-600">👤</span>
-                                                {% endif %}
-                                            </div>
-                                        </div>
+ 
+                        {% macro appointment_field(label, field_key, appointment, appointment_visibility) %}
 
-                                        <!-- Details -->
-                                        <div class="flex-1 min-w-0">
-                                            <!-- Doctor Name & Specialty -->
-                                            <h3 class="font-semibold text-gray-900 text-lg">Dr. {{ appt.doctor.firstname }} {{ appt.doctor.lastname }} </h3>
-                                            <p class="text-sm text-gray-600 mt-0.5">{{ appt.doctor.specialization }}</p>
+                        {% set is_visible = appointment_visibility.get(field_key, false) %}
+                            <div class="border rounded-lg p-4 hover:bg-gray-50 transition-colors duration-200" 
+                                role="listitem">
 
-                                            <!-- Appointment Info -->
-                                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600 mt-3">
-                                                <span class="flex items-center gap-1">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                                    </svg>
-                                                    {{ appt.appointment_date }}
-                                                </span>
-                                                <span class="text-gray-400">•</span>
-                                                <span class="flex items-center gap-1">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                    </svg>
-                                                    {{ appt.appointment_time  }}
-                                                </span>
-                                            </div>
-                                            {% if bg %}
-                                            <div class="text-sm text-gray-600 mt-1.5">
-                                                <span class="flex items-center gap-1">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                    </svg>
-                                                    {{ bg.clinic_address }}
-                                                </span>
-                                            </div>
-                                            {% endif  %}
-                                        </div>
-                                    </div>
+                                <div class="flex gap-6 mb-3">
+                                    <div class="flex-1 min-w-0">
+                                        <!-- Title + Toggle -->
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h3 class="text-sm font-semibold text-gray-700 w-1/4 flex-shrink-0">
+                                                {{ label }}
+                                            </h3>
 
-                                    <!-- Right Section: Status & Menu -->
-                                    <div class="flex flex-col items-end gap-3 flex-shrink-0">
-                                        
-                                        <div class="flex items-center gap-2">
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
-                                                {% if appt.status == 'Pending' %}
-                                                    bg-yellow-100 text-yellow-800
-                                                {% elif appt.status == 'Confirmed' %}
-                                                    bg-green-100 text-green-800
-                                                {% elif appt.status == 'Cancelled' %}
-                                                    bg-red-100 text-red-800
-                                                {% else %}
-                                                    bg-gray-100 text-gray-800
-                                                {% endif %}">
-                                                {{ appt.status }}
-                                            </span>
+                                            <!-- Content -->
+                                            {% if not is_visible %}
+                                                <p class="text-xs text-red-500 mt-2 italic">
+                                                    This appointment is hidden by the patient.
+                                                </p>
+                                            {% else %}
+                                            <div class="field-content space-y-2 text-sm text-gray-600 transition-all duration-300 text-left
+                                            {% if not is_visible %}filter blur-md opacity-60 pointer-events-none select-none{% endif %}"
+                                            data-field="{{ field_key }}"
+                                            aria-live="polite">
                                             
-                                            <!-- More Options Menu -->
-                                            <button type="button" 
-                                                    class="text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition-colors"
-                                                    aria-label="More options">
-                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                                                </svg>
-                                            </button>
+                                                <p class="flex flex-wrap gap-x-2">
+                                                    <span class="font-medium text-gray-700">Date:</span>
+                                                    <span>{{ appointment.date or "Not specified" }}</span>
+                                                </p>
+                                                <p class="flex flex-wrap gap-x-2">
+                                                    <span class="font-medium text-gray-700">Diagnosis:</span>
+                                                    <span>{{ appointment.diagnosis or "Not specified" }}</span>
+                                                </p>
+                                                <p class="flex flex-wrap gap-x-2">
+                                                    <span class="font-medium text-gray-700">Notes:</span>
+                                                    <span>{{ appointment.notes or "No notes provided" }}</span>
+                                                </p>
+                                            </div>
+                                            {% endif %}
                                         </div>
+                                        {% if doctor and is_visible == True %}
+                                        <button onclick="openOpinionModal(
+                                            {{ doctor.doctor_id }},
+                                            {{ appointment.appointment_id }},
+                                            '{{ appointment.patient_firstname }} {{ appointment.patient_lastname }}'
+                                            )" 
+                                            class="w-2/12 px-4 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition">
+                                            <i class="fa fa-plus"></i>
+                                            2nd Opinion
+                                        </button>
+                                        {% endif %}
                                     </div>
                                 </div>
-                            {% endif %}
-                            </article>
+                            </div>
+                        {% endmacro %}
+
+                        <!-- Appointment Fields -->
+                        {% for appt in appointments %}
+                            {{ appointment_field(
+                                "Appointment on " ~ appt.date,
+                                appt.appointment_id|string,
+                                appt,
+                                appointment_visibility
+                            ) }}
                         {% endfor %}
+
                         </div>
                     </div>
                 </div>
@@ -449,9 +440,147 @@
         </div>
 
     </div>
+
+    <!-- Opinion Modal -->
+    <div id="OpinionModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            
+            <!-- Modal Header -->
+            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">Second Opinion</h2>
+                    </div>
+                    <button onclick="closeOpinionModal()" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Modal Body -->
+            <form method="POST" id="OpinionForm">
+
+                <div class="p-6 space-y-6">
+                    
+                    <!-- Hidden Fields -->
+                    <input type="hidden" name="appointment_id" id="appointmentId">
+                    <input type="hidden" name="doctor_id" id="doctorId">
+                    
+                    <!-- Visit Date -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Patient: <span class="text-red-500"></span>
+                        </label>
+                        <div class="relative">
+                            <i class="fas fa-person absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <p class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm text-gray-600 mt-1" id="modalPatientName"></p>
+                        </div>
+                    </div>
+
+                    <!-- Diagnosis -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Diagnosis <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <i class="fas fa-stethoscope absolute left-4 top-4 text-gray-400"></i>
+                            <textarea name="second_opinion" 
+                                        id="second_opinion"
+                                        rows="4"
+                                        required
+                                        placeholder="Enter primary diagnosis and findings..."
+                                        class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"></textarea>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Include primary and secondary diagnoses if applicable</p>
+                    </div>
+
+                    <!-- Information Box -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex gap-3">
+                            <i class="fas fa-info-circle text-blue-600 text-lg mt-0.5"></i>
+                            <div class="flex-1">
+                                <h4 class="text-sm font-semibold text-blue-900 mb-1">Medical Record Information</h4>
+                                <ul class="text-xs text-blue-800 space-y-1">
+                                    <li>• This record will be permanently saved to the patient's medical history</li>
+                                    <li>• Ensure all information is accurate and complete before submitting</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-2xl">
+                    <div class="flex items-center gap-3">
+                        <button type="button" 
+                                onclick="closeOpinionModal()"
+                                class="flex-1 px-4 py-3 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                class="flex-1 px-4 py-3 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm hover:shadow">
+                            <i class="fas fa-save mr-2"></i>
+                            Save Opinion to Record
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <!-- Alpine.js -->
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<script>
+    
+// Opinion Modal Functions
+function openOpinionModal(doctorId, appointmentId, patientName) {
+    const form = document.getElementById('OpinionForm');
+    form.action = `/patient/second_opinion/${appointmentId}`;
 
+    document.getElementById('doctorId').value = doctorId;
+    document.getElementById('appointmentId').value = appointmentId;
+    document.getElementById('modalPatientName').textContent = patientName;
+
+    document.getElementById('OpinionModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeOpinionModal() {
+    document.getElementById('OpinionModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    document.getElementById('OpinionForm').reset();
+}
+
+
+// Close modals when clicking outside
+document.getElementById('OpinionModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeOpinionModal();
+    }
+});
+
+// Close modals with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeOpinionModal();
+    }
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    const OpinionModal = document.getElementById('OpinionModal');
+
+    if (OpinionModal) {
+        OpinionModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeOpinionModal();
+            }
+        });
+    }
+
+});
+
+</script>
 {% endblock %}

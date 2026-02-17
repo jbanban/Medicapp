@@ -119,6 +119,7 @@ def patient_profile():
             "date": record.visit_date,
             "diagnosis": record.diagnosis,
             "notes": record.notes,
+            "second_opinion": record.second_op
         })
 
     return render_template(

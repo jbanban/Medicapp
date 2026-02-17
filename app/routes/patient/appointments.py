@@ -1,4 +1,4 @@
-from flask import jsonify, render_template, session, redirect, url_for, request, flash
+from flask import jsonify, render_template, redirect, url_for, request, flash
 from datetime import date, datetime
 from flask_login import current_user, login_required
 from sqlalchemy.orm import joinedload
@@ -8,6 +8,7 @@ from app.models.appointment import Appointment
 from app.models.doctor_schedule import Doctor_Schedule
 from app.models.doctors_background import DoctorsBackground
 from app.services.patient_cache import get_patient_cache
+from app.services.email_services import send_email
 from app import db
 from . import patient_bp
 
@@ -145,6 +146,34 @@ def book_appointment():
 
         db.session.add(appointment)
         db.session.commit()
+
+        send_email(
+            subject="Appointment Confirmation – Successfully Booked",
+            recipient=appointment.patient.email,
+            body=f"""
+                Dear {appointment.patient.first_name} {appointment.patient.last_name},
+
+                Good day.
+
+                We are pleased to inform you that your appointment has been successfully scheduled.
+
+                Appointment Details:
+                Doctor: Dr. {appointment.doctor.first_name} {appointment.doctor.last_name}
+                Date: {appointment.appointment_date}
+                Time: {appointment.appointment_time}
+                Type: {appointment.type}
+
+                Please ensure that you arrive at least 10–15 minutes before your scheduled time for proper check-in.
+
+                If you need to reschedule or cancel your appointment, you may do so through your MEDICAPP account.
+
+                Thank you for choosing MEDICAPP. We look forward to serving you.
+
+                Sincerely,
+                MEDICAPP Support Team
+                """
+            )
+
 
         return jsonify({
             "success": True,

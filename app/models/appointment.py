@@ -21,6 +21,10 @@ class Appointment(db.Model):
     notes: Mapped[str | None] = mapped_column(EncryptedColumn(), nullable=True)
     status: Mapped[str] = mapped_column(String(20))
     type: Mapped[str] = mapped_column(String(30))
+
+    reminder_1hr_sent = db.Column(db.Boolean, default=False)
+    reminder_ontime_sent = db.Column(db.Boolean, default=False)
+
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     patient: Mapped["Patient"] = relationship(back_populates="appointments")

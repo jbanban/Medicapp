@@ -70,6 +70,10 @@
                             <span class="font-medium text-gray-700">Notes:</span>
                             <span>{{ appointment.notes or "No notes provided" }}</span>
                         </p>
+                        <p class="flex flex-wrap gap-x-2">
+                            <span class="font-medium text-blue-700">Second Opinion:</span>
+                            <span>{{ appointment.second_opinion or "No second opinion." }}</span>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -79,7 +83,7 @@
         <!-- Appointment Fields -->
         {% for appt in appointments %}
             {{ appointment_field(
-                "Appointment on " ~ appt.date,
+                "Appointment on: " ~ appt.date,
                 appt.appointment_id|string,
                 appt
             ) }}

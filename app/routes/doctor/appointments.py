@@ -1,12 +1,15 @@
 from flask import render_template, redirect, request, url_for, flash
 from flask_login import current_user, login_required
+from app.services.email_services import send_email
 from datetime import date, datetime
 from app.models.doctor import Doctor
 from app.models.appointment import Appointment
+from app.models.doctor_schedule import Doctor_Schedule
 from app.models.payment import PaymentRecord
 from app.routes.patient import Patient
 from app.models.medical_record import MedicalRecord
 from app.services.patient_cache import get_patient_cache
+from app.services.audit_services import log_activity
 from app import db
 from . import doctor_bp
 
@@ -62,23 +65,9 @@ def doctors_appointment():
         status="Ongoing"
     ).first()
 
-
     # 🔹 cache patient data
     for appointment in appointments.items:
         appointment.patient_data = get_patient_cache(appointment.patient_id)
-
-    # print("\n=== APPOINTMENTS DEBUG ===")
-    # for appt in appointments.items:
-    #     print(
-    #         f"ID={appt.appointment_id}, "
-    #         f"PatientID={appt.patient_id}, "
-    #         f"Date={appt.appointment_date}, "
-    #         f"Time={appt.appointment_time}, "
-    #         f"Status={appt.status}, "
-    #         f"ScheduleID={appt.doctor_schedule_id}"
-    #     )
-    # print("=== END APPOINTMENTS DEBUG ===\n")
-
 
     return render_template(
         'doctor/doctor_appointment.html',
@@ -94,11 +83,17 @@ def doctors_appointment():
 @login_required
 def view_profile(patient_id):
     patient = Patient.query.get(patient_id)
-    if not patient:
-        return redirect(url_for('doctor.doctors_appointment'))
+    
+    doctor = Doctor.query.filter_by(account_id=current_user.account_id)
 
     # 🔹 cache patient data
     patient_data = get_patient_cache(patient_id)
+
+    log_activity(
+        account_id=current_user.account_id,
+        action="Viewed Profile",
+        description=f"Dr. {doctor.firstname} {doctor.lastname}, Viewed Patient Profile of {patient_data.full_name}."
+    )
 
     return render_template(
         'patient/viewProfile.html',
@@ -106,6 +101,62 @@ def view_profile(patient_id):
         patient_data=patient_data
     )
 
+
+@doctor_bp.route('/appointments')
+@login_required
+def view_appointments():
+    doctor = Doctor.query.filter_by(
+        account_id=current_user.account_id
+    ).first()
+
+    if not doctor:
+        flash("Please complete your doctor profile.", "warning")
+        return redirect(url_for('doctor.create_doctor_profile'))
+
+    # Get query parameters
+    patient_id = request.args.get("patient_id")
+    search = request.args.get("search")
+
+    # Base query (only this doctor's appointments)
+    query = db.session.query(Appointment, Patient)\
+        .join(Patient, Patient.patient_id == Appointment.patient_id)\
+        .filter(Appointment.doctor_id == doctor.doctor_id)
+
+    # Filter by patient_id (when clicking eye icon)
+    if patient_id:
+        query = query.filter(Appointment.patient_id == patient_id)
+
+    # Search by patient name
+    if search:
+        query = query.filter(
+            (Patient.firstname.ilike(f"%{search}%")) |
+            (Patient.lastname.ilike(f"%{search}%"))
+        )
+
+    records = query.order_by(Appointment.appointment_date.desc()).all()
+
+    appointment_list = []
+
+    for appointment, patient in records:
+        decrypted = get_patient_cache(patient.patient_id)
+
+        appointment_list.append({
+            "appointment": appointment,
+            "patient_id": patient.patient_id,
+            "firstname": decrypted["firstname"],
+            "lastname": decrypted["lastname"],
+        })
+
+    return render_template(
+        "doctor/doctor_appointments.html",
+        appointments=appointment_list,
+        search=search
+    )
+
+
+
+
+# ACTIONS FOR BUTTON ROUTES
 @doctor_bp.route('/accept_appointment/<int:appointment_id>', methods=['POST'])
 @login_required
 def accept_appointment(appointment_id):
@@ -115,6 +166,40 @@ def accept_appointment(appointment_id):
     appointment.status = 'Booked'
     db.session.commit()
     flash('Appointment Request Successfully Accepted','success')
+
+    log_activity(
+        account_id=current_user.account_id,
+        action="Accept Appointment",
+        description=f"Doctor Accept appointment ID {appointment.appointment_id}"
+    )
+
+    send_email(
+        subject="Appointment Confirmation – Successfully Booked",
+        recipient=appointment.patient.email,
+        body=f"""
+            Dear {appointment.patient.first_name} {appointment.patient.last_name},
+
+            Good day.
+
+            We are pleased to inform you that your appointment has been successfully scheduled.
+
+            Appointment Details:
+            Doctor: Dr. {appointment.doctor.first_name} {appointment.doctor.last_name}
+            Date: {appointment.appointment_date}
+            Time: {appointment.appointment_time}
+            Type: {appointment.type}
+
+            Please ensure that you arrive at least 10–15 minutes before your scheduled time for proper check-in.
+
+            If you need to reschedule or cancel your appointment, you may do so through your MEDICAPP account.
+
+            Thank you for choosing MEDICAPP. We look forward to serving you.
+
+            Sincerely,
+            MEDICAPP Support Team
+            """
+        )
+
     return redirect(url_for('doctor.doctors_appointment'))
 
 @doctor_bp.route('/reject_appointment/<int:appointment_id>', methods=['POST'])
@@ -125,6 +210,13 @@ def reject_appointment(appointment_id):
         return redirect(url_for('doctor.doctors_appointment'))
     appointment.status = 'Rejected'
     db.session.commit()
+
+    log_activity(
+        account_id=current_user.account_id,
+        action="Reject Appointment",
+        description=f"Doctor Rejects appointment ID {appointment.appointment_id}"
+    )
+
     flash('Appointment Request Successfully Rejected','success')
     return redirect(url_for('doctor.doctors_appointment'))
 
@@ -136,6 +228,13 @@ def check_in_patient(appointment_id):
         return redirect(url_for('doctor.doctors_appointment'))
     appointment.status = 'Ongoing'
     db.session.commit()
+
+    log_activity(
+        account_id=current_user.account_id,
+        action="Patient Check-in",
+        description=f"Patient ID {appointment.patient_id} is currently check-in for his/her appointment {appointment.appointment_id}"
+    )
+
     flash('Patient is Currently Checked-in.', 'success')
     return redirect(url_for('doctor.doctors_appointment'))
 
@@ -146,6 +245,13 @@ def done_appointment(appointment_id):
     if not appointment:
         return redirect(url_for('doctor.doctors_appointment'))
     appointment.status = 'Done'
+
+    log_activity(
+        account_id=current_user.account_id,
+        action="Done Appointment",
+        description=f"Doctor successfully {appointment.reason} appointment ID {appointment.appointment_id}."
+    )
+
     db.session.commit()
     return redirect(url_for('doctor.doctors_appointment'))
 
@@ -203,6 +309,12 @@ def pay_appointment(appointment_id):
         db.session.add(new_payment)
         db.session.commit()
 
+        log_activity(
+            account_id=current_user.account_id,
+            action="Appointment Paid",
+            description=f"Appointment ID: {appointment.appointment_id} has been Successfully Paid."
+        )
+            
         flash('Appointment Successfully Paid.', 'success')
         return redirect(url_for('doctor.doctors_appointment'))
 
@@ -253,40 +365,112 @@ def cancel_appointment(appointment_id):
 
     appointment = Appointment.query.get_or_404(appointment_id)
 
-    # Ensure appointment belongs to this doctor
     if appointment.doctor_id != doctor.doctor_id:
         flash("Unauthorized action.", "danger")
         return redirect(url_for('doctor.doctors_appointment'))
 
-    # 1️⃣ Free current schedule slot (optional depending on your design)
+    today_str = date.today().strftime("%Y-%m-%d")
 
-    # 2️⃣ Find nearest available appointment slot
-    nearest_slot = Appointment.query.filter(
-        Appointment.doctor_id == doctor.doctor_id,
-        Appointment.status == 'Available',
-        Appointment.appointment_date >= datetime.today().date()
+    # 🔥 FIND AVAILABLE SLOT FROM doctor_schedule TABLE
+    nearest_slot = Doctor_Schedule.query.filter(
+        Doctor_Schedule.doctor_id == doctor.doctor_id,
+        Doctor_Schedule.status == 'available',
+        Doctor_Schedule.vacant_date >= today_str
     ).order_by(
-        Appointment.appointment_date.asc(),
-        Appointment.appointment_time.asc()
+        Doctor_Schedule.vacant_date.asc(),
+        Doctor_Schedule.start_time.asc()
     ).first()
 
     if nearest_slot:
-        # Reschedule current appointment
-        appointment.appointment_date = nearest_slot.appointment_date
-        appointment.appointment_time = nearest_slot.appointment_time
+
+        # 🔥 RESCHEDULE APPOINTMENT
+        appointment.appointment_date = nearest_slot.vacant_date.strftime("%Y-%m-%d")
+        appointment.appointment_time = nearest_slot.start_time.strftime("%H:%M")
         appointment.doctor_schedule_id = nearest_slot.doctor_schedule_id
         appointment.status = 'Booked'
 
-        # Mark slot as taken (if needed)
-        nearest_slot.status = 'Reserved'
+        # 🔥 MARK SLOT AS BOOKED
+        nearest_slot.status = 'Cancelled'
 
         db.session.commit()
+
 
         flash('Appointment automatically rescheduled to nearest available time.', 'success')
+
+        log_activity(
+            account_id=current_user.account_id,
+            action="Appointment automatic Reschedule",
+            description=f"Doctor cancelled appointment ID {appointment.appointment_id} and is atomatically Rescheduled."
+        )
+
+        send_email(
+            subject="Appointment Rescheduled Notice",
+            recipient=appointment.patient.email,
+            body=f"""
+                Dear {appointment.patient.first_name} {appointment.patient.last_name},
+
+                Good day.
+
+                Please be informed that your previously scheduled appointment with 
+                Dr. {doctor.first_name} {doctor.last_name} has been rescheduled
+                due to unforeseen circumstances.
+
+                New Appointment Details:
+                Date: {appointment.appointment_date}
+                Time: {appointment.appointment_time}
+
+                We sincerely apologize for any inconvenience this adjustment may cause.
+                Your understanding and continued trust in our services are greatly appreciated.
+
+                If the new schedule is not convenient for you, please log in to your
+                MEDICAPP account to choose another available time.
+
+                Thank you for your patience and understanding.
+
+                Sincerely,
+                MEDICAPP Support Team
+                """
+            )
+
     else:
-        # If no available slot found
         appointment.status = 'Cancelled'
         db.session.commit()
+
         flash('No available schedule found. Appointment cancelled.', 'warning')
 
+        log_activity(
+            account_id=current_user.account_id,
+            action="Cancel Appointment",
+            description=f"Doctor cancelled appointment ID {appointment.appointment_id}"
+        )
+        send_email(
+            subject="Notice of Appointment Cancellation",
+            recipient=appointment.patient.email,
+            body=f"""
+                Dear {appointment.patient.first_name} {appointment.patient.last_name},
+
+                Good day.
+
+                We regret to inform you that your scheduled appointment with 
+                Dr. {doctor.first_name} {doctor.last_name} on 
+                {appointment.appointment_date} at {appointment.appointment_time}
+                has been cancelled due to unforeseen circumstances.
+
+                We sincerely apologize for any inconvenience this may have caused.
+                Your time and trust are highly valued, and we understand the importance
+                of your scheduled consultation.
+
+                We kindly encourage you to log in to your MEDICAPP account to
+                reschedule your appointment at your convenience, or you may contact
+                the clinic directly for assistance.
+
+                Thank you for your understanding.
+
+                Sincerely,
+                MEDICAPP Support Team
+                """
+            )
+        
+
     return redirect(url_for('doctor.doctors_appointment'))
+
