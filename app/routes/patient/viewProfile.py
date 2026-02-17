@@ -92,7 +92,7 @@ def viewProfile(patient_id):
             "current_barangay": decrypt_value(info.current_barangay),
             "current_city": decrypt_value(info.current_city),
             "current_province": decrypt_value(info.current_province),
-            "current_zipcode": decrypt_value(info.current_zipcode),
+            "current_zipcode": info.current_zipcode,
             # PERMANENT ADDRESS
             "permanent_house_no": safe_decrypt(info.permanent_house_no),
             "permanent_street": safe_decrypt(info.permanent_street),

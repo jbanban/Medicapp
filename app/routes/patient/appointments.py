@@ -190,7 +190,7 @@ def book_appointment():
         }), 500
     
 
-@patient_bp.route('/cancel_appointment/<int:appointment_id>', methods=['PATCH'])
+@patient_bp.route('/cancel_appointment/<int:appointment_id>', methods=['POST'])
 @login_required
 def cancel_appointment(appointment_id):
     appointment = Appointment.query.get_or_404(appointment_id)
