@@ -53,3 +53,60 @@
     background-color: #2563eb; /* Tailwind blue-600 */
     border-radius: 9999px;
 }
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { 
+        transform: translateY(20px) scale(0.95);
+        opacity: 0;
+    }
+    to { 
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+#bookModal.show #modalContent {
+    animation: slideUp 0.3s ease-out forwards;
+}
+
+#bookModal:not(.hidden) {
+    animation: fadeIn 0.3s ease-out;
+}
+
+#rescheduleModal.show {
+    display: flex !important;
+}
+
+#rescheduleModal.show #rescheduleModalContent {
+    animation: modalSlideIn 0.3s ease-out forwards;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Improved date/time input styling */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+/* Focus ring for better accessibility */
+input:focus-visible {
+    outline: none;
+}

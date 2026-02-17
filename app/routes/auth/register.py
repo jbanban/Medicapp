@@ -1,5 +1,5 @@
 from flask import render_template, request, redirect, url_for, session, flash
-from app.models import Account, User
+from app.models import Account
 from app.extensions import db
 from werkzeug.security import generate_password_hash
 from . import auth_bp
@@ -22,8 +22,13 @@ def register():
             flash("Username already exists!", "danger")
             return redirect(url_for('auth.register'))
 
-        hashed_pw = generate_password_hash(password, method='scrypt')
-        new_account = Account(username=username, password=hashed_pw, role=role) 
+        new_account = Account(
+            username=username,
+            role=role,
+            active=True
+        )
+        new_account.set_password(password) 
+
         db.session.add(new_account)
         db.session.commit()
 
@@ -34,15 +39,15 @@ def register():
 
 
 
-@auth_bp.route('/admin/register', methods=['GET', 'POST'])
-def admin_register():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
+# @auth_bp.route('/admin/register', methods=['GET', 'POST'])
+# def admin_register():
+#     if request.method == 'POST':
+#         username = request.form['username']
+#         password = request.form['password']
 
-        new_user = User(username=username, password=generate_password_hash(password, method='sha256'))
-        db.session.add(new_user)
-        db.session.commit()
-        flash('Account created!', 'success')
-        return redirect(url_for('auth.admin_login'))
-    return render_template('admin/admin_register.html')
+#         new_user = User(username=username, password=generate_password_hash(password, method='sha256'))
+#         db.session.add(new_user)
+#         db.session.commit()
+#         flash('Account created!', 'success')
+#         return redirect(url_for('auth.admin_login'))
+#     return render_template('admin/admin_register.html')

@@ -4,6 +4,47 @@ from app.routes.patient import appointments
 from . import api_bp
 
 
+@api_bp.route('/doctor/<int:doctor_id>/availability')
+def patient_doctor_availability(doctor_id):
+    schedules = Doctor_Schedule.query.filter_by(
+        doctor_id=doctor_id,
+        status='available'
+    ).all()
+
+    availability = {}
+    for s in schedules:
+        date = s.vacant_date.strftime('%Y-%m-%d')
+        availability[date] = availability.get(date, 0) + 1
+
+    return jsonify([
+        {"date": date, "slots": slots}
+        for date, slots in availability.items()
+    ])
+
+@api_bp.route('/doctor/<int:doctor_id>/availability/month')
+def doctor_month_availability(doctor_id):
+    schedules = Doctor_Schedule.query.filter_by(
+        doctor_id=doctor_id,
+        status='available'
+    ).order_by(
+        Doctor_Schedule.vacant_date,
+        Doctor_Schedule.start_time
+    ).all()
+
+    data = {}
+
+    for s in schedules:
+        date = s.vacant_date.strftime('%Y-%m-%d')
+        data.setdefault(date, []).append({
+            "doctor_schedule_id": s.doctor_schedule_id,
+            "start": s.start_time.strftime('%I:%M %p').lstrip('0'),
+            "end": s.end_time.strftime('%I:%M %p').lstrip('0'),
+            "status": s.status
+        })
+
+    return jsonify(data)
+
+
 @api_bp.route('/availability/check', methods=['GET'])
 def check_availability():
     date = request.args.get('date')

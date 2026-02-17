@@ -1,5 +1,6 @@
 from flask import render_template, jsonify
-from flask import session, redirect, url_for, flash, request
+from flask import redirect, url_for, flash, request
+from flask_login import current_user, login_required
 from app.models.doctor import Doctor
 from app.models.doctor_schedule import Doctor_Schedule
 from app.services.generateSaveSlot import generate_and_save_slots
@@ -8,20 +9,12 @@ from . import doctor_bp
 
 
 @doctor_bp.route('/doctors_schedule', methods=['GET', 'POST'])
+@login_required
 def doctors_schedule():
-    if 'role' not in session or session['role'] != 'doctor':
-        return redirect(url_for('misc.unauthorized'))
 
-    user_id = session.get('user_id')
-    if not user_id:
-        return redirect(url_for('auth.login'))
-
-    doctor = Doctor.query.filter_by(account_id=user_id).first()
-    if not doctor:
-        flash("Please complete your doctor profile first.", "warning")
-        return redirect(url_for('misc.unauthorized'))
-
-    schedules = Doctor_Schedule.query.filter_by(doctor_id=user_id).first()
+    doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
+    
+    schedules = Doctor_Schedule.query.filter_by(doctor_id=doctor.doctor_id).first()
 
     return render_template(
         'doctor/calendar.html',
@@ -30,12 +23,11 @@ def doctors_schedule():
     )
 
 @doctor_bp.route('/scheduler', methods=['POST'])
+@login_required
 def scheduler():
-    if 'role' not in session or session['role'] != 'doctor':
-        return jsonify(success=False, error="Unauthorized"), 403
 
     doctor = Doctor.query.filter_by(
-        account_id=session.get('user_id')
+        account_id=current_user.account_id
     ).first()
 
     if not doctor:
@@ -65,6 +57,7 @@ def scheduler():
 
 
 @doctor_bp.route('/delete_schedule/<int:doctor_schedule_id>', methods=['POST'])
+@login_required
 def delete_doctor_schedule(doctor_schedule_id):
     schedule = Doctor_Schedule.query.get(doctor_schedule_id)
     if not schedule:

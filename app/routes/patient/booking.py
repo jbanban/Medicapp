@@ -1,4 +1,5 @@
 from flask import render_template, request, session, redirect, url_for, flash
+from flask_login import current_user, login_required
 from app.models.patient import Patient
 from app.models.doctor import Doctor
 from app.models.appointment import Appointment
@@ -6,35 +7,38 @@ from app.services.patient_cache import get_patient_cache
 from app import db
 from . import patient_bp
 
-
 @patient_bp.route('/request_appointment', methods=['GET', 'POST'])
+@login_required
 def request_appointment():
-    if 'role' not in session or session['role'] != 'patient':
-        return redirect(url_for('unauthorized'))
-    user_id = session.get('user_id')
-
+    
+    patient = Patient.query.filter_by(account_id=current_user.account_id).first()
     doctors = Doctor.query.all()
+
+    if not patient:
+        abort(404)
 
     if request.method == 'POST':
         appointment_date = request.form['preferred_date']
         appointment_time = request.form['preferred_time']
+        reason = request.form['reason']
         doctor_id = request.form['doctor_id']
         status = 'Pending'
+        type = 'request'
 
         new_appointment = Appointment(
-            patient_id=user_id,
+            patient_id=patient.patient_id,
             doctor_id=doctor_id,
             appointment_date=appointment_date,
             appointment_time=appointment_time,
-            status=status
+            reason=reason,
+            status=status,
+            type=type
         )
 
         db.session.add(new_appointment)
         db.session.commit()
 
         return redirect(url_for('patient.request_appointment'))
-    
-    patient = Patient.query.filter_by(account_id=user_id).first()
     
     decrypted_patient = get_patient_cache(patient.patient_id)
 
@@ -45,6 +49,7 @@ def request_appointment():
 
 
 @patient_bp.route('/patient/reschedule_appointment/<int:appointment_id>', methods=['GET', 'POST'])
+@login_required
 def reschedule_appointment(appointment_id):
     if 'role' not in session or session['role'] != 'patient':
         return redirect(url_for('unauthorized'))

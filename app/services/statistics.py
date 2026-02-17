@@ -1,6 +1,8 @@
 from collections import Counter
 from datetime import datetime
-from app.models import Appointment
+from sqlalchemy import func
+from app.models import Patient, Doctor, Appointment, PaymentRecord
+from app import db
 
 def calculate_appointment_statistics():
     appointments = Appointment.query.all()
@@ -62,3 +64,20 @@ def calculate_appointment_statistics():
     }
 
 
+def get_account_totals():
+
+    total_patients = Patient.query.count()
+    total_doctors = Doctor.query.count()
+    total_appointments = Appointment.query.count()
+
+    total_revenue = (
+        db.session.query(func.coalesce(func.sum(PaymentRecord.amount), 0))
+        .scalar()
+    )
+
+    return {
+        "total_patients": total_patients,
+        "total_doctors": total_doctors,
+        "total_appointments": total_appointments,
+        "total_revenue": total_revenue
+    }

@@ -19,11 +19,15 @@
         {% endif %}
     </td>
 
-    <td class="px-6 py-4 text-sm">
-        <a href="{{ url_for('admin.admin_doctors', account_id=account.account_id) }}"
-           class="text-blue-600 hover:text-blue-800 font-medium">
-            Edit
-        </a>
+    <td class="px-6 py-4 whitespace-nowrap text-center">
+        <div class="flex items-center justify-center gap-2">
+            <a href="{{ url_for('admin.admin_doctors', account_id=account.account_id) }}"
+                class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition"
+                title="Edit Account">
+                <i class="fas fa-edit"></i>
+                Edit
+            </a>
+        </div>
     </td>
 </tr>
 {% endfor %}

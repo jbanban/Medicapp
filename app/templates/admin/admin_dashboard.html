@@ -27,22 +27,22 @@
 
             <div class="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition">
                 <p class="text-sm text-gray-500">Total Patients</p>
-                <p class="text-3xl font-bold text-gray-800 mt-2">1,248</p>
+                <p class="text-3xl font-bold text-gray-800 mt-2">{{ totals.patients }}</p>
             </div>
 
             <div class="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition">
                 <p class="text-sm text-gray-500">Total Doctors</p>
-                <p class="text-3xl font-bold text-gray-800 mt-2">24</p>
+                <p class="text-3xl font-bold text-gray-800 mt-2">{{ totals.doctors }}</p>
             </div>
 
             <div class="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition">
                 <p class="text-sm text-gray-500">Appointments</p>
-                <p class="text-3xl font-bold text-gray-800 mt-2">432</p>
+                <p class="text-3xl font-bold text-gray-800 mt-2">{{ totals.appointments }}</p>
             </div>
 
             <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl p-6 shadow-lg">
                 <p class="text-sm opacity-90">Revenue</p>
-                <p class="text-3xl font-bold mt-2">$45,231.89</p>
+                <p class="text-3xl font-bold mt-2">${{ totals.revenue }}</p>
             </div>
 
         </div>
@@ -143,6 +143,8 @@
 </div>
 
 <!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
 const monthlyData = {{ statistics.monthly_counts|tojson }};
 const labels = Object.keys(monthlyData);

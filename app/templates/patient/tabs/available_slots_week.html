@@ -1,0 +1,27 @@
+<div class="bg-white rounded-lg shadow p-4">
+  <h3 class="text-lg font-semibold mb-4">Available Time Slots</h3>
+
+  {% if schedules %}
+    <div class="space-y-3">
+      {% for s in schedules %}
+        {% if s.status == 'Available' %}
+          <div class="flex justify-between items-center border rounded p-3">
+            <div class="text-sm text-gray-700">
+              {{ s.vacant_date.strftime('%B %d, %Y') }} <br>
+              {{ s.start_time.strftime('%H:%M') }} – {{ s.end_time.strftime('%H:%M') }}
+            </div>
+
+            <a
+              href="{{ url_for('patient.book_appointment', doctor_schedule_id=s.id) }}"
+              class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+            >
+              Book
+            </a>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-sm text-gray-500">No available schedules.</p>
+  {% endif %}
+</div>

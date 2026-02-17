@@ -1,0 +1,586 @@
+{% extends 'base/layout.html' %}
+{% block title %}Patient Profile{% endblock %}
+{% block content %}
+
+<div class="w-full bg-gray-50 min-h-screen py-8 px-4">
+    {% include 'base/notification.html' %}
+
+    <div class="max-w-7xl mx-auto" x-data="{ 
+        personalOpen: false, 
+        addressOpen: false, 
+        emergencyOpen: false,
+        appointmentHistoryOpen: false,
+        medicalOpen: false
+    }">
+
+        <!-- HEADER WITH BACK BUTTON -->
+        <!-- <a href="{{ url_for('patient.patient_profile') }}"
+            class="mb-6 inline-flex items-center gap-2 px-4 py-2.5 bg-white rounded-lg shadow-sm hover:shadow transition-all text-gray-600 hover:text-gray-900 border border-gray-200">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            <span class="font-medium">Back to Patients</span>
+        </a> -->
+
+        <div class="flex flex-col lg:flex-row gap-6">
+
+            <!-- LEFT SIDEBAR - PROFILE CARD -->
+            <div class="w-full lg:w-80 lg:sticky lg:top-6 h-fit">
+                <div class="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
+                    
+                    <!-- Cover Image -->
+                    <div class="h-32 bg-blue-600"></div>
+
+                    <!-- Profile Content -->
+                    <div class="px-6 pb-6 -mt-16">
+                        
+                        <!-- Avatar Section -->
+                        <div class="flex flex-col items-center">
+                            <div class="relative">
+                                {% if patient and patient.profile_image %}
+                                    <img 
+                                        src="{{ url_for('static', filename=patient.profile_image) }}" 
+                                        alt="Profile photo" 
+                                        class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+                                    >
+                                {% else %}
+                                    <div class="w-32 h-32 rounded-full bg-blue-600 flex items-center justify-center text-4xl font-bold text-white border-4 border-white shadow-lg">
+                                        {{ (patient.firstname[0] if patient and patient.firstname else 'P') ~ (patient.lastname[0] if patient and patient.lastname else '') }}
+                                    </div>
+                                {% endif %}
+                                <div class="absolute bottom-2 right-2 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                            </div>
+
+                            <!-- Name & Badge -->
+                            <div class="text-center mt-4">
+                                <h3 class="text-2xl font-bold text-gray-900 capitalize">
+                                    {{ patient.firstname }} {{ patient.middlename or '' }} {{ patient.lastname }}
+                                </h3>
+                                <p class="text-sm text-gray-500 mt-1">Patient ID: P-00{{ patient.patient_id }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Quick Info Stats -->
+                        <div class="mt-6 grid grid-cols-2 gap-3">
+                            <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
+                                <p class="text-xs text-gray-500 font-medium mb-1">Age</p>
+                                <p class="text-sm font-semibold text-gray-900">
+                                    {{ patient.age or '—' }}
+                                </p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
+                                <p class="text-xs text-gray-500 font-medium mb-1">Blood Type</p>
+                                <p class="text-sm font-semibold text-gray-900">{{ patient.blood_type or '—' }}</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 grid grid-cols-2 gap-3">
+                            <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
+                                <p class="text-xs text-gray-500 font-medium mb-1">Gender</p>
+                                <p class="text-sm font-semibold text-gray-900">{{ patient.gender or '—' }}</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
+                                <p class="text-xs text-gray-500 font-medium mb-1">Status</p>
+                                <p class="text-sm font-semibold text-gray-900">{{ patient.civil_status or '—' }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Contact Info -->
+                        <div class="mt-6 space-y-3">
+                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-envelope text-white text-sm"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs text-gray-500 font-medium">Email</p>
+                                    <p class="text-sm text-gray-900 truncate">{{ patient.email }}</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-phone text-white text-sm"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs text-gray-500 font-medium">Phone</p>
+                                    <p class="text-sm text-gray-900">{{ patient.phone }}</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-calendar-alt text-white text-sm"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs text-gray-500 font-medium">Birth Date</p>
+                                    <p class="text-sm text-gray-900">
+                                        {{ patient.birthdate.strftime('%B %d, %Y') if patient.birthdate else '—' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT CONTENT - DETAILED INFORMATION -->
+            <div class="flex-1 space-y-6">
+
+                <!-- ================= PERSONAL INFORMATION ================= -->
+                <div class="bg-white shadow-md rounded-xl border border-gray-200 overflow-hidden">
+                    <button 
+                        @click="personalOpen = !personalOpen"
+                        class="w-full bg-blue-600 px-6 py-4 border-b border-blue-700 flex items-center justify-between hover:bg-blue-700 transition-colors">
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-user"></i>
+                            Personal Information
+                        </h2>
+                        <i class="fas text-white transition-transform duration-200"
+                           :class="personalOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </button>
+                    <div x-show="personalOpen" 
+                         x-collapse
+                         class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <p class="text-xs text-gray-500 font-medium mb-1">First Name</p>
+                                <p class="text-base font-semibold text-gray-900">{{ patient.firstname }}</p>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <p class="text-xs text-gray-500 font-medium mb-1">Middle Name</p>
+                                <p class="text-base font-semibold text-gray-900">{{ patient.middlename or '—' }}</p>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <p class="text-xs text-gray-500 font-medium mb-1">Last Name</p>
+                                <p class="text-base font-semibold text-gray-900">{{ patient.lastname }}</p>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <p class="text-xs text-gray-500 font-medium mb-1">Email Address</p>
+                                <p class="text-sm font-semibold text-gray-900 break-all">{{ patient.email }}</p>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <p class="text-xs text-gray-500 font-medium mb-1">Phone Number</p>
+                                <p class="text-base font-semibold text-gray-900">{{ patient.phone }}</p>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <p class="text-xs text-gray-500 font-medium mb-1">Date of Birth</p>
+                                <p class="text-sm font-semibold text-gray-900">
+                                    {{ patient.birthdate.strftime('%B %d, %Y') if patient.birthdate else '—' }}
+                                </p>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <p class="text-xs text-gray-500 font-medium mb-1">Gender</p>
+                                <p class="text-base font-semibold text-gray-900">{{ patient.gender or '—' }}</p>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <p class="text-xs text-gray-500 font-medium mb-1">Blood Type</p>
+                                <p class="text-base font-semibold text-gray-900">{{ patient.blood_type or '—' }}</p>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <p class="text-xs text-gray-500 font-medium mb-1">Civil Status</p>
+                                <p class="text-base font-semibold text-gray-900">{{ patient.civil_status or '—' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= ADDRESS INFORMATION ================= -->
+                <div class="bg-white shadow-md rounded-xl border border-gray-200 overflow-hidden">
+                    <button 
+                        @click="addressOpen = !addressOpen"
+                        class="w-full bg-blue-600 px-6 py-4 border-b border-blue-700 flex items-center justify-between hover:bg-blue-700 transition-colors">
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-map-marked-alt"></i>
+                            Address Information
+                        </h2>
+                        <i class="fas text-white transition-transform duration-200"
+                           :class="addressOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </button>
+                    <div x-show="addressOpen" 
+                         x-collapse
+                         class="p-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Current Address -->
+                            <div class="border-2 border-blue-200 bg-blue-50 rounded-lg p-5">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-home text-white text-sm"></i>
+                                    </div>
+                                    <p class="text-sm font-bold text-gray-900">Current Address</p>
+                                </div>
+                                <p class="text-gray-700 leading-relaxed">
+                                    {{ patient.current_house_no or "" }}{% if patient.current_house_no and patient.current_street %}, {% endif %}
+                                    {{ patient.current_street or "" }}<br>
+
+                                    {{ patient.current_barangay or "" }}{% if patient.current_barangay and patient.current_city %}, {% endif %}
+                                    {{ patient.current_city or "" }}<br>
+
+                                    {{ patient.current_province or "" }}{% if patient.current_province and patient.current_zipcode %}, {% endif %}
+                                    {{ patient.current_zipcode or "" }}
+                                </p>
+                            </div>
+
+                            <!-- Permanent Address -->
+                            <div class="border-2 border-gray-300 bg-gray-50 rounded-lg p-5">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <div class="w-8 h-8 bg-gray-700 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-building text-white text-sm"></i>
+                                    </div>
+                                    <p class="text-sm font-bold text-gray-900">Permanent Address</p>
+                                </div>
+                                <p class="text-gray-700 leading-relaxed">
+                                    {{ patient.permanent_house_no or "" }}{% if patient.permanent_house_no and patient.permanent_street %}, {% endif %}
+                                    {{ patient.permanent_street or "" }}<br>
+
+                                    {{ patient.permanent_barangay or "" }}{% if patient.permanent_barangay and patient.permanent_city %}, {% endif %}
+                                    {{ patient.permanent_city or "" }}<br>
+
+                                    {{ patient.permanent_province or "" }}{% if patient.permanent_province and patient.permanent_zipcode %}, {% endif %}
+                                    {{ patient.permanent_zipcode or "" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= EMERGENCY CONTACT ================= -->
+                <div class="bg-white shadow-md rounded-xl border border-gray-200 overflow-hidden">
+                    <button 
+                        @click="emergencyOpen = !emergencyOpen"
+                        class="w-full bg-blue-600 px-6 py-4 border-b border-blue-700 flex items-center justify-between hover:bg-blue-700 transition-colors">
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-phone-alt"></i>
+                            Emergency Contact
+                        </h2>
+                        <i class="fas text-white transition-transform duration-200"
+                           :class="emergencyOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </button>
+                    <div x-show="emergencyOpen" 
+                         x-collapse
+                         class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <p class="text-xs text-gray-500 font-medium mb-1">Contact Name</p>
+                                <p class="text-base font-semibold text-gray-900">{{ patient.ec_name or '—' }}</p>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <p class="text-xs text-gray-500 font-medium mb-1">Relationship</p>
+                                <p class="text-base font-semibold text-gray-900">{{ patient.ec_relation or '—' }}</p>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <p class="text-xs text-gray-500 font-medium mb-1">Contact Number</p>
+                                <p class="text-base font-semibold text-gray-900">{{ patient.ec_phone or '—' }}</p>
+                            </div>
+
+                            <div class="md:col-span-3 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                                <p class="text-xs text-gray-500 font-medium mb-1">Emergency Contact Address</p>
+                                <p class="text-base font-semibold text-gray-900">{{ patient.ec_address or '—' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= APPOINTMENT HISTORY ================= -->
+                <div class="bg-white shadow-md rounded-xl border border-gray-200 overflow-hidden">
+                    <button 
+                        @click="appointmentHistoryOpen = !appointmentHistoryOpen"
+                        class="w-full bg-blue-600 px-6 py-4 border-b border-blue-700 flex items-center justify-between hover:bg-blue-700 transition-colors">
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-calendar-alt"></i>
+                            Appointment History
+                        </h2>
+                        <i class="fas text-white transition-transform duration-200"
+                           :class="appointmentHistoryOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </button>
+                    <div x-show="appointmentHistoryOpen" 
+                         x-collapse
+                         class="p-6">
+
+                        <div class="space-y-4 overflow-y-auto max-h-96">
+ 
+                        {% macro appointment_field(label, field_key, appointment, appointment_visibility) %}
+
+                        {% set is_visible = appointment_visibility.get(field_key, false) %}
+                            <div class="border rounded-lg p-4 hover:bg-gray-50 transition-colors duration-200" 
+                                role="listitem">
+
+                                <div class="flex gap-6 mb-3">
+                                    <div class="flex-1 min-w-0">
+                                        <!-- Title + Toggle -->
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h3 class="text-sm font-semibold text-gray-700 w-1/4 flex-shrink-0">
+                                                {{ label }}
+                                            </h3>
+
+                                            <!-- Content -->
+                                            {% if not is_visible %}
+                                                <p class="text-xs text-red-500 mt-2 italic">
+                                                    This appointment is hidden by the patient.
+                                                </p>
+                                            {% else %}
+                                            <div class="field-content space-y-2 text-sm text-gray-600 transition-all duration-300 text-left
+                                            {% if not is_visible %}filter blur-md opacity-60 pointer-events-none select-none{% endif %}"
+                                            data-field="{{ field_key }}"
+                                            aria-live="polite">
+                                            
+                                                <p class="flex flex-wrap gap-x-2">
+                                                    <span class="font-medium text-gray-700">Date:</span>
+                                                    <span>{{ appointment.date or "Not specified" }}</span>
+                                                </p>
+                                                <p class="flex flex-wrap gap-x-2">
+                                                    <span class="font-medium text-gray-700">Diagnosis:</span>
+                                                    <span>{{ appointment.diagnosis or "Not specified" }}</span>
+                                                </p>
+                                                <p class="flex flex-wrap gap-x-2">
+                                                    <span class="font-medium text-gray-700">Notes:</span>
+                                                    <span>{{ appointment.notes or "No notes provided" }}</span>
+                                                </p>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        {% if doctor and is_visible == True %}
+                                        <button onclick="openOpinionModal(
+                                            {{ doctor.doctor_id }},
+                                            {{ appointment.appointment_id }},
+                                            '{{ appointment.patient_firstname }} {{ appointment.patient_lastname }}'
+                                            )" 
+                                            class="w-2/12 px-4 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition">
+                                            <i class="fa fa-plus"></i>
+                                            2nd Opinion
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endmacro %}
+
+                        <!-- Appointment Fields -->
+                        {% for appt in appointments %}
+                            {{ appointment_field(
+                                "Appointment on " ~ appt.date,
+                                appt.appointment_id|string,
+                                appt,
+                                appointment_visibility
+                            ) }}
+                        {% endfor %}
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= MEDICAL DETAILS ================= -->
+                <div class="bg-white shadow-md rounded-xl border border-gray-200 overflow-hidden">
+
+                    <!-- HEADER -->
+                    <button 
+                        @click="medicalOpen = !medicalOpen"
+                        class="w-full bg-blue-600 px-6 py-4 border-b border-blue-700 flex items-center justify-between hover:bg-blue-700 transition-colors">
+                        
+                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-heartbeat"></i>
+                            Medical History
+                        </h2>
+
+                        <i class="fas text-white transition-transform duration-200"
+                        :class="medicalOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                    </button>
+
+                    <!-- CONTENT -->
+                    <div x-show="medicalOpen" x-collapse class="p-6">
+                        <div class="space-y-4">
+
+                            {% macro medical_card(icon, label, value, key) %}
+                            <div class="border-l-4 border-blue-600 bg-gray-50 rounded-r-lg p-4">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas {{ icon }} text-blue-600 mt-1"></i>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-bold text-gray-900 mb-1">
+                                            {{ label }}
+                                        </p>
+
+                                        <p class="text-gray-700
+                                            {% if not visibility[key] %}
+                                                blur-sm select-none text-gray-400
+                                            {% endif %}
+                                        ">
+                                            {{ value or 'No information available' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endmacro %}
+
+                            {{ medical_card("fa-notes-medical", "Past Medical History", history.pastMedicalHistory, "pastMedicalHistory") }}
+                            {{ medical_card("fa-hospital", "Hospitalization History", history.beenHospitalized, "beenHospitalized") }}
+                            {{ medical_card("fa-procedures", "Surgical History", history.hadSurgery, "hadSurgery") }}
+                            {{ medical_card("fa-exclamation-triangle", "Allergies", history.allergies, "allergies") }}
+                            {{ medical_card("fa-pills", "Current Medications", history.ongoingMedications, "ongoingMedications") }}
+                            {{ medical_card("fa-dna", "Family Medical History", history.familyHistory, "familyHistory") }}
+                            {{ medical_card("fa-users", "Social History", history.socialHistory, "socialHistory") }}
+                            {{ medical_card("fa-syringe", "Immunization Records", history.immunizations, "immunizations") }}
+                            {{ medical_card("fa-plane", "Recent Travel History", history.recentTravelHistory, "recentTravelHistory") }}
+                            {{ medical_card("fa-info-circle", "Additional Information", history.otherRelevantInfo, "otherRelevantInfo") }}
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Opinion Modal -->
+    <div id="OpinionModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            
+            <!-- Modal Header -->
+            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">Second Opinion</h2>
+                    </div>
+                    <button onclick="closeOpinionModal()" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Modal Body -->
+            <form method="POST" id="OpinionForm">
+
+                <div class="p-6 space-y-6">
+                    
+                    <!-- Hidden Fields -->
+                    <input type="hidden" name="appointment_id" id="appointmentId">
+                    <input type="hidden" name="doctor_id" id="doctorId">
+                    
+                    <!-- Visit Date -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Patient: <span class="text-red-500"></span>
+                        </label>
+                        <div class="relative">
+                            <i class="fas fa-person absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <p class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm text-gray-600 mt-1" id="modalPatientName"></p>
+                        </div>
+                    </div>
+
+                    <!-- Diagnosis -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Diagnosis <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <i class="fas fa-stethoscope absolute left-4 top-4 text-gray-400"></i>
+                            <textarea name="second_opinion" 
+                                        id="second_opinion"
+                                        rows="4"
+                                        required
+                                        placeholder="Enter primary diagnosis and findings..."
+                                        class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"></textarea>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Include primary and secondary diagnoses if applicable</p>
+                    </div>
+
+                    <!-- Information Box -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex gap-3">
+                            <i class="fas fa-info-circle text-blue-600 text-lg mt-0.5"></i>
+                            <div class="flex-1">
+                                <h4 class="text-sm font-semibold text-blue-900 mb-1">Medical Record Information</h4>
+                                <ul class="text-xs text-blue-800 space-y-1">
+                                    <li>• This record will be permanently saved to the patient's medical history</li>
+                                    <li>• Ensure all information is accurate and complete before submitting</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-2xl">
+                    <div class="flex items-center gap-3">
+                        <button type="button" 
+                                onclick="closeOpinionModal()"
+                                class="flex-1 px-4 py-3 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                class="flex-1 px-4 py-3 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm hover:shadow">
+                            <i class="fas fa-save mr-2"></i>
+                            Save Opinion to Record
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Alpine.js -->
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<script>
+    
+// Opinion Modal Functions
+function openOpinionModal(doctorId, appointmentId, patientName) {
+    const form = document.getElementById('OpinionForm');
+    form.action = `/patient/second_opinion/${appointmentId}`;
+
+    document.getElementById('doctorId').value = doctorId;
+    document.getElementById('appointmentId').value = appointmentId;
+    document.getElementById('modalPatientName').textContent = patientName;
+
+    document.getElementById('OpinionModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeOpinionModal() {
+    document.getElementById('OpinionModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    document.getElementById('OpinionForm').reset();
+}
+
+
+// Close modals when clicking outside
+document.getElementById('OpinionModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeOpinionModal();
+    }
+});
+
+// Close modals with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeOpinionModal();
+    }
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    const OpinionModal = document.getElementById('OpinionModal');
+
+    if (OpinionModal) {
+        OpinionModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeOpinionModal();
+            }
+        });
+    }
+
+});
+
+</script>
+{% endblock %}

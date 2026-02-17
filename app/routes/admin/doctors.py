@@ -1,44 +1,64 @@
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, jsonify
+from werkzeug.security import generate_password_hash
+from sqlalchemy.exc import IntegrityError
 from app.models import Account, Doctor
 from app.extensions import db
-from werkzeug.security import generate_password_hash
+from app.utils.admin_only import admin_required
 from app.services.empty_to_none import empty_to_none
-from app.security.crypto import decrypt_value, safe_decrypt
-from app.extensions import cache
 from . import admin_bp
 
 @admin_bp.route('/admin_doctors', methods=['GET', 'POST'])
+@admin_required
 def admin_doctors():
+
     account_id = request.args.get('account_id', type=int)
     edit_account = Account.query.get(account_id) if account_id else None
 
     if request.method == 'POST':
-        account_id = request.form.get('account_id=')
-        username = request.form['username']
-        password = request.form.get('password')
+        data = request.get_json(silent=True) or request.form
 
-        # EDIT
-        if account_id:
-            account = Account.query.get(account_id)
-            account.username = username
+        try:
+            account_id = data.get('account_id')
+            account_id = int(account_id) if account_id else None
 
-            if password:
-                account.password = generate_password_hash(password)
+            username = data.get('username')
+            password = data.get('password')
 
-            db.session.commit()
+            if not username:
+                return jsonify({
+                    "success": False,
+                    "message": "Username is required"
+                }), 400
 
-            return jsonify({
-                "success": True,
-                "message": "Account updated successfully",
-                "data": {
-                    "id": account.id,
-                    "username": account.username,
-                    "role": account.role
-                }
-            }), 200
+            if not password:
+                return jsonify({
+                    "success": False,
+                    "message": "Password is required",
+                    "category": "error"
+                }), 400
 
-        # CREATE
-        else:
+            # EDIT
+            if account_id:
+                account = Account.query.get(account_id)
+                if not account:
+                    return jsonify({
+                        "success": False,
+                        "message": "Account not found"
+                    }), 404
+
+                account.username = username
+
+                if password:
+                    account.password_hash = generate_password_hash(password)
+
+                db.session.commit()
+
+                return jsonify({
+                    "success": True,
+                    "message": "Account updated successfully"
+                }), 200
+
+            # CREATE
             if Account.query.filter_by(username=username).first():
                 return jsonify({
                     "success": False,
@@ -47,21 +67,34 @@ def admin_doctors():
 
             new_account = Account(
                 username=username,
-                password=generate_password_hash(password),
+                password_hash=generate_password_hash(password),
                 role='doctor'
             )
+
             db.session.add(new_account)
             db.session.commit()
 
             return jsonify({
                 "success": True,
-                "message": "Doctor account created successfully",
-                "data": {
-                    "id": new_account.account_id,
-                    "username": new_account.username,
-                    "role": new_account.role
-                }
+                "message": "Doctor account created successfully"
             }), 201
+
+        except IntegrityError as e:
+            db.session.rollback()
+            return jsonify({
+                "success": False,
+                "message": "Database integrity error",
+                "category": "error"
+            }), 400
+
+        except Exception as e:
+            db.session.rollback()
+            print("🔥 ADMIN_DOCTORS ERROR:", e)
+            return jsonify({
+                "success": False,
+                "message": "Internal server error",
+                "category": "error"
+            }), 500
     
     doctors = Doctor.query.all()
         
@@ -98,9 +131,6 @@ def admin_doctors():
         for d in doctors
     ]
 
-
-
-
     accounts = (
         db.session.query(Account)
         .outerjoin(Doctor, Doctor.account_id == Account.account_id)
@@ -117,6 +147,7 @@ def admin_doctors():
 
 
 @admin_bp.route('/create_doctor_profile/<int:account_id>', methods=['GET', 'POST'])
+@admin_required
 def create_doctor_profile(account_id):
     selected_account = Account.query.get_or_404(account_id)
 
@@ -212,12 +243,10 @@ def create_doctor_profile(account_id):
             db.session.add(doctor)
             db.session.commit()
 
-            flash("Doctor profile created successfully!", "success")
             return redirect(url_for('admin.admin_doctors'))
 
         except Exception as e:
             db.session.rollback()
-            flash("An unexpected error occurred. Please try again.", "danger")
             print("CREATE PROFILE ERROR:", e)
         
 
@@ -227,6 +256,7 @@ def create_doctor_profile(account_id):
     )
 
 @admin_bp.route('/edit_doctor/<int:doctor_id>', methods=['GET', 'POST'])
+@admin_required
 def edit_doctor(doctor_id):
     doctor = Doctor.query.get_or_404(doctor_id)
 
@@ -258,7 +288,6 @@ def edit_doctor(doctor_id):
 
         db.session.commit()
 
-        flash("Doctor profile updated successfully!", "success")
         return redirect(url_for('admin.admin_doctors'))
 
     return render_template(

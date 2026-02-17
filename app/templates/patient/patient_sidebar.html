@@ -9,11 +9,6 @@
             <img src="/static/img/logo-name-removebg-preview.png"
                 class="sidebar-logo p-2 w-[180px] transition-all duration-300"
                 alt="logo">
-
-            <button onclick="toggleSidebar(this)"
-                    class="text-gray-500 hover:text-blue-600">
-                <i class="ri-menu-line text-xl"></i>
-            </button>
         </div>
 
 
@@ -120,10 +115,6 @@
                 <div class="mt-10">
                     <a
                         href="{{ url_for('auth.logout') }}"
-                        @click.prevent="
-                            clearPatientStorage({{ patient.patient_id }});
-                            window.location.href='{{ url_for('auth.logout') }}';
-                        "
                         class="flex items-center gap-3 p-3 rounded-xl hover:bg-red-100 transition-all"
                         >
                         <i class="ri-logout-box-r-line sidebar-icon text-xl"></i>
@@ -138,14 +129,4 @@
     </aside>
 
 </div>
-<script>
-  document.getElementById('logoutBtn')?.addEventListener('click', function () {
-    const patientId = this.dataset.patientId;
-    handleLogout(patientId);
-  });
-
-  function handleLogout(patientId) {
-    window.location.href = "/logout";
-  }
-</script>
 

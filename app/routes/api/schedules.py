@@ -1,5 +1,7 @@
-from flask import jsonify, request, session
+from flask import jsonify, request
 from datetime import date, datetime, timedelta
+
+from flask_login import current_user
 from app.models.doctor_schedule import Doctor_Schedule
 from app.models.doctor import Doctor
 from app import db
@@ -49,9 +51,7 @@ def get_doctor_month_schedule():
     else:
         end_date = date(year, month + 1, 1)
 
-    user_id = session.get('user_id')
-
-    doctor = Doctor.query.filter_by(account_id=user_id).first() 
+    doctor = Doctor.query.filter_by(account_id=current_user.account_id).first() 
 
     rows = (
         db.session.query(
@@ -80,6 +80,7 @@ def get_doctor_month_schedule():
 
 @api_bp.route('/schedules', methods=['GET'])
 def get_week_schedules():
+    
     week_start_str = request.args.get('week_start')
 
     if not week_start_str:
@@ -98,24 +99,27 @@ def get_week_schedules():
 
     week_end = week_start + timedelta(days=6)
 
-    doctor_id = session.get("doctor_id")
+    doctor_id = current_user.doctor_id if hasattr(current_user, 'doctor_id') else None
     if not doctor_id:
-        return jsonify({"success": False}), 401
+        return jsonify({
+            "success": False,
+            "message": "Doctor not found"
+        }), 404
 
-    schedules = Schedule.query.filter(
-        Schedule.doctor_id == doctor_id,
-        Schedule.date >= week_start,
-        Schedule.date <= week_end
+    schedules = Doctor_Schedule.query.filter(
+        Doctor_Schedule.doctor_id == doctor_id,
+        Doctor_Schedule.vacant_date >= week_start,
+        Doctor_Schedule.vacant_date <= week_end
     ).all()
 
     day_map = defaultdict(list)
 
     for s in schedules:
-        weekday = s.date.strftime("%A").lower()  # monday, tuesday...
+        weekday = s.vacant_date.strftime("%A").lower()  # monday, tuesday...
 
         day_map[weekday].append({
             "id": s.id,
-            "date": s.date.strftime("%Y-%m-%d"),
+            "date": s.vacant_date.strftime("%Y-%m-%d"),
             "start": s.start_time.strftime("%H:%M"),
             "end": s.end_time.strftime("%H:%M")
         })

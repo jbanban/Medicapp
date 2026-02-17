@@ -1,0 +1,528 @@
+{% extends 'base/layout.html' %}
+{% block title %}Reports - MedicApp{% endblock %}
+
+{% block content %}
+{% include 'admin/admin_sidebar.html' %}
+<div class="flex w-full p-6 bg-gray-50">
+
+    <div class="flex-1 max-w-7xl mx-auto">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">
+                    <i class="fas fa-chart-bar text-blue-600 mr-2"></i>
+                    Reports & Analytics
+                </h1>
+                <p class="text-gray-600 mt-1">Generate comprehensive reports and insights</p>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-gray-700">Admin User</span>
+                <img src="{{ url_for('static', filename='img/profile.jpg') }}"
+                     class="w-10 h-10 rounded-full shadow-md border-2 border-white">
+            </div>
+        </div>
+
+        <!-- Main Container -->
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100">
+            
+            <!-- Report Type Selector -->
+            <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+                <label class="block text-sm font-semibold text-gray-700 mb-3">
+                    <i class="fas fa-file-alt mr-2 text-blue-600"></i>
+                    Select Report Type
+                </label>
+                <select id="reportType" 
+                        onchange="onReportChange()"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white shadow-sm">
+                    <option value="">-- Choose a Report Type --</option>
+                    <option value="doctorAppointmentSummary">
+                        <i class="fas fa-calendar-check"></i> Doctor Appointment Summary
+                    </option>
+                    <option value="patientsAccountSummary">
+                        <i class="fas fa-users"></i> Patients Account Summary
+                    </option>
+                    <option value="doctorsRevenueSummary">
+                        <i class="fas fa-dollar-sign"></i> Doctors Revenue Summary
+                    </option>
+                </select>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="p-6 border-b border-gray-100">
+
+                <!-- Doctor Appointment Summary Filter -->
+                <div id="filter-doctorAppointmentSummary" class="hidden">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="fas fa-filter text-blue-600"></i>
+                        <h3 class="text-lg font-semibold text-gray-900">Filter Options</h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-user-md mr-1"></i> Select Doctor
+                            </label>
+                            <select id="doctorAppointmentDoctor" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                <option value="">-- All Doctors --</option>
+                                {% for doctor in doctors %}
+                                <option value="{{ doctor.doctor_id }}">Dr. {{ doctor.firstname }} {{ doctor.lastname }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-calendar mr-1"></i> Select Month
+                            </label>
+                            <input type="month" 
+                                   id="doctorAppointmentMonth" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        </div>
+
+                        <div class="flex items-end">
+                            <button onclick="generateReport()" 
+                                    class="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg">
+                                <i class="fas fa-chart-line"></i>
+                                Generate Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Patients Account Summary Filter -->
+                <div id="filter-patientsAccountSummary" class="hidden">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="fas fa-filter text-blue-600"></i>
+                        <h3 class="text-lg font-semibold text-gray-900">Filter Options</h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-calendar mr-1"></i> Select Month
+                            </label>
+                            <input type="month" 
+                                   id="patientsAccountMonth" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        </div>
+
+                        <div class="flex items-end">
+                            <button onclick="generateReport()" 
+                                    class="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg">
+                                <i class="fas fa-chart-line"></i>
+                                Generate Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Doctors Revenue Summary Filter -->
+                <div id="filter-doctorsRevenueSummary" class="hidden">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="fas fa-filter text-blue-600"></i>
+                        <h3 class="text-lg font-semibold text-gray-900">Filter Options</h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-user-md mr-1"></i> Select Doctor
+                            </label>
+                            <select id="doctorsRevenueDoctor" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                                <option value="">-- All Doctors --</option>
+                                {% for doctor in doctors %}
+                                <option value="{{ doctor.doctor_id }}">Dr. {{ doctor.firstname }} {{ doctor.lastname }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-calendar mr-1"></i> Select Month
+                            </label>
+                            <input type="month" 
+                                   id="doctorsRevenueMonth" 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        </div>
+
+                        <div class="flex items-end">
+                            <button onclick="generateReport()" 
+                                    class="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg">
+                                <i class="fas fa-chart-line"></i>
+                                Generate Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Report Output -->
+            <div id="reportContainer" class="p-6">
+                <!-- Empty State -->
+                <div id="emptyState" class="text-center py-16">
+                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-100 mb-4">
+                        <i class="fas fa-chart-pie text-3xl text-blue-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">Ready to Generate Reports</h3>
+                    <p class="text-gray-600 max-w-md mx-auto">
+                        Select a report type and configure your filters above, then click "Generate Report" to view comprehensive analytics and insights.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Quick Stats Cards (Optional) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Appointments</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">{{ total_appointments|default(0) }}</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                        <i class="fas fa-calendar-check text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Active Patients</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">{{ total_patients|default(0) }}</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                        <i class="fas fa-users text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Revenue</p>
+                        <p class="text-2xl font-bold text-gray-900 mt-1">₱{{ "{:,.2f}".format(total_revenue or 0) }}</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                        <i class="fas fa-peso-sign text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+function onReportChange() {
+    const reportType = document.getElementById("reportType").value;
+
+    // Hide all filters first
+    document.querySelectorAll('[id^="filter-"]').forEach(el => {
+        el.classList.add("hidden");
+    });
+
+    // Show selected filter
+    if (reportType) {
+        const activeFilter = document.getElementById(`filter-${reportType}`);
+        if (activeFilter) {
+            activeFilter.classList.remove("hidden");
+        }
+    }
+
+    // Reset to empty state
+    document.getElementById("reportContainer").innerHTML = `
+        <div id="emptyState" class="text-center py-16">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-100 mb-4">
+                <i class="fas fa-chart-pie text-3xl text-blue-600"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Configure Your Filters</h3>
+            <p class="text-gray-600 max-w-md mx-auto">
+                Select your preferred filters above and click "Generate Report" to view the results.
+            </p>
+        </div>
+    `;
+}
+
+function generateReport() {
+    const reportType = document.getElementById("reportType").value;
+    
+    if (!reportType) {
+        showError("Please select a report type first.");
+        return;
+    }
+
+    let payload = { report_type: reportType };
+
+    // Gather filter data based on report type
+    if (reportType === "doctorAppointmentSummary") {
+        payload.doctor_id = document.getElementById("doctorAppointmentDoctor").value;
+        payload.month = document.getElementById("doctorAppointmentMonth").value;
+        
+        if (!payload.month) {
+            showError("Please select a month for the report.");
+            return;
+        }
+    }
+
+    if (reportType === "patientsAccountSummary") {
+        payload.month = document.getElementById("patientsAccountMonth").value;
+        
+        if (!payload.month) {
+            showError("Please select a month for the report.");
+            return;
+        }
+    }
+
+    if (reportType === "doctorsRevenueSummary") {
+        payload.doctor_id = document.getElementById("doctorsRevenueDoctor").value;
+        payload.month = document.getElementById("doctorsRevenueMonth").value;
+        
+        if (!payload.month) {
+            showError("Please select a month for the report.");
+            return;
+        }
+    }
+
+    // Show loading state
+    showLoading();
+
+    // Fetch report data
+    fetch("/admin/reports/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Network response was not ok');
+        return res.json();
+    })
+    .then(data => {
+        if (data.error) {
+            showError(data.error);
+        } else {
+            renderReport(reportType, data);
+        }
+    })
+    .catch(error => {
+        showError("Failed to generate report. Please try again.");
+        console.error('Error:', error);
+    });
+}
+
+function showLoading() {
+    document.getElementById("reportContainer").innerHTML = `
+        <div class="text-center py-16">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4 animate-pulse">
+                <i class="fas fa-spinner fa-spin text-3xl text-blue-600"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Generating Report...</h3>
+            <p class="text-gray-600">Please wait while we compile your data.</p>
+        </div>
+    `;
+}
+
+function showError(message) {
+    document.getElementById("reportContainer").innerHTML = `
+        <div class="text-center py-16">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
+                <i class="fas fa-exclamation-triangle text-3xl text-red-600"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Error</h3>
+            <p class="text-gray-600">${message}</p>
+        </div>
+    `;
+}
+
+function renderReport(type, data) {
+    const container = document.getElementById("reportContainer");
+
+    if (type === "doctorAppointmentSummary") {
+        container.innerHTML = `
+            <div class="space-y-4">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">
+                            <i class="fas fa-calendar-check text-blue-600 mr-2"></i>
+                            Doctor Appointment Summary
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Total Appointments: ${data.rows?.length || 0}</p>
+                    </div>
+                    <button onclick="exportReport('doctorAppointmentSummary')" 
+                            class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                        <i class="fas fa-download"></i>
+                        Export PDF
+                    </button>
+                </div>
+
+                ${data.rows && data.rows.length > 0 ? `
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Patient</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 bg-white">
+                                ${data.rows.map((row, index) => `
+                                    <tr class="hover:bg-gray-50 transition">
+                                        <td class="px-6 py-4 text-sm text-gray-900">${row.date}</td>
+                                        <td class="px-6 py-4 text-sm text-gray-900">${row.patient}</td>
+                                        <td class="px-6 py-4">
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
+                                                ${row.status === 'Done' ? 'bg-green-100 text-green-800' : 
+                                                  row.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                                  row.status === 'Cancelled' ? 'bg-red-100 text-red-800' : 
+                                                  'bg-blue-100 text-blue-800'}">
+                                                ${row.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join("")}
+                            </tbody>
+                        </table>
+                    </div>
+                ` : `
+                    <div class="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                        <i class="fas fa-inbox text-4xl text-gray-300 mb-3"></i>
+                        <p class="text-gray-600">No appointments found for the selected criteria.</p>
+                    </div>
+                `}
+            </div>
+        `;
+    }
+
+    if (type === "patientsAccountSummary") {
+        container.innerHTML = `
+            <div class="space-y-4">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">
+                            <i class="fas fa-users text-blue-600 mr-2"></i>
+                            Patients Account Summary
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">Total Patients: ${data.rows?.length || 0}</p>
+                    </div>
+                    <button onclick="exportReport('patientsAccountSummary')" 
+                            class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                        <i class="fas fa-download"></i>
+                        Export PDF
+                    </button>
+                </div>
+
+                ${data.rows && data.rows.length > 0 ? `
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Patient</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Total Due</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 bg-white">
+                                ${data.rows.map(row => `
+                                    <tr class="hover:bg-gray-50 transition">
+                                        <td class="px-6 py-4 text-sm text-gray-900">${row.patient}</td>
+                                        <td class="px-6 py-4 text-sm font-semibold text-gray-900">₱${parseFloat(row.amount).toLocaleString()}</td>
+                                        <td class="px-6 py-4">
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
+                                                ${row.status === 'Paid' ? 'bg-green-100 text-green-800' : 
+                                                  row.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                                  'bg-red-100 text-red-800'}">
+                                                ${row.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join("")}
+                            </tbody>
+                        </table>
+                    </div>
+                ` : `
+                    <div class="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                        <i class="fas fa-inbox text-4xl text-gray-300 mb-3"></i>
+                        <p class="text-gray-600">No patient accounts found for the selected criteria.</p>
+                    </div>
+                `}
+            </div>
+        `;
+    }
+
+    if (type === "doctorsRevenueSummary") {
+
+        const total = Number(data.total_revenue) || 0;
+
+        container.innerHTML = `
+            <div class="space-y-4">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">
+                            <i class="fas fa-dollar-sign text-blue-600 mr-2"></i>
+                            Doctors Revenue Summary
+                        </h3>
+                        <p class="text-sm text-gray-600 mt-1">
+                            Total Transactions: ${data.rows?.length || 0}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white mb-6">
+                    <p class="text-blue-100 text-sm font-medium">Total Revenue</p>
+                    <p class="text-4xl font-bold mt-2">
+                        ₱${total.toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        })}
+                    </p>
+                </div>
+
+                ${data.rows && data.rows.length > 0 ? `
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Date</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Patient</th>
+                                    <th class="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase">Fee</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 bg-white">
+                                ${data.rows.map(row => `
+                                    <tr class="hover:bg-gray-50 transition">
+                                        <td class="px-6 py-4 text-sm text-gray-900">${row.date}</td>
+                                        <td class="px-6 py-4 text-sm text-gray-900">${row.patient}</td>
+                                        <td class="px-6 py-4 text-sm font-semibold text-gray-900 text-right">
+                                            ₱${Number(row.amount).toLocaleString('en-US', {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2
+                                            })}
+                                        </td>
+                                    </tr>
+                                `).join("")}
+                            </tbody>
+                        </table>
+                    </div>
+                ` : `
+                    <div class="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                        <p class="text-gray-600">No revenue data found for the selected criteria.</p>
+                    </div>
+                `}
+            </div>
+        `;
+    }
+
+}
+
+function exportReport(reportType) {
+    alert('Export functionality would be implemented here for: ' + reportType);
+    // You can implement PDF export using libraries like jsPDF or server-side generation
+}
+</script>
+
+{% endblock %}

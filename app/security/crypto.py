@@ -46,20 +46,42 @@ def encrypt_value(plaintext: str) -> str:
 
     return json.dumps(payload)
 
+def decrypt_value(data):
 
-def decrypt_value(payload: str) -> str:
-    data = json.loads(payload)
+    if data is None:
+        return None
 
-    salt = base64.b64decode(data["salt"])
-    nonce = base64.b64decode(data["nonce"])
-    ciphertext = base64.b64decode(data["ciphertext"])
+    # If already plaintext (legacy or non-encrypted)
+    if not isinstance(data, str):
+        return str(data)
 
-    key = derive_key(MASTER_KEY, salt)
-    aesgcm = AESGCM(key)
+    try:
+        # Convert JSON string to dict
+        payload = json.loads(data)
+    except Exception:
+        # Not JSON → return as-is
+        return data
 
-    plaintext = aesgcm.decrypt(nonce, ciphertext, None)
-    return plaintext.decode()
+    required_keys = {"salt", "nonce", "ciphertext"}
 
+    if not required_keys.issubset(payload):
+        return data
+
+    try:
+        salt = base64.b64decode(payload["salt"])
+        nonce = base64.b64decode(payload["nonce"])
+        ciphertext = base64.b64decode(payload["ciphertext"])
+
+        key = derive_key(MASTER_KEY, salt)
+        aesgcm = AESGCM(key)
+
+        plaintext = aesgcm.decrypt(nonce, ciphertext, None)
+        return plaintext.decode()
+
+    except Exception:
+        return None
+
+        
 
 def safe_decrypt(value):
     if not value:
