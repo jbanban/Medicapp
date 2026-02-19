@@ -97,8 +97,7 @@ def viewAvailableTime(doctor_id):
                            selected_date=selected_date 
                            )
 
-
-@patient_bp.route('/book_appointment', methods=['POST','PATCH'])
+@patient_bp.route('/book_appointment', methods=['POST'])
 @login_required
 def book_appointment():
     schedule_id = request.form.get('doctor_schedule_id')
@@ -130,11 +129,24 @@ def book_appointment():
             "error": "Patient profile not found"
         }), 400
 
+    # Check if patient already has an appointment on the same date
+    appointment_date = schedule.vacant_date.strftime("%Y-%m-%d")
+    existing_appointment = Appointment.query.filter_by(
+        patient_id=patient.patient_id,
+        appointment_date=appointment_date
+    ).filter(Appointment.status != 'Cancelled').first()
+
+    if existing_appointment:
+        return jsonify({
+            "success": False,
+            "error": f"You already have an appointment booked on {appointment_date}. Only one appointment per day is allowed."
+        }), 409
+
     try:
         appointment = Appointment(
             patient_id=patient.patient_id,
             doctor_id=schedule.doctor_id,
-            appointment_date=schedule.vacant_date.strftime("%Y-%m-%d"),
+            appointment_date=appointment_date,
             appointment_time=f"{schedule.start_time.strftime('%H:%M')} - {schedule.end_time.strftime('%H:%M')}",
             reason=reason,
             status='Booked',
@@ -151,14 +163,14 @@ def book_appointment():
             subject="Appointment Confirmation – Successfully Booked",
             recipient=appointment.patient.email,
             body=f"""
-                Dear {appointment.patient.first_name} {appointment.patient.last_name},
+                Dear {appointment.patient.firstname} {appointment.patient.lastname},
 
                 Good day.
 
                 We are pleased to inform you that your appointment has been successfully scheduled.
 
                 Appointment Details:
-                Doctor: Dr. {appointment.doctor.first_name} {appointment.doctor.last_name}
+                Doctor: Dr. {appointment.doctor.firstname} {appointment.doctor.lastname}
                 Date: {appointment.appointment_date}
                 Time: {appointment.appointment_time}
                 Type: {appointment.type}
@@ -179,7 +191,7 @@ def book_appointment():
             "success": True,
             "message": "Appointment booked successfully!",
             "appointment_id": appointment.appointment_id
-        }), 200
+        }), 201
 
     except Exception as e:
         db.session.rollback()

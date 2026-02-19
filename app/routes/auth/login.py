@@ -17,6 +17,7 @@ def load_user(account_id):
     return Account.query.get(int(account_id))
 
 
+@auth_bp.route('/', methods=['GET', 'POST'])
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
 

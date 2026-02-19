@@ -11,12 +11,13 @@ scheduler = BackgroundScheduler()
 
 def parse_appointment_datetime(appointment):
     try:
+        start_time = appointment.appointment_time.split(" - ")[0].strip()  # extracts "09:00"
         return datetime.strptime(
-            f"{appointment.appointment_date} {appointment.appointment_time}",
+            f"{appointment.appointment_date} {start_time}",
             "%Y-%m-%d %H:%M"
         )
     except Exception as e:
-        print("Datetime parsing error:", e)
+        print(f"Datetime parsing error for appointment {appointment.appointment_id}: {e}")
         return None
 
 
@@ -29,7 +30,7 @@ def check_appointments(app):  # ✅ receive app
         appointments = Appointment.query.filter(
             Appointment.status == "Booked"
         ).all()
-
+        
         for appointment in appointments:
 
             appointment_datetime = parse_appointment_datetime(appointment)
@@ -134,3 +135,123 @@ def expire_old_schedule_slots(app):
 
         db.session.commit()
 
+
+def check_missed_appointments(app):
+    with app.app_context():
+        now = datetime.now()
+
+        try:
+            appointments = Appointment.query.filter(
+                Appointment.status == "Booked"
+            ).all()
+
+            updated = 0
+
+            for appointment in appointments:
+                appointment_datetime = parse_appointment_datetime(appointment)
+
+                if not appointment_datetime:
+                    continue
+
+                if appointment_datetime + timedelta(minutes=10) >= now:
+                    continue
+
+                appointment.status = "Missed"
+                updated += 1
+
+                patient = appointment.patient
+
+                # Guard against None patient
+                if not patient:
+                    print(f"No patient found for appointment {appointment.appointment_id}, skipping.")
+                    continue
+
+                # Fix NoneType error — treat NULL as 0
+                if patient.missed_appointments is None:
+                    patient.missed_appointments = 0
+
+                patient.missed_appointments += 1
+                count = patient.missed_appointments
+
+                if count == 1:
+                    try:
+                        send_email(
+                            subject="Missed Appointment Reminder – MEDICAPP",
+                            recipient=patient.email,
+                            body=f"""
+                                Dear {patient.firstname} {patient.lastname},
+
+                                We noticed that you missed your appointment on {appointment.appointment_date}
+                                with Dr. {appointment.doctor.firstname} {appointment.doctor.lastname}.
+
+                                This is a friendly reminder that missing appointments affects your care
+                                and the availability of slots for other patients.
+
+                                Please make sure to attend your future appointments or cancel in advance
+                                if you are unable to make it.
+
+                                Sincerely,
+                                MEDICAPP Support Team
+                            """
+                        )
+                    except Exception as e:
+                        print(f"Failed to send 1st miss reminder: {e}")
+
+                elif count == 2:
+                    try:
+                        send_email(
+                            subject="⚠️ Warning – 2nd Missed Appointment",
+                            recipient=patient.email,
+                            body=f"""
+                                Dear {patient.firstname} {patient.lastname},
+
+                                This is a warning notice that you have now missed 2 appointments on MEDICAPP.
+
+                                Latest missed appointment:
+                                Doctor: Dr. {appointment.doctor.firstname} {appointment.doctor.lastname}
+                                Date: {appointment.appointment_date}
+
+                                Please be advised that missing one more appointment will result in
+                                the suspension of your MEDICAPP account.
+
+                                Sincerely,
+                                MEDICAPP Support Team
+                            """
+                        )
+                    except Exception as e:
+                        print(f"Failed to send 2nd miss warning: {e}")
+
+                elif count >= 3 and not patient.is_suspended:
+                    patient.is_suspended = True
+                    patient.suspended_at = datetime.now()
+
+                    try:
+                        send_email(
+                            subject="Account Suspended – Missed Appointments",
+                            recipient=patient.email,
+                            body=f"""
+                                Dear {patient.firstname} {patient.lastname},
+
+                                Your MEDICAPP account has been suspended due to 3 missed appointments.
+
+                                Latest missed appointment:
+                                Doctor: Dr. {appointment.doctor.firstname} {appointment.doctor.lastname}
+                                Date: {appointment.appointment_date}
+
+                                If you believe this is an error or would like to appeal,
+                                please contact our support team.
+
+                                Sincerely,
+                                MEDICAPP Support Team
+                            """
+                        )
+                    except Exception as e:
+                        print(f"Failed to send suspension email: {e}")
+
+            if updated:
+                db.session.commit()
+                print(f"[Scheduler] Marked {updated} appointment(s) as Missed.")
+
+        except Exception as e:
+            db.session.rollback()
+            print(f"[Scheduler] check_missed_appointments failed: {e}")

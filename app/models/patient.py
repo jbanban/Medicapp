@@ -75,6 +75,11 @@ class Patient(db.Model):
     # ---------------- FILES ----------------
     profile_image: Mapped[str | None] = mapped_column(nullable=True)
 
+    # ---------------- SUSPENSION ----------------
+    missed_appointments = db.Column(db.Integer, default=0)
+    is_suspended = db.Column(db.Boolean, default=False)
+    suspended_at = db.Column(db.DateTime, nullable=True)
+
     # ---------------- METADATA ----------------
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, nullable=False

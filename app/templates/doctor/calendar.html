@@ -225,6 +225,9 @@
         <div id="weekView" class="hidden">
             {% include 'doctor/scheduler.html' %}
         </div>
+        <div id="dayView" class="hidden">
+            {% include 'doctor/daySchedule.html' %}
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -316,12 +319,15 @@ function showView(view) {
 
     const monthView = document.getElementById("monthView");
     const weekView  = document.getElementById("weekView");
+    const dayView = document.getElementById("dayView")
 
     if (monthView) monthView.classList.add("hidden");
     if (weekView)  weekView.classList.add("hidden");
+    if (dayView)  dayView.classList.add("hidden");
 
     if (view === "month" && monthView) monthView.classList.remove("hidden");
     if (view === "week"  && weekView)  weekView.classList.remove("hidden");
+    if (view === "day"  && dayView)  dayView.classList.remove("hidden");
 
     const label = document.getElementById("currentViewLabel");
     if (label) {

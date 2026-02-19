@@ -20,7 +20,7 @@ def doctors_appointment():
     doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
 
     tab = request.args.get('tab', 'all')
-    today = date.today().isoformat()
+    today = date.today()
 
     page = request.args.get('page', 1, type=int)
     per_page = 5
@@ -30,6 +30,12 @@ def doctors_appointment():
         .join(Patient, Appointment.patient_id == Patient.patient_id)
         .filter(Appointment.doctor_id == doctor.doctor_id)
     )
+
+    missed = Appointment.query.filter_by(
+        doctor_id=doctor.doctor_id,
+        status = 'Missed',          # adjust to match your actual status string
+        appointment_date = today
+    ).all()
 
     if tab == 'today':
         appointments_query = appointments_query.filter(
@@ -69,13 +75,15 @@ def doctors_appointment():
     for appointment in appointments.items:
         appointment.patient_data = get_patient_cache(appointment.patient_id)
 
+
     return render_template(
         'doctor/doctor_appointment.html',
         appointments=appointments.items,
         pagination=appointments,
         doctor=doctor,
         tab=tab,
-        ongoing_appointment=ongoing_appointment
+        ongoing_appointment=ongoing_appointment,
+        missed_appointments=missed   
     )
 
 
@@ -177,14 +185,14 @@ def accept_appointment(appointment_id):
         subject="Appointment Confirmation – Successfully Booked",
         recipient=appointment.patient.email,
         body=f"""
-            Dear {appointment.patient.first_name} {appointment.patient.last_name},
+            Dear {appointment.patient.firstname} {appointment.patient.lastname},
 
             Good day.
 
             We are pleased to inform you that your appointment has been successfully scheduled.
 
             Appointment Details:
-            Doctor: Dr. {appointment.doctor.first_name} {appointment.doctor.last_name}
+            Doctor: Dr. {appointment.doctor.firstname} {appointment.doctor.lastname}
             Date: {appointment.appointment_date}
             Time: {appointment.appointment_time}
             Type: {appointment.type}
@@ -407,12 +415,12 @@ def cancel_appointment(appointment_id):
             subject="Appointment Rescheduled Notice",
             recipient=appointment.patient.email,
             body=f"""
-                Dear {appointment.patient.first_name} {appointment.patient.last_name},
+                Dear {appointment.patient.firstname} {appointment.patient.lastname},
 
                 Good day.
 
                 Please be informed that your previously scheduled appointment with 
-                Dr. {doctor.first_name} {doctor.last_name} has been rescheduled
+                Dr. {doctor.firstname} {doctor.lastname} has been rescheduled
                 due to unforeseen circumstances.
 
                 New Appointment Details:
@@ -447,12 +455,12 @@ def cancel_appointment(appointment_id):
             subject="Notice of Appointment Cancellation",
             recipient=appointment.patient.email,
             body=f"""
-                Dear {appointment.patient.first_name} {appointment.patient.last_name},
+                Dear {appointment.patient.firstname} {appointment.patient.lastname},
 
                 Good day.
 
                 We regret to inform you that your scheduled appointment with 
-                Dr. {doctor.first_name} {doctor.last_name} on 
+                Dr. {doctor.firstname} {doctor.lastname} on 
                 {appointment.appointment_date} at {appointment.appointment_time}
                 has been cancelled due to unforeseen circumstances.
 
