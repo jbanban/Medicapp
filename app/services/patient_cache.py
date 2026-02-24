@@ -14,8 +14,6 @@ def get_patient_cache(patient_id):
         "profile_image": patient.profile_image,
         "firstname": decrypt_value(patient.firstname),
         "lastname": decrypt_value(patient.lastname),
-        "email": decrypt_value(patient.email),
-        "phone": decrypt_value(patient.phone),
 
         "full_name": " ".join(filter(None, [
             decrypt_value(patient.firstname),

@@ -1,9 +1,10 @@
-from flask import render_template, redirect, url_for, flash
+from flask import render_template, redirect, url_for, flash, abort
 from flask_login import current_user, login_required
 from sqlalchemy import func
 from app.models.doctor import Doctor
 from app.models.patient import Patient
 from app.models.appointment import Appointment
+from app.models.doctor_secretary import Doctor_Secretary
 from app.services.patient_cache import get_patient_cache
 from . import doctor_bp
 from app import db
@@ -11,11 +12,19 @@ from app import db
 @doctor_bp.route('/patients')
 @login_required
 def doctor_patients():
-    doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
+    if current_user.role != "doctor":
+        return redirect (url_for('misc.forbidden'))
+    
+    doctor = None
 
-    if not doctor:
-        flash("Please complete your doctor profile.", "warning")
-        return redirect(url_for('doctor.create_doctor_profile'))
+    if current_user.role == "doctor":
+        doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
+
+    elif current_user.role == "secretary":
+        secretary = Doctor_Secretary.query.filter_by(account_id=current_user.account_id).first()
+        if not secretary:
+            abort(403)
+        doctor = secretary.doctor 
 
     latest_subquery = (
         db.session.query(
@@ -38,7 +47,6 @@ def doctor_patients():
         )
         .all()
     )
-
 
     patient_list = []
 

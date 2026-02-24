@@ -61,9 +61,9 @@ def me_jwt():
 
 def redirect_based_on_role(user):
 
-    if user.role == 'doctor':
+    if user.role in ('doctor', 'secretary'):
         return redirect(url_for('doctor.doctor_dashboard'))
-
+    
     elif user.role == 'patient':
         patient_profile = Patient.query.filter_by(account_id=user.account_id).first()
         if patient_profile:

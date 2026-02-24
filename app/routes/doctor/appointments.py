@@ -5,6 +5,7 @@ from datetime import date, datetime
 from app.models.doctor import Doctor
 from app.models.appointment import Appointment
 from app.models.doctor_schedule import Doctor_Schedule
+from app.models.doctor_secretary import Doctor_Secretary
 from app.models.payment import PaymentRecord
 from app.routes.patient import Patient
 from app.models.medical_record import MedicalRecord
@@ -19,7 +20,17 @@ from . import doctor_bp
 def doctors_appointment():
     if current_user.role not in ["doctor", "secretary"]:
         abort(403)
-    doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
+        
+    doctor = None
+
+    if current_user.role == "doctor":
+        doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
+
+    elif current_user.role == "secretary":
+        secretary = Doctor_Secretary.query.filter_by(account_id=current_user.account_id).first()
+        if not secretary:
+            abort(403)
+        doctor = secretary.doctor 
 
     tab = request.args.get('tab', 'all')
     today = date.today()
@@ -93,7 +104,7 @@ def doctors_appointment():
 @login_required
 def view_profile(patient_id):
     if current_user.role != "doctor":
-        abort(403)  # Forbidden
+        return redirect (url_for('misc.forbidden'))
 
     patient = Patient.query.get(patient_id)
     
@@ -113,13 +124,19 @@ def view_profile(patient_id):
 @doctor_bp.route('/appointments')
 @login_required
 def view_appointments():
-    doctor = Doctor.query.filter_by(
-        account_id=current_user.account_id
-    ).first()
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
 
-    if not doctor:
-        flash("Please complete your doctor profile.", "warning")
-        return redirect(url_for('doctor.create_doctor_profile'))
+    doctor = None
+
+    if current_user.role == "doctor":
+        doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
+
+    elif current_user.role == "secretary":
+        secretary = Doctor_Secretary.query.filter_by(account_id=current_user.account_id).first()
+        if not secretary:
+            abort(403)
+        doctor = secretary.doctor 
 
     # Get query parameters
     patient_id = request.args.get("patient_id")
@@ -168,6 +185,8 @@ def view_appointments():
 @doctor_bp.route('/accept_appointment/<int:appointment_id>', methods=['POST'])
 @login_required
 def accept_appointment(appointment_id):
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
     appointment = Appointment.query.get(appointment_id)
     if not appointment:
         return redirect(url_for('doctor.doctors_appointment'))
@@ -208,6 +227,8 @@ def accept_appointment(appointment_id):
 @doctor_bp.route('/reject_appointment/<int:appointment_id>', methods=['POST'])
 @login_required
 def reject_appointment(appointment_id):
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
     appointment = Appointment.query.get(appointment_id)
     if not appointment:
         return redirect(url_for('doctor.doctors_appointment'))
@@ -220,6 +241,8 @@ def reject_appointment(appointment_id):
 @doctor_bp.route('/check-in/<int:appointment_id>', methods=['POST'])
 @login_required
 def check_in_patient(appointment_id):
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
     appointment = Appointment.query.get(appointment_id)
     if not appointment:
         return redirect(url_for('doctor.doctors_appointment'))
@@ -232,6 +255,8 @@ def check_in_patient(appointment_id):
 @doctor_bp.route('/done_appointment/<int:appointment_id>', methods=['POST'])
 @login_required
 def done_appointment(appointment_id):
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
     appointment = Appointment.query.get(appointment_id)
     if not appointment:
         return redirect(url_for('doctor.doctors_appointment'))
@@ -244,7 +269,8 @@ def done_appointment(appointment_id):
 @doctor_bp.route('/diagnosis_record/<int:appointment_id>', methods=['POST'])
 @login_required
 def appointment_diagnosis(appointment_id):
-
+    if current_user.role != "doctor":
+        abort(403)
     appointment = Appointment.query.get_or_404(appointment_id)
     doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
 
@@ -273,6 +299,8 @@ def appointment_diagnosis(appointment_id):
 @doctor_bp.route('/pay_appointment/<int:appointment_id>', methods=['POST'])
 @login_required
 def pay_appointment(appointment_id):
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
     appointment = Appointment.query.get_or_404(appointment_id)
 
     if request.method == 'POST':
@@ -309,7 +337,8 @@ def pay_appointment(appointment_id):
 @doctor_bp.route("/appointment/<int:appointment_id>/update_status/<string:action>", methods=["POST"])
 @login_required
 def update_appointment_status(appointment_id, action):
-
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
     doctor = Doctor.query.filter_by(account_id=current_user.account_id).first_or_404()
 
     appointment = Appointment.query.get_or_404(appointment_id)
@@ -345,11 +374,18 @@ def update_appointment_status(appointment_id, action):
 @doctor_bp.route('/cancel_appointment/<int:appointment_id>', methods=['POST'])
 @login_required
 def cancel_appointment(appointment_id):
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
+    doctor = None
 
-    doctor = Doctor.query.filter_by(
-        account_id=current_user.account_id
-    ).first_or_404()
+    if current_user.role == "doctor":
+        doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
 
+    elif current_user.role == "secretary":
+        secretary = Doctor_Secretary.query.filter_by(account_id=current_user.account_id).first()
+        if not secretary:
+            abort(403)
+        doctor = secretary.doctor 
     appointment = Appointment.query.get_or_404(appointment_id)
 
     if appointment.doctor_id != doctor.doctor_id:
@@ -447,6 +483,5 @@ def cancel_appointment(appointment_id):
                 """
             )
         
-
     return redirect(url_for('doctor.doctors_appointment'))
 

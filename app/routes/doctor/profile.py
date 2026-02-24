@@ -13,7 +13,9 @@ from . import doctor_bp
 @doctor_bp.route('/doctor_profile/<int:doctor_id>', methods=['GET', 'POST'])
 @login_required
 def doctor_profile(doctor_id):
-
+    if current_user.role != "doctor":
+        return redirect (url_for('misc.forbidden'))
+    
     doctor = Doctor.query.get_or_404(doctor_id)
 
     # 🔒 SECURITY CHECK
@@ -28,7 +30,9 @@ def doctor_profile(doctor_id):
 @doctor_bp.route('/image/<int:doctor_id>/upload-photo', methods=['POST'])
 @login_required
 def upload_doctor_photo(doctor_id):
-
+    if current_user.role != "doctor":
+        return redirect (url_for('misc.forbidden'))
+    
     user_id = current_user.account_id
 
     # Get doctor based on URL (doctor_id), not user_id
@@ -85,6 +89,9 @@ def upload_doctor_photo(doctor_id):
 @doctor_bp.route('/background/add/<int:doctor_id>/<string:bg_type>', methods=['POST'])
 @login_required
 def add_background(doctor_id, bg_type):
+    if current_user.role != "doctor":
+        return redirect (url_for('misc.forbidden'))
+    
     doctor = Doctor.query.get_or_404(doctor_id)
 
     if doctor.account_id != current_user.account_id:
@@ -111,6 +118,9 @@ def add_background(doctor_id, bg_type):
 @doctor_bp.route('/background/update/<int:bg_id>/<int:doctor_id>', methods=['POST'])
 @login_required
 def update_background(bg_id, doctor_id):
+    if current_user.role != "doctor":
+        return redirect (url_for('misc.forbidden'))
+    
     doctor = Doctor.query.get_or_404(doctor_id)
     bg = DoctorsBackground.query.get_or_404(bg_id)
 
@@ -130,6 +140,9 @@ def update_background(bg_id, doctor_id):
 @doctor_bp.route('/background/delete/<int:bg_id>/<int:doctor_id>', methods=['POST'])
 @login_required
 def delete_background(bg_id, doctor_id):
+    if current_user.role != "doctor":
+        return redirect (url_for('misc.forbidden'))
+    
     doctor = Doctor.query.get_or_404(doctor_id)
     bg = DoctorsBackground.query.get_or_404(bg_id)
 
@@ -144,6 +157,9 @@ def delete_background(bg_id, doctor_id):
 @doctor_bp.route('/update_clinic_info/<int:doctor_id>', methods=['POST'])
 @login_required
 def update_clinic_info(doctor_id):
+    if current_user.role != "doctor":
+        return redirect (url_for('misc.forbidden'))
+
     doctor = Doctor.query.get_or_404(doctor_id)
 
     # 🔒 Ownership check
@@ -181,6 +197,9 @@ def update_clinic_info(doctor_id):
 @doctor_bp.route('/update_doctor_settings/<int:doctor_id>', methods=['POST'])
 @login_required
 def update_doctor_settings(doctor_id):
+    if current_user.role != "doctor":
+        return redirect (url_for('misc.forbidden'))
+    
     doctor = Doctor.query.get_or_404(doctor_id)
 
     if doctor.account_id != current_user.account_id:
@@ -197,6 +216,9 @@ def update_doctor_settings(doctor_id):
 @doctor_bp.route('/deactivate/<int:doctor_id>', methods=['POST'])
 @login_required
 def deactivate_doctor(doctor_id):
+    if current_user.role != "doctor":
+        return redirect (url_for('misc.forbidden'))
+    
     doctor = Doctor.query.get_or_404(doctor_id)
 
     # 🔒 Ownership check

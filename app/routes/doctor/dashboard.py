@@ -2,6 +2,7 @@ from datetime import date, datetime
 from flask import render_template, abort
 from flask_login import current_user, login_required
 from app.models.doctor import Doctor
+from app.models.doctor_secretary import Doctor_Secretary
 from app.models.appointment import Appointment
 from app.models.account import Account
 from app.models.payment import PaymentRecord
@@ -189,7 +190,12 @@ def doctor_dashboard():
     if current_user.role not in ["doctor", "secretary"]:
         abort(403)
 
-    doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
+    if current_user.role == "secretary":
+        secretary = Doctor_Secretary.query.filter_by(account_id=current_user.account_id).first_or_404()
+        doctor = Doctor.query.get_or_404(secretary.doctor_id)
+    else:
+        doctor = Doctor.query.filter_by(account_id=current_user.account_id).first_or_404()
+
     doctor_id = doctor.doctor_id
 
     # ── Gather all statistics ─────────────────────────────────────────────────

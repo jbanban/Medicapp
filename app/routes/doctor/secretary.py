@@ -10,7 +10,7 @@ from . import doctor_bp
 def list_secretaries():
 
     if current_user.role != "doctor":
-        abort(403)
+        return redirect (url_for('misc.forbidden'))
 
     doctor = Doctor.query.filter_by(
         account_id=current_user.account_id
@@ -22,7 +22,8 @@ def list_secretaries():
 
     return render_template(
         "doctor/doctor_secretary.html",
-        secretaries=secretaries
+        secretaries=secretaries,
+        doctor=doctor
     )
 
 @doctor_bp.route("/create", methods=["POST"])
@@ -31,27 +32,27 @@ def create_secretary():
 
     # 🔐 Allow doctor only
     if current_user.role != "doctor":
-        abort(403)
+        return redirect (url_for('misc.forbidden'))
 
     doctor = Doctor.query.filter_by(
         account_id=current_user.account_id
     ).first_or_404()
 
-    first_name = request.form.get("first_name")
-    last_name = request.form.get("last_name")
+    firstname = request.form.get("firstname")
+    lastname = request.form.get("lastname")
     username = request.form.get("username")
     password = request.form.get("password")
 
     # 🛑 Validate required fields
-    if not all([first_name, last_name, username, password]):
+    if not all([firstname, lastname, username, password]):
         flash("All fields are required.", "danger")
-        return redirect(url_for("secretary.list_secretaries"))
+        return redirect(url_for("doctor.list_secretaries"))
 
     # 🛑 Check if username already exists
     existing_user = Account.query.filter_by(username=username).first()
     if existing_user:
         flash("Username already exists.", "danger")
-        return redirect(url_for("secretary.list_secretaries"))
+        return redirect(url_for("doctor.list_secretaries"))
 
     try:
         # ✅ Create Account (Using your model properly)
@@ -70,8 +71,8 @@ def create_secretary():
         secretary = Doctor_Secretary(
             account_id=account.account_id,
             doctor_id=doctor.doctor_id,
-            first_name=first_name,
-            last_name=last_name
+            firstname=firstname,
+            lastname=lastname
         )
 
         db.session.add(secretary)
@@ -83,45 +84,45 @@ def create_secretary():
         db.session.rollback()
         flash("Error creating secretary.", "danger")
 
-    return redirect(url_for("secretary.list_secretaries"))
+    return redirect(url_for("doctor.list_secretaries"))
 
-@doctor_bp.route("/update/<int:id>", methods=["POST"])
+@doctor_bp.route("/update/<int:secretary_id>", methods=["POST"])
 @login_required
-def update_secretary(id):
+def update_secretary(secretary_id):
 
     if current_user.role != "doctor":
-        abort(403)
+        return redirect (url_for('misc.forbidden'))
 
     doctor = Doctor.query.filter_by(
         account_id=current_user.account_id
     ).first_or_404()
 
     secretary = Doctor_Secretary.query.filter_by(
-        secretary_id=id,
+        secretary_id=secretary_id,
         doctor_id=doctor.doctor_id
     ).first_or_404()
 
-    secretary.first_name = request.form.get("first_name")
-    secretary.last_name = request.form.get("last_name")
+    secretary.firstname = request.form.get("firstname")
+    secretary.lastname = request.form.get("lastname")
 
     db.session.commit()
 
     flash("Secretary updated successfully!", "success")
-    return redirect(url_for("secretary.list_secretaries"))
+    return redirect(url_for("doctor.list_secretaries"))
 
-@doctor_bp.route("/delete/<int:id>", methods=["POST"])
+@doctor_bp.route("/delete/<int:secretary_id>", methods=["POST"])
 @login_required
-def delete_secretary(id):
+def delete_secretary(secretary_id):
 
     if current_user.role != "doctor":
-        abort(403)
+        return redirect (url_for('misc.forbidden'))
 
     doctor = Doctor.query.filter_by(
         account_id=current_user.account_id
     ).first_or_404()
 
     secretary = Doctor_Secretary.query.filter_by(
-        secretary_id=id,
+        secretary_id=secretary_id,
         doctor_id=doctor.doctor_id
     ).first_or_404()
 
@@ -133,4 +134,4 @@ def delete_secretary(id):
     db.session.commit()
 
     flash("Secretary deleted successfully!", "success")
-    return redirect(url_for("secretary.list_secretaries"))
+    return redirect(url_for("doctor.list_secretaries"))

@@ -23,11 +23,11 @@ class Doctor_Secretary(db.Model):
         nullable=False
     )
 
-    first_name: Mapped[str] = mapped_column(
+    firstname: Mapped[str] = mapped_column(
         String(100), nullable=False
     )
 
-    last_name: Mapped[str] = mapped_column(
+    lastname: Mapped[str] = mapped_column(
         String(100), nullable=False
     )
 

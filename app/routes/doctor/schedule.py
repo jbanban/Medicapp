@@ -1,9 +1,11 @@
-from flask import render_template, jsonify
+from flask import render_template, jsonify, abort
 from flask import redirect, url_for, flash, request
 from flask_login import current_user, login_required
 from datetime import date, timedelta
 from app.models.doctor import Doctor
 from app.models.doctor_schedule import Doctor_Schedule
+from app.models.doctor_secretary import Doctor_Secretary
+from app.models.appointment import Appointment
 from app.services.generateSaveSlot import generate_and_save_slots
 from app import db
 from . import doctor_bp
@@ -12,9 +14,20 @@ from . import doctor_bp
 @doctor_bp.route('/doctors_schedule', methods=['GET', 'POST'])
 @login_required
 def doctors_schedule():
-    
-    doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
-    
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
+
+    doctor = None
+
+    if current_user.role == "doctor":
+        doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
+
+    elif current_user.role == "secretary":
+        secretary = Doctor_Secretary.query.filter_by(account_id=current_user.account_id).first()
+        if not secretary:
+            abort(403)
+        doctor = secretary.doctor 
+
     schedules = Doctor_Schedule.query.filter_by(doctor_id=doctor.doctor_id).first()
 
     return render_template(
@@ -27,10 +40,19 @@ def doctors_schedule():
 @doctor_bp.route('/scheduler', methods=['POST'])
 @login_required
 def scheduler():
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
+        
+    doctor = None
 
-    doctor = Doctor.query.filter_by(
-        account_id=current_user.account_id
-    ).first()
+    if current_user.role == "doctor":
+        doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
+
+    elif current_user.role == "secretary":
+        secretary = Doctor_Secretary.query.filter_by(account_id=current_user.account_id).first()
+        if not secretary:
+            abort(403)
+        doctor = secretary.doctor 
 
     if not doctor:
         return jsonify(success=False, error="Doctor not found"), 404
@@ -60,6 +82,8 @@ def scheduler():
 @doctor_bp.route('/delete_schedule/<int:doctor_schedule_id>', methods=['POST'])
 @login_required
 def delete_doctor_schedule(doctor_schedule_id):
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
     schedule = Doctor_Schedule.query.get(doctor_schedule_id)
     if not schedule:
         return redirect(url_for('doctor.doctors_schedule'))
@@ -73,6 +97,8 @@ def delete_doctor_schedule(doctor_schedule_id):
 @doctor_bp.route('/schedule')
 @login_required
 def day_schedule():
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
 
     today=date.today()
 
