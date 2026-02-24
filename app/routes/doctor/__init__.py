@@ -6,5 +6,6 @@ from .appointments import *
 from .schedule import *
 from .profile import *
 from .patients import *
+from .secretary import *
 # from .medical_records import *
 # from .prescriptions import *

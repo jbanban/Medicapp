@@ -7,4 +7,5 @@ from .medical_record import MedicalRecord
 from .medical_visibility import MedicalVisibility
 from .doctor_schedule import Doctor_Schedule
 from .payment import PaymentRecord
-from .audit_log import AuditLog
+from .notification import Notification
+from .doctor_secretary import Doctor_Secretary

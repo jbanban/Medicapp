@@ -1,12 +1,15 @@
 
-from flask import render_template, session, redirect, url_for, flash
+from flask import render_template, redirect, url_for, flash
 from flask_login import current_user, login_required
-from flask_migrate import current
-from datetime import date, datetime
+from datetime import date, timedelta
 from app.models.patient import Patient
 from app.models.appointment import Appointment
-from app.models.account import Account
+from app.models.doctor import Doctor
+from app.models.payment import PaymentRecord
+from sqlalchemy import func
 from app.services.patient_cache import get_patient_cache
+from app import db
+
 from . import patient_bp
 
 
@@ -23,20 +26,31 @@ def patient_dashboard():
     decrypted_patient = get_patient_cache(patient.patient_id)
 
     appointments = Appointment.query.filter_by(patient_id=patient.patient_id).all()
-    doctors = Account.query.filter_by(role='doctor').all()
+    doctors = Doctor.query.all()
+
+    
+    five_days_ahead = today + timedelta(days=5)
 
     upcoming = Appointment.query \
-        .filter(
-            Appointment.patient_id == patient.patient_id,
-            Appointment.appointment_date >= today
-        ) \
-        .order_by(Appointment.appointment_date.asc()) \
-        .all()
+            .filter(
+                Appointment.patient_id == patient.patient_id,
+                Appointment.appointment_date >= today,
+                Appointment.appointment_date <= five_days_ahead
+            ) \
+            .order_by(Appointment.appointment_date.asc()) \
+            .all()
 
+    total_payment = db.session.query(func.sum(PaymentRecord.amount)) \
+        .join(Appointment, PaymentRecord.appointment_id == Appointment.appointment_id) \
+        .filter(Appointment.patient_id == patient.patient_id) \
+        .scalar()
+
+    total_payment = total_payment or 0  # Handle None if no payments found
 
     return render_template('patient/patient_dashboard.html',
                            patient=decrypted_patient, 
                            appointments=appointments,
                            doctors=doctors,
-                           upcoming=upcoming
+                           upcoming=upcoming,
+                           payment=total_payment
                            )

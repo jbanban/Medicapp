@@ -1,4 +1,4 @@
-from flask import render_template, redirect, request, url_for, flash
+from flask import render_template, redirect, request, url_for, flash, abort
 from flask_login import current_user, login_required
 from app.services.email_services import send_email
 from datetime import date, datetime
@@ -9,7 +9,7 @@ from app.models.payment import PaymentRecord
 from app.routes.patient import Patient
 from app.models.medical_record import MedicalRecord
 from app.services.patient_cache import get_patient_cache
-from app.services.audit_services import log_activity
+from app.routes.patient.notification import create_notification
 from app import db
 from . import doctor_bp
 
@@ -17,6 +17,8 @@ from . import doctor_bp
 @doctor_bp.route('/appointments')
 @login_required
 def doctors_appointment():
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
     doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
 
     tab = request.args.get('tab', 'all')
@@ -90,6 +92,9 @@ def doctors_appointment():
 @doctor_bp.route('/view_profile/<int:patient_id>')
 @login_required
 def view_profile(patient_id):
+    if current_user.role != "doctor":
+        abort(403)  # Forbidden
+
     patient = Patient.query.get(patient_id)
     
     doctor = Doctor.query.filter_by(account_id=current_user.account_id)
@@ -97,11 +102,6 @@ def view_profile(patient_id):
     # 🔹 cache patient data
     patient_data = get_patient_cache(patient_id)
 
-    log_activity(
-        account_id=current_user.account_id,
-        action="Viewed Profile",
-        description=f"Dr. {doctor.firstname} {doctor.lastname}, Viewed Patient Profile of {patient_data.full_name}."
-    )
 
     return render_template(
         'patient/viewProfile.html',
@@ -175,11 +175,6 @@ def accept_appointment(appointment_id):
     db.session.commit()
     flash('Appointment Request Successfully Accepted','success')
 
-    log_activity(
-        account_id=current_user.account_id,
-        action="Accept Appointment",
-        description=f"Doctor Accept appointment ID {appointment.appointment_id}"
-    )
 
     send_email(
         subject="Appointment Confirmation – Successfully Booked",
@@ -219,12 +214,6 @@ def reject_appointment(appointment_id):
     appointment.status = 'Rejected'
     db.session.commit()
 
-    log_activity(
-        account_id=current_user.account_id,
-        action="Reject Appointment",
-        description=f"Doctor Rejects appointment ID {appointment.appointment_id}"
-    )
-
     flash('Appointment Request Successfully Rejected','success')
     return redirect(url_for('doctor.doctors_appointment'))
 
@@ -237,12 +226,6 @@ def check_in_patient(appointment_id):
     appointment.status = 'Ongoing'
     db.session.commit()
 
-    log_activity(
-        account_id=current_user.account_id,
-        action="Patient Check-in",
-        description=f"Patient ID {appointment.patient_id} is currently check-in for his/her appointment {appointment.appointment_id}"
-    )
-
     flash('Patient is Currently Checked-in.', 'success')
     return redirect(url_for('doctor.doctors_appointment'))
 
@@ -254,11 +237,6 @@ def done_appointment(appointment_id):
         return redirect(url_for('doctor.doctors_appointment'))
     appointment.status = 'Done'
 
-    log_activity(
-        account_id=current_user.account_id,
-        action="Done Appointment",
-        description=f"Doctor successfully {appointment.reason} appointment ID {appointment.appointment_id}."
-    )
 
     db.session.commit()
     return redirect(url_for('doctor.doctors_appointment'))
@@ -314,15 +292,16 @@ def pay_appointment(appointment_id):
             payment_status='Paid'
         )
 
+        create_notification(
+            patient_id=appointment.patient.patient_id,
+            title='Payment Received',
+            message=f'Your payment of ₱{amount} has been received.',
+            type='payment'
+        )
+
         db.session.add(new_payment)
         db.session.commit()
-
-        log_activity(
-            account_id=current_user.account_id,
-            action="Appointment Paid",
-            description=f"Appointment ID: {appointment.appointment_id} has been Successfully Paid."
-        )
-            
+        
         flash('Appointment Successfully Paid.', 'success')
         return redirect(url_for('doctor.doctors_appointment'))
 
@@ -405,12 +384,6 @@ def cancel_appointment(appointment_id):
 
         flash('Appointment automatically rescheduled to nearest available time.', 'success')
 
-        log_activity(
-            account_id=current_user.account_id,
-            action="Appointment automatic Reschedule",
-            description=f"Doctor cancelled appointment ID {appointment.appointment_id} and is atomatically Rescheduled."
-        )
-
         send_email(
             subject="Appointment Rescheduled Notice",
             recipient=appointment.patient.email,
@@ -446,11 +419,6 @@ def cancel_appointment(appointment_id):
 
         flash('No available schedule found. Appointment cancelled.', 'warning')
 
-        log_activity(
-            account_id=current_user.account_id,
-            action="Cancel Appointment",
-            description=f"Doctor cancelled appointment ID {appointment.appointment_id}"
-        )
         send_email(
             subject="Notice of Appointment Cancellation",
             recipient=appointment.patient.email,

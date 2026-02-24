@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.models.patient_history_background import PatientHistoryBackground
     from app.models.medical_visibility import MedicalVisibility
     from app.models.appointment_visibility import AppointmentVisibility
+    from app.models.notification import Notification
 
 
 class Patient(db.Model):
@@ -84,11 +85,18 @@ class Patient(db.Model):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, nullable=False
     )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
 
     # ---------------- RELATIONSHIPS ----------------
     account: Mapped["Account"] = relationship(back_populates="patient")
     appointments: Mapped[list["Appointment"]] = relationship(back_populates="patient")
     records: Mapped[list["MedicalRecord"]] = relationship(back_populates="patient")
+    notifications: Mapped[list["Notification"]] = relationship(back_populates="patient")
 
     history: Mapped["PatientHistoryBackground"] = relationship(
         back_populates="patient",

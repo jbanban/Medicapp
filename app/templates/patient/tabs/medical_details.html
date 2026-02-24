@@ -84,8 +84,8 @@
         </div>
         <button
             type="button"
-            onclick="saveAllVisibility()"
-            id="saveButton"
+            onclick="saveMedicalVisibility()"
+            id="medicalSaveButton"
             class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg">
             Save All Settings
         </button>
@@ -106,165 +106,140 @@
 </style>
 
 <script>
-// Initialize state if not already present
-if (!window.state) {
-    window.state = {
-        hiddenFields: {}
-    };
-}
+(function () {
 
-const patientId = {{ patient.patient_id }};
-let hiddenFields = {};
+    const patientId = {{ patient.patient_id }};
+    let hiddenFields = {};
 
-document.addEventListener("DOMContentLoaded", loadVisibility);
+    /* =============================
+       LOAD SAVED VISIBILITY
+    ============================== */
+    async function loadMedicalVisibility() {
+        try {
+            const response = await fetch(
+                "{{ url_for('patient.get_medical_visibility', patient_id=patient.patient_id) }}"
+            );
 
-async function loadVisibility() {
-    try {
-        const response = await fetch(
-            "{{ url_for('patient.get_medical_visibility', patient_id=patient.patient_id) }}"
-        );
-        hiddenFields = await response.json();
-        updateUIFromState();
-    } catch (error) {
-        console.error('Error loading visibility:', error);
+            if (!response.ok) return;
+
+            hiddenFields = await response.json();
+            updateUIFromState();
+
+        } catch (error) {
+            console.error("Medical load error:", error);
+        }
     }
-}
 
-async function toggleVisibility(key) {
-    // Toggle the state
-    hiddenFields[key] = !hiddenFields[key];
-    
-    // Update UI immediately
-    updateToggleButton(key);
-    updateFieldBlur(key);
-    
-    // Save to backend
-    await saveVisibility(key);
-}
+    /* =============================
+       TOGGLE FIELD
+    ============================== */
+    function toggleMedicalField(fieldKey) {
 
-function updateToggleButton(field) {
-    const button = document.querySelector(`button[data-field="${field}"]`);
-    if (!button) return;
-    
-    const eyeVisible = button.querySelector('.eye-visible');
-    const eyeHidden = button.querySelector('.eye-hidden');
-    
-    if (hiddenFields[field]) {
-        // Field is visible (true means visible)
-        eyeVisible.classList.remove('hidden');
-        eyeHidden.classList.add('hidden');
-    } else {
-        // Field is hidden (false/undefined means hidden)
-        eyeVisible.classList.add('hidden');
-        eyeHidden.classList.remove('hidden');
+        hiddenFields[fieldKey] = !hiddenFields[fieldKey];
+
+        updateToggleUI(fieldKey);
     }
-}
 
-function updateFieldBlur(field) {
-    const content = document.querySelector(`.field-content[data-field="${field}"]`);
-    if (!content) return;
-    
-    if (hiddenFields[field]) {
-        // Visible - remove blur
-        content.classList.remove('blurred');
-    } else {
-        // Hidden - add blur
-        content.classList.add('blurred');
+    /* =============================
+       UPDATE UI
+    ============================== */
+    function updateToggleUI(fieldKey) {
+
+        const button = document.querySelector(`button[data-field="${fieldKey}"]`);
+        const content = document.querySelector(`.field-content[data-field="${fieldKey}"]`);
+
+        if (!button || !content) return;
+
+        const eyeVisible = button.querySelector(".eye-visible");
+        const eyeHidden = button.querySelector(".eye-hidden");
+
+        const isVisible = hiddenFields[fieldKey];
+
+        if (isVisible) {
+            content.classList.remove("blurred");
+            eyeVisible.classList.remove("hidden");
+            eyeHidden.classList.add("hidden");
+        } else {
+            content.classList.add("blurred");
+            eyeVisible.classList.add("hidden");
+            eyeHidden.classList.remove("hidden");
+        }
     }
-}
 
-function updateUIFromState() {
-    Object.keys(hiddenFields).forEach(field => {
-        updateToggleButton(field);
-        updateFieldBlur(field);
-    });
-    
-    // Also update fields that might not be in hiddenFields yet (default to hidden)
-    const allFields = document.querySelectorAll('.field-content[data-field]');
-    allFields.forEach(content => {
-        const field = content.getAttribute('data-field');
-        if (!(field in hiddenFields)) {
-            hiddenFields[field] = false; // Default to hidden
-            updateToggleButton(field);
-            updateFieldBlur(field);
+    function updateUIFromState() {
+
+        const allFields = document.querySelectorAll(".field-content[data-field]");
+
+        allFields.forEach(el => {
+            const key = el.dataset.field;
+
+            if (!(key in hiddenFields)) {
+                hiddenFields[key] = false;
+            }
+
+            updateToggleUI(key);
+        });
+    }
+
+    /* =============================
+       SAVE ALL
+    ============================== */
+    async function saveMedicalVisibility() {
+
+        const button = document.getElementById("medicalSaveButton");
+
+        try {
+
+            button.disabled = true;
+            button.textContent = "Saving...";
+
+            const response = await fetch(
+                "{{ url_for('patient.update_medical_visibility', patient_id=patient.patient_id) }}",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(hiddenFields)
+                }
+            );
+
+            if (!response.ok) throw new Error();
+
+            button.textContent = "✓ Saved!";
+            button.classList.remove("bg-blue-600");
+            button.classList.add("bg-green-600");
+
+        } catch (error) {
+
+            button.textContent = "✗ Error";
+            button.classList.remove("bg-blue-600");
+            button.classList.add("bg-red-600");
+
+        } finally {
+
+            setTimeout(() => {
+                button.textContent = "Save All Settings";
+                button.classList.remove("bg-green-600", "bg-red-600");
+                button.classList.add("bg-blue-600");
+                button.disabled = false;
+            }, 2000);
+        }
+    }
+
+    /* =============================
+       EVENTS
+    ============================== */
+
+    document.addEventListener("DOMContentLoaded", loadMedicalVisibility);
+
+    document.addEventListener("click", function (e) {
+        const btn = e.target.closest("button[data-field]");
+        if (btn) {
+            toggleMedicalField(btn.dataset.field);
         }
     });
-}
 
-async function saveVisibility(key) {
-    try {
-        const response = await fetch(
-            "{{ url_for('patient.update_medical_visibility', patient_id=patient.patient_id) }}",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(hiddenFields)
-            }
-        );
+    document.getElementById("medicalSaveButton")
+        ?.addEventListener("click", saveMedicalVisibility);
 
-        const data = await response.json();
-        console.log('Visibility saved:', data);
-    } catch (error) {
-        console.error('Error saving visibility:', error);
-    }
-}
-
-async function saveAllVisibility() {
-    try {
-        const response = await fetch(
-            "{{ url_for('patient.update_medical_visibility', patient_id=patient.patient_id) }}",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(hiddenFields)
-            }
-        );
-
-        const data = await response.json();
-        console.log('All visibility settings saved:', data);
-        
-        // Show success feedback
-        showSaveSuccess();
-    } catch (error) {
-        console.error('Error saving visibility:', error);
-        showSaveError();
-    }
-}
-
-function showSaveSuccess() {
-    const button = document.getElementById('saveButton');
-    const originalText = button.textContent;
-    button.textContent = '✓ Saved Successfully!';
-    button.classList.add('bg-green-600');
-    button.classList.remove('bg-blue-600');
-    
-    setTimeout(() => {
-        button.textContent = originalText;
-        button.classList.remove('bg-green-600');
-        button.classList.add('bg-blue-600');
-    }, 2000);
-}
-
-function showSaveError() {
-    const button = document.getElementById('saveButton');
-    const originalText = button.textContent;
-    button.textContent = '✗ Save Failed';
-    button.classList.add('bg-red-600');
-    button.classList.remove('bg-blue-600');
-    
-    setTimeout(() => {
-        button.textContent = originalText;
-        button.classList.remove('bg-red-600');
-        button.classList.add('bg-blue-600');
-    }, 2000);
-}
-
-function isHidden(key) {
-    // If value is false (hidden) or undefined, return true (should blur)
-    return !hiddenFields[key];
-}
+})();
 </script>

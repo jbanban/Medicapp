@@ -9,6 +9,7 @@ from app.models.doctor_schedule import Doctor_Schedule
 from app.models.doctors_background import DoctorsBackground
 from app.services.patient_cache import get_patient_cache
 from app.services.email_services import send_email
+from app.routes.patient.notification import create_notification
 from app import db
 from . import patient_bp
 
@@ -159,6 +160,13 @@ def book_appointment():
         db.session.add(appointment)
         db.session.commit()
 
+        create_notification(
+            patient_id=patient.patient_id,
+            title='Appointment Confirmed',
+            message=f'Your appointment with Dr. {schedule.doctor.lastname} is confirmed for {appointment_date}.',
+            type='appointment'
+        )
+        
         send_email(
             subject="Appointment Confirmation – Successfully Booked",
             recipient=appointment.patient.email,
@@ -193,6 +201,7 @@ def book_appointment():
             "appointment_id": appointment.appointment_id
         }), 201
 
+        
     except Exception as e:
         db.session.rollback()
         print(f"Error booking appointment: {str(e)}")  # For debugging

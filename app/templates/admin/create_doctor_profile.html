@@ -3,177 +3,607 @@
 {% block title %}Create Doctor Profile{% endblock %}
 
 {% block content %}
-<div class="w-full bg-gray-50 px-6 py-8">
-  <div class="flex flex-col lg:flex-row gap-6">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 
-    <div class="w-full lg:w-full ">
-      <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+<style>
+  :root {
+    --bg: #f0f2f7;
+    --surface: #ffffff;
+    --border: #e4e7ef;
+    --text: #111827;
+    --muted: #6b7280;
+    --accent: #2563eb;
+    --accent-light: #eff4ff;
+    --accent-hover: #1d4ed8;
+    --hover: #f8f9fc;
+    --input-bg: #f9fafb;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
 
-        
-        <!-- Header -->
-        <div class="px-6 py-5 border-b border-gray-200 flex justify-between items-center bg-blue-50">
-          <h3 class="text-xl font-semibold text-blue-700">Create Doctor Profile</h3>
-          <!-- Close Button -->
-          <a class="fixed top-14 right-12 text-gray-500 hover:text-gray-800 transition"
-            href="{{ url_for('admin.admin_doctors') }}">
-              ✕
-          </a>
-        </div>
+  .dp-wrap * { box-sizing: border-box; }
 
-        <div class="px-6 py-6">
-          
-          {% if selected_account %}
-          <h2 class="text-xl font-semibold mb-4">Create Profile for Dr. {{ selected_account.username }}</h2>
-          <hr class="my-4 border-gray-200">
-          {% endif %}
+  .dp-wrap {
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    background: var(--bg);
+    padding: 2rem 1.5rem 4rem;
+  }
 
+  /* Page header */
+  .dp-page-header {
+    max-width: 900px;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
 
-          <form method="POST" class="space-y-6">
-        
-            <!-- Name Fields -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                <input type="text" name="firstname" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Middle Name</label>
-                <input type="text" name="middlename" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                <input type="text" name="lastname" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
-              </div>
-            </div>
+  .dp-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
 
-            <!-- Age / Bloodtype / Height / Weight -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                <input type="number" name="age" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
-              </div>
+  .dp-breadcrumb a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+  }
 
-              <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Blood Type</label>
-                <select name="bloodtype" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                  <option disabled selected>Select blood type</option>
-                  <option>A</option>
-                  <option>B</option>
-                  <option>AB</option>
-                  <option>O</option>
-                </select>
-              </div>
+  .dp-breadcrumb a:hover { text-decoration: underline; }
 
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Height (cm)</label>
-                <input type="text" name="height" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
-              </div>
+  .dp-close-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 1rem;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .dp-close-btn:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
 
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
-                <input type="text" name="weight" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
-              </div>
-            </div>
+  /* Card */
+  .dp-card {
+    max-width: 900px;
+    margin: 0 auto;
+    background: var(--surface);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 32px rgba(0,0,0,0.07);
+    overflow: hidden;
+  }
 
-            <!-- Specialization / Gender / DOB -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
-                <select name="specialization" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                  <option selected disabled>-- Select Specialization --</option>
-                  <option>Dermatology</option>
-                  <option>Dentistry</option>
-                  <option>Psychiatry</option>
-                  <option>Biochemistry</option>
-                  <option>Radiology</option>
-                  <option>Neurology</option>
-                  <option>Biology</option>
-                </select>
-              </div>
+  .dp-card-header {
+    padding: 1.6rem 2rem;
+    background: linear-gradient(135deg, #1e40af 0%, #2563eb 60%, #3b82f6 100%);
+    display: flex; align-items: center; gap: 1rem;
+  }
 
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-                <select name="gender" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                  <option disabled selected>Select gender</option>
-                  <option>Male</option>
-                  <option>Female</option>
-                  <option>Undecided</option>
-                </select>
-              </div>
+  .dp-header-icon {
+    width: 44px; height: 44px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem;
+    backdrop-filter: blur(4px);
+  }
 
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                <input type="date" name="dob" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
-              </div>
-            </div>
+  .dp-card-header h3 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 1.4rem;
+    color: #fff;
+    font-weight: 400;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
 
-            <!-- POB & Civil Status -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Place of Birth</label>
-                <input type="text" name="pob" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
-              </div>
+  .dp-card-header p {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.7);
+    margin: 0.1rem 0 0;
+  }
 
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Civil Status</label>
-                <select name="civilstatus" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                  <option disabled selected>Select civil status</option>
-                  <option>Single</option>
-                  <option>Married</option>
-                  <option>Separated</option>
-                  <option>Widow</option>
-                  <option>Divorced</option>
-                </select>
-              </div>
-            </div>
+  .dp-card-body { padding: 2rem; }
 
-            <!-- Degree / Nationality / Religion -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Degree</label>
-                <select name="degree" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                  <option disabled selected>Degree level</option>
-                  <option>College Level</option>
-                  <option>Vocational Level</option>
-                  <option>Master's Degree</option>
-                </select>
-              </div>
+  /* Doctor banner */
+  .dp-doctor-banner {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.9rem 1.1rem;
+    background: var(--accent-light);
+    border: 1.5px solid #bfdbfe;
+    border-radius: var(--radius);
+    margin-bottom: 2rem;
+  }
 
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Nationality</label>
-                <input type="text" name="nationality" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
-              </div>
+  .dp-doctor-banner .avatar {
+    width: 38px; height: 38px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+  }
 
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Religion</label>
-                <input type="text" name="religion" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
-              </div>
-            </div>
+  .dp-doctor-banner span {
+    font-size: 0.875rem;
+    color: #1e40af;
+    font-weight: 500;
+  }
 
-            <!-- Contact & Email -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
-                <input type="text" name="phone" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
-              </div>
+  /* Section dividers */
+  .dp-section {
+    margin-bottom: 2rem;
+  }
 
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input type="email" name="email" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
-              </div>
-            </div>
+  .dp-section-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
 
-            <!-- Submit -->
-            <div class="text-center mt-6">
-              <button type="submit" class="px-10 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 shadow-lg transition">
-                Submit
-              </button>
-            </div>
+  .dp-section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
 
-          </form>
-        </div>
+  /* Grid */
+  .dp-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .dp-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+  .dp-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+
+  @media (max-width: 768px) {
+    .dp-grid-3, .dp-grid-4, .dp-grid-2 { grid-template-columns: 1fr; }
+    .dp-card-body { padding: 1.25rem; }
+    .md-span2 { grid-column: span 1 !important; }
+  }
+
+  .md-span2 { grid-column: span 2; }
+
+  /* Field */
+  .dp-field { display: flex; flex-direction: column; gap: 0.4rem; }
+
+  .dp-label {
+    font-size: 0.775rem;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.01em;
+  }
+
+  .dp-input {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--input-bg);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+
+  .dp-input:hover { border-color: #c4c9d6; background: var(--surface); }
+  .dp-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    background: var(--surface);
+  }
+
+  .dp-input::placeholder { color: #9ca3af; }
+
+  /* Native select styled */
+  .dp-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6l4 4 4-4' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    padding-right: 2.2rem;
+    cursor: pointer;
+  }
+
+  /* ---- Custom Search Dropdown ---- */
+  .csd-wrapper { position: relative; }
+  .csd-wrapper .dp-native { display: none; }
+
+  .csd-trigger {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.65rem 0.9rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--input-bg);
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    user-select: none;
+  }
+
+  .csd-trigger:hover { border-color: #c4c9d6; background: var(--surface); }
+  .csd-open .csd-trigger {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+    background: var(--surface);
+  }
+
+  .csd-badge {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    background: var(--accent-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+
+  .csd-text { flex: 1; }
+  .csd-val {
+    font-size: 0.875rem; font-weight: 500;
+    color: var(--text); display: block; line-height: 1.2;
+  }
+  .csd-val.ph { color: #9ca3af; font-weight: 400; }
+  .csd-sub { font-size: 0.68rem; color: var(--muted); margin-top: 1px; }
+
+  .csd-arrow { color: var(--muted); transition: transform 0.22s; flex-shrink: 0; }
+  .csd-open .csd-arrow { transform: rotate(180deg); }
+
+  .csd-panel {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.1);
+    z-index: 200;
+    overflow: hidden;
+    opacity: 0; transform: translateY(-6px) scale(0.98);
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+  .csd-open .csd-panel { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; }
+
+  .csd-search-box { padding: 0.6rem; border-bottom: 1px solid var(--border); }
+  .csd-search-inner { position: relative; }
+
+  .csd-search-inner svg {
+    position: absolute; left: 0.55rem; top: 50%;
+    transform: translateY(-50%); color: var(--muted); pointer-events: none;
+  }
+
+  .csd-search-inner input {
+    width: 100%; padding: 0.5rem 0.75rem 0.5rem 2rem;
+    border: 1.5px solid var(--border); border-radius: 7px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.83rem;
+    color: var(--text); background: var(--input-bg); outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .csd-search-inner input:focus { border-color: var(--accent); background: var(--surface); }
+  .csd-search-inner input::placeholder { color: #9ca3af; }
+
+  .csd-list { max-height: 200px; overflow-y: auto; padding: 0.35rem; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+  .csd-item {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: 7px; cursor: pointer;
+    transition: background 0.12s;
+  }
+  .csd-item:hover { background: var(--hover); }
+  .csd-item.active { background: var(--accent-light); }
+
+  .csd-item-icon {
+    width: 26px; height: 26px; border-radius: 6px;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; flex-shrink: 0;
+  }
+  .csd-item.active .csd-item-icon { background: rgba(37,99,235,0.12); }
+
+  .csd-item-label { flex: 1; font-size: 0.845rem; font-weight: 500; color: var(--text); }
+
+  .csd-item-check { color: var(--accent); opacity: 0; transition: opacity 0.12s; }
+  .csd-item.active .csd-item-check { opacity: 1; }
+
+  .csd-empty { text-align: center; padding: 1rem; font-size: 0.82rem; color: var(--muted); }
+
+  /* Submit */
+  .dp-submit-wrap { padding-top: 1rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.75rem; }
+
+  .dp-btn-ghost {
+    padding: 0.7rem 1.5rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem; font-weight: 500;
+    color: var(--muted); background: transparent;
+    cursor: pointer; text-decoration: none;
+    transition: all 0.2s; display: inline-flex; align-items: center;
+  }
+  .dp-btn-ghost:hover { background: var(--hover); color: var(--text); }
+
+  .dp-btn-primary {
+    padding: 0.7rem 2rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem; font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    box-shadow: 0 4px 14px rgba(37,99,235,0.3);
+  }
+  .dp-btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,99,235,0.35); }
+  .dp-btn-primary:active { transform: translateY(0); }
+</style>
+
+<div class="w-full dp-wrap">
+
+  <!-- Page header -->
+  <div class="dp-page-header">
+    <nav class="dp-breadcrumb">
+      <a href="{{ url_for('admin.admin_doctors') }}">Doctors</a>
+      <span>›</span>
+      <span>Create Profile</span>
+    </nav>
+    <a class="dp-close-btn" href="{{ url_for('admin.admin_doctors') }}" title="Close">✕</a>
+  </div>
+
+  <div class="dp-card">
+
+    <!-- Card Header -->
+    <div class="dp-card-header">
+      <div class="dp-header-icon">🩺</div>
+      <div>
+        <h3>Create Doctor Profile</h3>
+        <p>Fill in all required fields to register a new doctor</p>
       </div>
+    </div>
+
+    <div class="dp-card-body">
+
+      {% if selected_account %}
+      <div class="dp-doctor-banner">
+        <div class="avatar">👤</div>
+        <span>Creating profile for <strong>Dr. {{ selected_account.username }}</strong></span>
+      </div>
+      {% endif %}
+
+      <form method="POST" class="space-y-0">
+
+        <!-- Personal Information -->
+        <div class="dp-section">
+          <div class="dp-section-label">Personal Information</div>
+          <div class="dp-grid-3" style="margin-bottom:1rem">
+            <div class="dp-field">
+              <label class="dp-label">First Name <span style="color:#ef4444">*</span></label>
+              <input type="text" name="firstname" class="dp-input" placeholder="e.g. Juan" required>
+            </div>
+            <div class="dp-field">
+              <label class="dp-label">Middle Name</label>
+              <input type="text" name="middlename" class="dp-input" placeholder="Optional">
+            </div>
+            <div class="dp-field">
+              <label class="dp-label">Last Name <span style="color:#ef4444">*</span></label>
+              <input type="text" name="lastname" class="dp-input" placeholder="e.g. Dela Cruz" required>
+            </div>
+          </div>
+
+          <div class="dp-grid-4" style="margin-bottom:1rem">
+            <div class="dp-field">
+              <label class="dp-label">Age <span style="color:#ef4444">*</span></label>
+              <input type="number" name="age" class="dp-input" placeholder="e.g. 35" min="18" max="100" required>
+            </div>
+            <div class="dp-field md-span2">
+              <label class="dp-label">Blood Type <span style="color:#ef4444">*</span></label>
+              <select name="bloodtype" class="dp-input dp-select" required>
+                <option value="" disabled selected>Select blood type</option>
+                <option>A+</option><option>A−</option>
+                <option>B+</option><option>B−</option>
+                <option>AB+</option><option>AB−</option>
+                <option>O+</option><option>O−</option>
+              </select>
+            </div>
+            <div class="dp-field">
+              <label class="dp-label">Height (cm) <span style="color:#ef4444">*</span></label>
+              <input type="text" name="height" class="dp-input" placeholder="e.g. 170" required>
+            </div>
+            <div class="dp-field">
+              <label class="dp-label">Weight (kg) <span style="color:#ef4444">*</span></label>
+              <input type="text" name="weight" class="dp-input" placeholder="e.g. 68" required>
+            </div>
+          </div>
+
+          <div class="dp-grid-3">
+            <div class="dp-field">
+              <label class="dp-label">Gender <span style="color:#ef4444">*</span></label>
+              <select name="gender" class="dp-input dp-select" required>
+                <option value="" disabled selected>Select gender</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Undecided</option>
+              </select>
+            </div>
+            <div class="dp-field">
+              <label class="dp-label">Date of Birth <span style="color:#ef4444">*</span></label>
+              <input type="date" name="dob" class="dp-input" required>
+            </div>
+            <div class="dp-field">
+              <label class="dp-label">Place of Birth <span style="color:#ef4444">*</span></label>
+              <input type="text" name="pob" class="dp-input" placeholder="e.g. Davao City" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- Professional -->
+        <div class="dp-section">
+          <div class="dp-section-label">Professional Details</div>
+          <div class="dp-grid-3" style="margin-bottom:1rem">
+
+            <!-- Search Dropdown: Specialization -->
+            <div class="dp-field">
+              <label class="dp-label">Specialization <span style="color:#ef4444">*</span></label>
+              <div class="csd-wrapper" id="specCsd">
+                <input class="dp-native" type="hidden" name="specialization" id="specVal" required>
+                <div class="csd-trigger" id="specTrigger">
+                  <div class="csd-badge" id="specBadge">🔬</div>
+                  <div class="csd-text">
+                    <span class="csd-val ph" id="specLabel">Select specialization</span>
+                    <span class="csd-sub" id="specSub" style="display:none"></span>
+                  </div>
+                  <svg class="csd-arrow" width="15" height="15" viewBox="0 0 16 16" fill="none">
+                    <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <div class="csd-panel" id="specPanel">
+                  <div class="csd-search-box">
+                    <div class="csd-search-inner">
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                      <input type="text" id="specSearch" placeholder="Search...">
+                    </div>
+                  </div>
+                  <div class="csd-list" id="specList"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="dp-field">
+              <label class="dp-label">Degree <span style="color:#ef4444">*</span></label>
+              <select name="degree" class="dp-input dp-select" required>
+                <option value="" disabled selected>Degree level</option>
+                <option>College Level</option>
+                <option>Vocational Level</option>
+                <option>Master's Degree</option>
+                <option>Doctorate</option>
+              </select>
+            </div>
+
+            <div class="dp-field">
+              <label class="dp-label">Civil Status <span style="color:#ef4444">*</span></label>
+              <select name="civilstatus" class="dp-input dp-select" required>
+                <option value="" disabled selected>Select status</option>
+                <option>Single</option>
+                <option>Married</option>
+                <option>Separated</option>
+                <option>Widow</option>
+                <option>Divorced</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="dp-grid-2">
+            <div class="dp-field">
+              <label class="dp-label">Nationality <span style="color:#ef4444">*</span></label>
+              <input type="text" name="nationality" class="dp-input" placeholder="e.g. Filipino" required>
+            </div>
+            <div class="dp-field">
+              <label class="dp-label">Religion</label>
+              <input type="text" name="religion" class="dp-input" placeholder="e.g. Roman Catholic">
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="dp-section">
+          <div class="dp-section-label">Contact Information</div>
+          <div class="dp-grid-2">
+            <div class="dp-field">
+              <label class="dp-label">Contact Number <span style="color:#ef4444">*</span></label>
+              <input type="text" name="phone" class="dp-input" placeholder="+63 9XX XXX XXXX" required>
+            </div>
+            <div class="dp-field">
+              <label class="dp-label">Email Address <span style="color:#ef4444">*</span></label>
+              <input type="email" name="email" class="dp-input" placeholder="doctor@example.com" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="dp-submit-wrap">
+          <a href="{{ url_for('admin.admin_doctors') }}" class="dp-btn-ghost">Cancel</a>
+          <button type="submit" class="dp-btn-primary">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M13 5l-6 6-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Create Profile
+          </button>
+        </div>
+
+      </form>
     </div>
   </div>
 </div>
+
+<script>
+(function() {
+  const specs = [
+    { value: 'dermatology',   label: 'Dermatology',   icon: '✨', sub: 'Skin & Hair' },
+    { value: 'dentistry',     label: 'Dentistry',     icon: '🦷', sub: 'Oral Health' },
+    { value: 'psychiatry',    label: 'Psychiatry',    icon: '🧠', sub: 'Mental Health' },
+    { value: 'biochemistry',  label: 'Biochemistry',  icon: '⚗️', sub: 'Lab Sciences' },
+    { value: 'radiology',     label: 'Radiology',     icon: '🩻', sub: 'Imaging' },
+    { value: 'neurology',     label: 'Neurology',     icon: '🔬', sub: 'Brain & Nerves' },
+    { value: 'biology',       label: 'Biology',       icon: '🧬', sub: 'Life Sciences' },
+  ];
+
+  const wrapper  = document.getElementById('specCsd');
+  const trigger  = document.getElementById('specTrigger');
+  const panel    = document.getElementById('specPanel');
+  const list     = document.getElementById('specList');
+  const search   = document.getElementById('specSearch');
+  const valInput = document.getElementById('specVal');
+  const labelEl  = document.getElementById('specLabel');
+  const subEl    = document.getElementById('specSub');
+  const badgeEl  = document.getElementById('specBadge');
+
+  let chosen = null;
+
+  function render(q) {
+    const f = q ? specs.filter(s => s.label.toLowerCase().includes(q.toLowerCase())) : specs;
+    list.innerHTML = '';
+    if (!f.length) { list.innerHTML = '<div class="csd-empty">No results</div>'; return; }
+    f.forEach(s => {
+      const el = document.createElement('div');
+      el.className = 'csd-item' + (chosen === s.value ? ' active' : '');
+      el.innerHTML = `
+        <div class="csd-item-icon">${s.icon}</div>
+        <span class="csd-item-label">${s.label}</span>
+        <svg class="csd-item-check" width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 8l4 4 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      `;
+      el.addEventListener('click', () => pick(s));
+      list.appendChild(el);
+    });
+  }
+
+  function pick(s) {
+    chosen = s.value;
+    valInput.value = s.value;
+    labelEl.textContent = s.label;
+    labelEl.classList.remove('ph');
+    badgeEl.textContent = s.icon;
+    subEl.textContent = s.sub;
+    subEl.style.display = 'block';
+    close();
+  }
+
+  function open() { wrapper.classList.add('csd-open'); search.value = ''; render(''); setTimeout(() => search.focus(), 40); }
+  function close() { wrapper.classList.remove('csd-open'); }
+
+  trigger.addEventListener('click', () => wrapper.classList.contains('csd-open') ? close() : open());
+  search.addEventListener('input', e => render(e.target.value));
+  document.addEventListener('click', e => { if (!wrapper.contains(e.target)) close(); });
+
+  render('');
+})();
+</script>
+
 {% endblock %}

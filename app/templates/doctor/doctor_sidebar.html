@@ -84,6 +84,21 @@
                         </a>
                     </li>
 
+                    <!-- secretary -->
+                    <li>
+                        <a href="{{ url_for('doctor.list_secretaries')}}"
+                            class="sidebar-link flex items-center gap-3 p-3 rounded-xl hover:bg-blue-100 transition
+                            {% if request.endpoint == 'doctor.doctor_patients' %}
+                                bg-blue-100 text-blue-700 shadow-md shadow-blue-200 font-semibold
+                            {% else %}
+                                hover:bg-blue-100 hover:text-blue-700
+                            {% endif %}">
+
+                            <i class="sidebar-icon ri-team-line text-xl text-gray-500 group-hover:text-blue-700"></i>
+                            <span class="font-medium sidebar-text">My Staffs</span>
+                        </a>
+                    </li>
+
                     <!-- Profile -->
                     <li>
                         <a href="{{ url_for('doctor.doctor_profile', doctor_id=doctor.doctor_id) }}"

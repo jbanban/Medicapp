@@ -29,6 +29,12 @@ class PatientHistoryBackground(db.Model):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow
     )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
 
     # ---------------- RELATIONSHIPS ----------------
     patient: Mapped["Patient"] = relationship(back_populates="history")

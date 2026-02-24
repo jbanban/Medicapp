@@ -1,8 +1,8 @@
-"""initial schema
+"""initial
 
-Revision ID: 797f80a47e83
+Revision ID: e0380534d607
 Revises: 
-Create Date: 2026-02-04 08:19:00.527323
+Create Date: 2026-02-24 12:21:59.950631
 
 """
 from alembic import op
@@ -10,9 +10,8 @@ import sqlalchemy as sa
 from app.security.encrypted_column import EncryptedColumn
 
 
-
 # revision identifiers, used by Alembic.
-revision = '797f80a47e83'
+revision = 'e0380534d607'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -27,17 +26,9 @@ def upgrade():
     sa.Column('role', sa.String(length=20), nullable=False),
     sa.Column('active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('account_id'),
     sa.UniqueConstraint('username')
-    )
-    op.create_table('medical_visibility',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('patient_id', sa.Integer(), nullable=False),
-    sa.Column('encrypted_state', sa.Text(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=True),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('patient_id')
     )
     op.create_table('doctor',
     sa.Column('doctor_id', sa.Integer(), autoincrement=True, nullable=False),
@@ -88,31 +79,36 @@ def upgrade():
     sa.Column('permanent_city', EncryptedColumn(), nullable=False),
     sa.Column('permanent_province', EncryptedColumn(), nullable=False),
     sa.Column('permanent_zipcode', EncryptedColumn(), nullable=False),
-    sa.Column('phone', EncryptedColumn(), nullable=False),
-    sa.Column('email', EncryptedColumn(), nullable=True),
+    sa.Column('phone', sa.String(), nullable=False),
+    sa.Column('phone_otp', EncryptedColumn(), nullable=True),
+    sa.Column('phone_otp_expiry', sa.DateTime(), nullable=True),
+    sa.Column('phone_verified', sa.Boolean(), nullable=False),
+    sa.Column('email', sa.String(), nullable=True),
+    sa.Column('email_otp', EncryptedColumn(), nullable=True),
+    sa.Column('email_otp_expiry', sa.DateTime(), nullable=True),
+    sa.Column('email_verified', sa.Boolean(), nullable=False),
     sa.Column('ec_name', EncryptedColumn(), nullable=True),
     sa.Column('ec_phone', EncryptedColumn(), nullable=True),
     sa.Column('ec_relation', EncryptedColumn(), nullable=True),
     sa.Column('ec_address', EncryptedColumn(), nullable=True),
     sa.Column('profile_image', sa.String(), nullable=True),
+    sa.Column('missed_appointments', sa.Integer(), nullable=True),
+    sa.Column('is_suspended', sa.Boolean(), nullable=True),
+    sa.Column('suspended_at', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['account_id'], ['account.account_id'], ),
     sa.PrimaryKeyConstraint('patient_id'),
     sa.UniqueConstraint('account_id')
     )
-    op.create_table('appointment',
-    sa.Column('appointment_id', sa.Integer(), autoincrement=True, nullable=False),
+    op.create_table('appointment_visibility',
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('patient_id', sa.Integer(), nullable=False),
-    sa.Column('doctor_id', sa.Integer(), nullable=False),
-    sa.Column('appointment_date', sa.String(length=10), nullable=False),
-    sa.Column('appointment_time', sa.String(length=10), nullable=False),
-    sa.Column('reason', EncryptedColumn(), nullable=True),
-    sa.Column('notes', EncryptedColumn(), nullable=True),
-    sa.Column('status', sa.String(length=20), nullable=False),
+    sa.Column('visibility_meta', sa.JSON(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['doctor_id'], ['doctor.doctor_id'], ),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['patient_id'], ['patient.patient_id'], ),
-    sa.PrimaryKeyConstraint('appointment_id')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('doctor_schedule',
     sa.Column('doctor_schedule_id', sa.Integer(), autoincrement=True, nullable=False),
@@ -127,6 +123,65 @@ def upgrade():
     sa.PrimaryKeyConstraint('doctor_schedule_id'),
     sa.UniqueConstraint('doctor_id', 'vacant_date', 'start_time', 'end_time', name='uq_doctor_slot')
     )
+    op.create_table('doctor_secretary',
+    sa.Column('secretary_id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('account_id', sa.Integer(), nullable=False),
+    sa.Column('doctor_id', sa.Integer(), nullable=False),
+    sa.Column('first_name', sa.String(length=100), nullable=False),
+    sa.Column('last_name', sa.String(length=100), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['account_id'], ['account.account_id'], ),
+    sa.ForeignKeyConstraint(['doctor_id'], ['doctor.doctor_id'], ),
+    sa.PrimaryKeyConstraint('secretary_id'),
+    sa.UniqueConstraint('account_id')
+    )
+    op.create_table('doctors_background',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('doctor_id', sa.Integer(), nullable=False),
+    sa.Column('type', sa.String(length=50), nullable=False),
+    sa.Column('title', sa.String(length=150), nullable=False),
+    sa.Column('organization', sa.String(length=150), nullable=True),
+    sa.Column('year', sa.String(length=20), nullable=True),
+    sa.Column('description', sa.Text(), nullable=True),
+    sa.Column('clinic_name', sa.String(length=150), nullable=True),
+    sa.Column('clinic_address', sa.String(length=255), nullable=True),
+    sa.Column('clinic_days', sa.String(length=100), nullable=True),
+    sa.Column('clinic_hours_from', sa.String(length=100), nullable=True),
+    sa.Column('clinic_hours_to', sa.String(length=100), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['doctor_id'], ['doctor.doctor_id'], ondelete='CASCADE'),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('medical_visibility',
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('patient_id', sa.Integer(), nullable=False),
+    sa.Column('pastMedicalHistory', sa.Boolean(), nullable=False),
+    sa.Column('beenHospitalized', sa.Boolean(), nullable=False),
+    sa.Column('hadSurgery', sa.Boolean(), nullable=False),
+    sa.Column('allergies', sa.Boolean(), nullable=False),
+    sa.Column('ongoingMedications', sa.Boolean(), nullable=False),
+    sa.Column('familyHistory', sa.Boolean(), nullable=False),
+    sa.Column('socialHistory', sa.Boolean(), nullable=False),
+    sa.Column('immunizations', sa.Boolean(), nullable=False),
+    sa.Column('recentTravelHistory', sa.Boolean(), nullable=False),
+    sa.Column('otherRelevantInfo', sa.Boolean(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['patient_id'], ['patient.patient_id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('patient_id')
+    )
+    op.create_table('notifications',
+    sa.Column('notification_id', sa.Integer(), nullable=False),
+    sa.Column('patient_id', sa.Integer(), nullable=False),
+    sa.Column('title', sa.String(length=100), nullable=False),
+    sa.Column('message', sa.String(length=255), nullable=False),
+    sa.Column('type', sa.String(length=50), nullable=False),
+    sa.Column('is_read', sa.Boolean(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['patient_id'], ['patient.patient_id'], ),
+    sa.PrimaryKeyConstraint('notification_id')
+    )
     op.create_table('patient_history_background',
     sa.Column('phb_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('patient_id', sa.Integer(), nullable=False),
@@ -137,27 +192,50 @@ def upgrade():
     sa.Column('ongoingMedications', EncryptedColumn(), nullable=True),
     sa.Column('familyHistory', EncryptedColumn(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['patient_id'], ['patient.patient_id'], ),
     sa.PrimaryKeyConstraint('phb_id')
+    )
+    op.create_table('appointment',
+    sa.Column('appointment_id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('patient_id', sa.Integer(), nullable=False),
+    sa.Column('doctor_id', sa.Integer(), nullable=False),
+    sa.Column('doctor_schedule_id', sa.Integer(), nullable=True),
+    sa.Column('appointment_date', sa.String(length=10), nullable=False),
+    sa.Column('appointment_time', sa.String(length=20), nullable=False),
+    sa.Column('reason', EncryptedColumn(), nullable=True),
+    sa.Column('notes', EncryptedColumn(), nullable=True),
+    sa.Column('status', sa.String(length=20), nullable=False),
+    sa.Column('type', sa.String(length=30), nullable=False),
+    sa.Column('reminder_1hr_sent', sa.Boolean(), nullable=False),
+    sa.Column('reminder_ontime_sent', sa.Boolean(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['doctor_id'], ['doctor.doctor_id'], ),
+    sa.ForeignKeyConstraint(['doctor_schedule_id'], ['doctor_schedule.doctor_schedule_id'], ),
+    sa.ForeignKeyConstraint(['patient_id'], ['patient.patient_id'], ),
+    sa.PrimaryKeyConstraint('appointment_id')
     )
     op.create_table('medical_record',
     sa.Column('record_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('patient_id', sa.Integer(), nullable=False),
     sa.Column('doctor_id', sa.Integer(), nullable=False),
-    sa.Column('schedule_id', sa.Integer(), nullable=False),
+    sa.Column('appointment_id', sa.Integer(), nullable=False),
     sa.Column('visit_date', sa.String(length=10), nullable=False),
-    sa.Column('diagnosis', sa.String(), nullable=False),
-    sa.Column('notes', sa.String(), nullable=False),
+    sa.Column('diagnosis', EncryptedColumn(), nullable=False),
+    sa.Column('notes', EncryptedColumn(), nullable=False),
+    sa.Column('second_op', EncryptedColumn(), nullable=True),
+    sa.Column('third_op', EncryptedColumn(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['appointment_id'], ['appointment.appointment_id'], ),
     sa.ForeignKeyConstraint(['doctor_id'], ['doctor.doctor_id'], ),
     sa.ForeignKeyConstraint(['patient_id'], ['patient.patient_id'], ),
-    sa.ForeignKeyConstraint(['schedule_id'], ['doctor_schedule.doctor_schedule_id'], ),
     sa.PrimaryKeyConstraint('record_id')
     )
     op.create_table('payment_record',
     sa.Column('payment_record_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('appointment_id', sa.Integer(), nullable=False),
-    sa.Column('amount', sa.String(length=20), nullable=False),
+    sa.Column('amount', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('payment_status', sa.String(length=20), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['appointment_id'], ['appointment.appointment_id'], ),
@@ -170,11 +248,15 @@ def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('payment_record')
     op.drop_table('medical_record')
-    op.drop_table('patient_history_background')
-    op.drop_table('doctor_schedule')
     op.drop_table('appointment')
+    op.drop_table('patient_history_background')
+    op.drop_table('notifications')
+    op.drop_table('medical_visibility')
+    op.drop_table('doctors_background')
+    op.drop_table('doctor_secretary')
+    op.drop_table('doctor_schedule')
+    op.drop_table('appointment_visibility')
     op.drop_table('patient')
     op.drop_table('doctor')
-    op.drop_table('medical_visibility')
     op.drop_table('account')
     # ### end Alembic commands ###
