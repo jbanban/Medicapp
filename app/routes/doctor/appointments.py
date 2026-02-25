@@ -1,15 +1,16 @@
-from flask import render_template, redirect, request, url_for, flash
+from flask import render_template, redirect, request, url_for, flash, abort
 from flask_login import current_user, login_required
 from app.services.email_services import send_email
 from datetime import date, datetime
 from app.models.doctor import Doctor
 from app.models.appointment import Appointment
 from app.models.doctor_schedule import Doctor_Schedule
+from app.models.doctor_secretary import Doctor_Secretary
 from app.models.payment import PaymentRecord
 from app.routes.patient import Patient
 from app.models.medical_record import MedicalRecord
 from app.services.patient_cache import get_patient_cache
-from app.services.audit_services import log_activity
+from app.routes.patient.notification import create_notification
 from app import db
 from . import doctor_bp
 
@@ -17,10 +18,22 @@ from . import doctor_bp
 @doctor_bp.route('/appointments')
 @login_required
 def doctors_appointment():
-    doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
+        
+    doctor = None
+
+    if current_user.role == "doctor":
+        doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
+
+    elif current_user.role == "secretary":
+        secretary = Doctor_Secretary.query.filter_by(account_id=current_user.account_id).first()
+        if not secretary:
+            abort(403)
+        doctor = secretary.doctor 
 
     tab = request.args.get('tab', 'all')
-    today = date.today().isoformat()
+    today = date.today()
 
     page = request.args.get('page', 1, type=int)
     per_page = 5
@@ -30,6 +43,12 @@ def doctors_appointment():
         .join(Patient, Appointment.patient_id == Patient.patient_id)
         .filter(Appointment.doctor_id == doctor.doctor_id)
     )
+
+    missed = Appointment.query.filter_by(
+        doctor_id=doctor.doctor_id,
+        status = 'Missed',          # adjust to match your actual status string
+        appointment_date = today
+    ).all()
 
     if tab == 'today':
         appointments_query = appointments_query.filter(
@@ -69,19 +88,24 @@ def doctors_appointment():
     for appointment in appointments.items:
         appointment.patient_data = get_patient_cache(appointment.patient_id)
 
+
     return render_template(
         'doctor/doctor_appointment.html',
         appointments=appointments.items,
         pagination=appointments,
         doctor=doctor,
         tab=tab,
-        ongoing_appointment=ongoing_appointment
+        ongoing_appointment=ongoing_appointment,
+        missed_appointments=missed   
     )
 
 
 @doctor_bp.route('/view_profile/<int:patient_id>')
 @login_required
 def view_profile(patient_id):
+    if current_user.role != "doctor":
+        return redirect (url_for('misc.forbidden'))
+
     patient = Patient.query.get(patient_id)
     
     doctor = Doctor.query.filter_by(account_id=current_user.account_id)
@@ -89,11 +113,6 @@ def view_profile(patient_id):
     # 🔹 cache patient data
     patient_data = get_patient_cache(patient_id)
 
-    log_activity(
-        account_id=current_user.account_id,
-        action="Viewed Profile",
-        description=f"Dr. {doctor.firstname} {doctor.lastname}, Viewed Patient Profile of {patient_data.full_name}."
-    )
 
     return render_template(
         'patient/viewProfile.html',
@@ -105,13 +124,19 @@ def view_profile(patient_id):
 @doctor_bp.route('/appointments')
 @login_required
 def view_appointments():
-    doctor = Doctor.query.filter_by(
-        account_id=current_user.account_id
-    ).first()
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
 
-    if not doctor:
-        flash("Please complete your doctor profile.", "warning")
-        return redirect(url_for('doctor.create_doctor_profile'))
+    doctor = None
+
+    if current_user.role == "doctor":
+        doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
+
+    elif current_user.role == "secretary":
+        secretary = Doctor_Secretary.query.filter_by(account_id=current_user.account_id).first()
+        if not secretary:
+            abort(403)
+        doctor = secretary.doctor 
 
     # Get query parameters
     patient_id = request.args.get("patient_id")
@@ -160,6 +185,8 @@ def view_appointments():
 @doctor_bp.route('/accept_appointment/<int:appointment_id>', methods=['POST'])
 @login_required
 def accept_appointment(appointment_id):
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
     appointment = Appointment.query.get(appointment_id)
     if not appointment:
         return redirect(url_for('doctor.doctors_appointment'))
@@ -167,24 +194,19 @@ def accept_appointment(appointment_id):
     db.session.commit()
     flash('Appointment Request Successfully Accepted','success')
 
-    log_activity(
-        account_id=current_user.account_id,
-        action="Accept Appointment",
-        description=f"Doctor Accept appointment ID {appointment.appointment_id}"
-    )
 
     send_email(
         subject="Appointment Confirmation – Successfully Booked",
         recipient=appointment.patient.email,
         body=f"""
-            Dear {appointment.patient.first_name} {appointment.patient.last_name},
+            Dear {appointment.patient.firstname} {appointment.patient.lastname},
 
             Good day.
 
             We are pleased to inform you that your appointment has been successfully scheduled.
 
             Appointment Details:
-            Doctor: Dr. {appointment.doctor.first_name} {appointment.doctor.last_name}
+            Doctor: Dr. {appointment.doctor.firstname} {appointment.doctor.lastname}
             Date: {appointment.appointment_date}
             Time: {appointment.appointment_time}
             Type: {appointment.type}
@@ -205,17 +227,13 @@ def accept_appointment(appointment_id):
 @doctor_bp.route('/reject_appointment/<int:appointment_id>', methods=['POST'])
 @login_required
 def reject_appointment(appointment_id):
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
     appointment = Appointment.query.get(appointment_id)
     if not appointment:
         return redirect(url_for('doctor.doctors_appointment'))
     appointment.status = 'Rejected'
     db.session.commit()
-
-    log_activity(
-        account_id=current_user.account_id,
-        action="Reject Appointment",
-        description=f"Doctor Rejects appointment ID {appointment.appointment_id}"
-    )
 
     flash('Appointment Request Successfully Rejected','success')
     return redirect(url_for('doctor.doctors_appointment'))
@@ -223,17 +241,13 @@ def reject_appointment(appointment_id):
 @doctor_bp.route('/check-in/<int:appointment_id>', methods=['POST'])
 @login_required
 def check_in_patient(appointment_id):
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
     appointment = Appointment.query.get(appointment_id)
     if not appointment:
         return redirect(url_for('doctor.doctors_appointment'))
     appointment.status = 'Ongoing'
     db.session.commit()
-
-    log_activity(
-        account_id=current_user.account_id,
-        action="Patient Check-in",
-        description=f"Patient ID {appointment.patient_id} is currently check-in for his/her appointment {appointment.appointment_id}"
-    )
 
     flash('Patient is Currently Checked-in.', 'success')
     return redirect(url_for('doctor.doctors_appointment'))
@@ -241,16 +255,13 @@ def check_in_patient(appointment_id):
 @doctor_bp.route('/done_appointment/<int:appointment_id>', methods=['POST'])
 @login_required
 def done_appointment(appointment_id):
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
     appointment = Appointment.query.get(appointment_id)
     if not appointment:
         return redirect(url_for('doctor.doctors_appointment'))
     appointment.status = 'Done'
 
-    log_activity(
-        account_id=current_user.account_id,
-        action="Done Appointment",
-        description=f"Doctor successfully {appointment.reason} appointment ID {appointment.appointment_id}."
-    )
 
     db.session.commit()
     return redirect(url_for('doctor.doctors_appointment'))
@@ -258,7 +269,8 @@ def done_appointment(appointment_id):
 @doctor_bp.route('/diagnosis_record/<int:appointment_id>', methods=['POST'])
 @login_required
 def appointment_diagnosis(appointment_id):
-
+    if current_user.role != "doctor":
+        abort(403)
     appointment = Appointment.query.get_or_404(appointment_id)
     doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
 
@@ -287,6 +299,8 @@ def appointment_diagnosis(appointment_id):
 @doctor_bp.route('/pay_appointment/<int:appointment_id>', methods=['POST'])
 @login_required
 def pay_appointment(appointment_id):
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
     appointment = Appointment.query.get_or_404(appointment_id)
 
     if request.method == 'POST':
@@ -306,15 +320,16 @@ def pay_appointment(appointment_id):
             payment_status='Paid'
         )
 
+        create_notification(
+            patient_id=appointment.patient.patient_id,
+            title='Payment Received',
+            message=f'Your payment of ₱{amount} has been received.',
+            type='payment'
+        )
+
         db.session.add(new_payment)
         db.session.commit()
-
-        log_activity(
-            account_id=current_user.account_id,
-            action="Appointment Paid",
-            description=f"Appointment ID: {appointment.appointment_id} has been Successfully Paid."
-        )
-            
+        
         flash('Appointment Successfully Paid.', 'success')
         return redirect(url_for('doctor.doctors_appointment'))
 
@@ -322,7 +337,8 @@ def pay_appointment(appointment_id):
 @doctor_bp.route("/appointment/<int:appointment_id>/update_status/<string:action>", methods=["POST"])
 @login_required
 def update_appointment_status(appointment_id, action):
-
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
     doctor = Doctor.query.filter_by(account_id=current_user.account_id).first_or_404()
 
     appointment = Appointment.query.get_or_404(appointment_id)
@@ -358,11 +374,18 @@ def update_appointment_status(appointment_id, action):
 @doctor_bp.route('/cancel_appointment/<int:appointment_id>', methods=['POST'])
 @login_required
 def cancel_appointment(appointment_id):
+    if current_user.role not in ["doctor", "secretary"]:
+        abort(403)
+    doctor = None
 
-    doctor = Doctor.query.filter_by(
-        account_id=current_user.account_id
-    ).first_or_404()
+    if current_user.role == "doctor":
+        doctor = Doctor.query.filter_by(account_id=current_user.account_id).first()
 
+    elif current_user.role == "secretary":
+        secretary = Doctor_Secretary.query.filter_by(account_id=current_user.account_id).first()
+        if not secretary:
+            abort(403)
+        doctor = secretary.doctor 
     appointment = Appointment.query.get_or_404(appointment_id)
 
     if appointment.doctor_id != doctor.doctor_id:
@@ -397,22 +420,16 @@ def cancel_appointment(appointment_id):
 
         flash('Appointment automatically rescheduled to nearest available time.', 'success')
 
-        log_activity(
-            account_id=current_user.account_id,
-            action="Appointment automatic Reschedule",
-            description=f"Doctor cancelled appointment ID {appointment.appointment_id} and is atomatically Rescheduled."
-        )
-
         send_email(
             subject="Appointment Rescheduled Notice",
             recipient=appointment.patient.email,
             body=f"""
-                Dear {appointment.patient.first_name} {appointment.patient.last_name},
+                Dear {appointment.patient.firstname} {appointment.patient.lastname},
 
                 Good day.
 
                 Please be informed that your previously scheduled appointment with 
-                Dr. {doctor.first_name} {doctor.last_name} has been rescheduled
+                Dr. {doctor.firstname} {doctor.lastname} has been rescheduled
                 due to unforeseen circumstances.
 
                 New Appointment Details:
@@ -438,21 +455,16 @@ def cancel_appointment(appointment_id):
 
         flash('No available schedule found. Appointment cancelled.', 'warning')
 
-        log_activity(
-            account_id=current_user.account_id,
-            action="Cancel Appointment",
-            description=f"Doctor cancelled appointment ID {appointment.appointment_id}"
-        )
         send_email(
             subject="Notice of Appointment Cancellation",
             recipient=appointment.patient.email,
             body=f"""
-                Dear {appointment.patient.first_name} {appointment.patient.last_name},
+                Dear {appointment.patient.firstname} {appointment.patient.lastname},
 
                 Good day.
 
                 We regret to inform you that your scheduled appointment with 
-                Dr. {doctor.first_name} {doctor.last_name} on 
+                Dr. {doctor.firstname} {doctor.lastname} on 
                 {appointment.appointment_date} at {appointment.appointment_time}
                 has been cancelled due to unforeseen circumstances.
 
@@ -471,6 +483,5 @@ def cancel_appointment(appointment_id):
                 """
             )
         
-
     return redirect(url_for('doctor.doctors_appointment'))
 

@@ -18,6 +18,12 @@ class MedicalRecord(db.Model):
     second_op: Mapped[str] = mapped_column(EncryptedColumn(), nullable=True)
     third_op: Mapped[str] = mapped_column(EncryptedColumn(), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
 
     patient: Mapped["Patient"] = relationship(back_populates="records")
     doctor: Mapped["Doctor"] = relationship(back_populates="records")

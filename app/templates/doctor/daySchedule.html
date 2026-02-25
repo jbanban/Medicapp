@@ -1,0 +1,652 @@
+{% extends 'base/layout.html' %}
+{% block title %}Day Schedule | MEDICAPP{% endblock %}
+
+{% block content %}
+<div class="flex w-full bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+
+    {% include 'doctor/doctor_sidebar.html' %}
+    {% include 'base/notification.html' %}
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col">
+
+        <!-- Top Header -->
+        <header class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+            <div class="flex items-center justify-between px-6 py-4">
+                <div class="flex items-center gap-4">
+                    <button class="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition" id="menuToggle">
+                        <i class="fas fa-bars text-lg"></i>
+                    </button>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Day Schedule</h1>
+                        <p class="text-sm text-gray-500 mt-0.5">
+                            <i class="fas fa-calendar-day mr-1 text-blue-500"></i>
+                            {{ selected_date.strftime('%A, %B %d, %Y') if selected_date else today.strftime('%A, %B %d, %Y') }}
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="relative p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition">
+                        <i class="fas fa-bell text-lg"></i>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    <div class="flex items-center gap-3 pl-3 border-l border-gray-200">
+                        <div class="hidden sm:block text-right">
+                            <p class="text-sm font-semibold text-gray-800">{{ doctor.firstname }} {{ doctor.lastname }}</p>
+                            <p class="text-xs text-gray-500">Medical Doctor</p>
+                        </div>
+                        <a href="{{ url_for('doctor.doctor_profile', doctor_id=doctor.doctor_id) }}" class="flex items-center gap-2 group">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-white grid place-items-center font-semibold shadow-md group-hover:shadow-lg transition">
+                                {{ doctor.firstname[0] }}{{ doctor.lastname[0] }}
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="flex-1 p-6 lg:p-8">
+
+            <!-- Date Navigator -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-2">
+                    <a href="{{ url_for('doctor.day_schedule', date=prev_date) }}"
+                       class="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition shadow-sm">
+                        <i class="fas fa-chevron-left text-sm"></i>
+                    </a>
+                    <a href="{{ url_for('doctor.day_schedule', date=next_date) }}"
+                       class="p-2 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition shadow-sm">
+                        <i class="fas fa-chevron-right text-sm"></i>
+                    </a>
+                    <a href="{{ url_for('doctor.day_schedule') }}"
+                       class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm ml-2">
+                        Today
+                    </a>
+                </div>
+
+                <!-- Summary Badges -->
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                        <i class="fas fa-clock"></i>
+                        {{ appointments|selectattr('status', 'equalto', 'Pending')|list|length }} Pending
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-green-50 text-green-700 border border-green-200">
+                        <i class="fas fa-check-circle"></i>
+                        {{ appointments|selectattr('status', 'equalto', 'Booked')|list|length }} Booked
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-orange-50 text-orange-700 border border-orange-200">
+                        <i class="fas fa-spinner"></i>
+                        {{ appointments|selectattr('status', 'equalto', 'Ongoing')|list|length }} Ongoing
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                        <i class="fas fa-check-double"></i>
+                        {{ appointments|selectattr('status', 'equalto', 'Done')|list|length }} Done
+                    </span>
+                </div>
+            </div>
+
+            <!-- Day Schedule Timeline -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+
+                <!-- Column Headers -->
+                <div class="grid grid-cols-[100px_1fr] border-b border-gray-100 bg-gray-50">
+                    <div class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide border-r border-gray-100">Time</div>
+                    <div class="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Appointments</div>
+                </div>
+
+                <!-- Time Slots -->
+                <div id="timelineContainer">
+                    {% set hours = range(7, 20) %}
+                    {% for hour in hours %}
+                        {% set hour_str_24 = '%02d:00'|format(hour) %}
+                        {% set hour_str_30 = '%02d:30'|format(hour) %}
+                        {% set display_hour = hour if hour <= 12 else hour - 12 %}
+                        {% set ampm = 'AM' if hour < 12 else 'PM' %}
+                        {% set display_hour_12 = 12 if hour == 12 else display_hour %}
+
+                        <!-- Full Hour Slot -->
+                        <div class="grid grid-cols-[100px_1fr] border-b border-gray-100 min-h-[70px] hover:bg-blue-50/20 transition group time-slot"
+                             data-time="{{ hour_str_24 }}">
+                            <div class="px-4 py-3 border-r border-gray-100 flex items-start pt-3">
+                                <span class="text-xs font-semibold text-gray-400 whitespace-nowrap">
+                                    {{ display_hour_12 }}:00 {{ ampm }}
+                                </span>
+                            </div>
+                            <div class="px-4 py-2 flex flex-col gap-2 relative">
+
+                                {# Match appointments to this hour slot #}
+                                {% for appointment in appointments %}
+                                    {% set appt_hour = appointment.appointment_time[:2]|int %}
+                                    {% set appt_min = appointment.appointment_time[3:5]|int %}
+                                    {% if appt_hour == hour and appt_min < 30 %}
+
+                                        <!-- Appointment Card in Timeline -->
+                                        <div class="appointment-entry flex items-center gap-3 bg-white border rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition group/card
+                                            {% if appointment.status == 'Booked' %} border-green-200 bg-green-50/50
+                                            {% elif appointment.status == 'Ongoing' %} border-orange-200 bg-orange-50/50
+                                            {% elif appointment.status == 'Done' %} border-blue-200 bg-blue-50/50
+                                            {% elif appointment.status == 'Paid' %} border-emerald-200 bg-emerald-50/50
+                                            {% elif appointment.status == 'Pending' %} border-amber-200 bg-amber-50/50
+                                            {% elif appointment.status == 'Cancelled' %} border-gray-200 bg-gray-50/50
+                                            {% elif appointment.status == 'Rejected' %} border-red-200 bg-red-50/50
+                                            {% else %} border-gray-200
+                                            {% endif %}"
+                                            data-status="{{ appointment.status }}"
+                                            data-patient="{{ appointment.patient_data.firstname }} {{ appointment.patient_data.lastname }}">
+
+                                            <!-- Left color bar -->
+                                            <div class="w-1 self-stretch rounded-full flex-shrink-0
+                                                {% if appointment.status == 'Booked' %} bg-green-500
+                                                {% elif appointment.status == 'Ongoing' %} bg-orange-500
+                                                {% elif appointment.status == 'Done' %} bg-blue-500
+                                                {% elif appointment.status == 'Paid' %} bg-emerald-500
+                                                {% elif appointment.status == 'Pending' %} bg-amber-500
+                                                {% elif appointment.status == 'Cancelled' %} bg-gray-400
+                                                {% elif appointment.status == 'Rejected' %} bg-red-500
+                                                {% else %} bg-gray-300
+                                                {% endif %}">
+                                            </div>
+
+                                            <!-- Time Badge -->
+                                            <div class="flex-shrink-0 text-center">
+                                                <p class="text-xs font-bold text-gray-700">{{ appointment.appointment_time }}</p>
+                                            </div>
+
+                                            <!-- Avatar -->
+                                            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                                                {{ appointment.patient_data.firstname[0] }}{{ appointment.patient_data.lastname[0] }}
+                                            </div>
+
+                                            <!-- Patient Info -->
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center gap-2">
+                                                    <p class="text-sm font-bold text-gray-900 truncate">
+                                                        {{ appointment.patient_data.firstname }} {{ appointment.patient_data.lastname }}
+                                                    </p>
+                                                    <!-- Status Badge -->
+                                                    {% if appointment.status == 'Booked' %}
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-700">
+                                                            <i class="fas fa-check-circle text-[10px]"></i> Booked
+                                                        </span>
+                                                    {% elif appointment.status == 'Pending' %}
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-700">
+                                                            <i class="fas fa-clock text-[10px]"></i> Pending
+                                                        </span>
+                                                    {% elif appointment.status == 'Ongoing' %}
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                                                            <i class="fas fa-spinner text-[10px]"></i> Ongoing
+                                                        </span>
+                                                    {% elif appointment.status == 'Done' %}
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-700">
+                                                            <i class="fas fa-check-double text-[10px]"></i> Done
+                                                        </span>
+                                                    {% elif appointment.status == 'Paid' %}
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-700">
+                                                            <i class="fas fa-money-bill-wave text-[10px]"></i> Paid
+                                                        </span>
+                                                    {% elif appointment.status == 'Cancelled' %}
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">
+                                                            <i class="fas fa-ban text-[10px]"></i> Cancelled
+                                                        </span>
+                                                    {% elif appointment.status == 'Rejected' %}
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-700">
+                                                            <i class="fas fa-times-circle text-[10px]"></i> Rejected
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                                <p class="text-xs text-gray-500 truncate mt-0.5">
+                                                    <i class="fas fa-stethoscope mr-1 text-gray-400"></i>
+                                                    {{ appointment.reason|default('General consultation') }}
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-0.5">
+                                                    <i class="fas fa-id-card mr-1"></i> P-00{{ appointment.patient_data.patient_id }}
+                                                </p>
+                                            </div>
+
+                                            <!-- Action Buttons -->
+                                            <div class="flex items-center gap-2 flex-shrink-0">
+
+                                                <!-- Today tab logic (since day schedule IS today-focused) -->
+                                                {% if appointment.status == 'Booked' %}
+
+                                                    {% if ongoing_appointment and ongoing_appointment.appointment_id != appointment.appointment_id %}
+                                                        <!-- Another is ongoing - disable -->
+                                                        <button class="p-2 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed" title="Another appointment is ongoing">
+                                                            <i class="fas fa-ban text-sm"></i>
+                                                        </button>
+                                                    {% else %}
+                                                        <!-- Check In -->
+                                                        <form method="POST"
+                                                              action="{{ url_for('doctor.update_appointment_status', appointment_id=appointment.appointment_id, action='checkin') }}">
+                                                            <button type="submit"
+                                                                    class="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition shadow-sm"
+                                                                    title="Check In">
+                                                                <i class="fas fa-sign-in-alt text-sm"></i>
+                                                            </button>
+                                                        </form>
+                                                        <!-- Cancel -->
+                                                        <form action="{{ url_for('doctor.cancel_appointment', appointment_id=appointment.appointment_id) }}" method="POST">
+                                                            <button type="submit"
+                                                                    class="p-2 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition"
+                                                                    title="Cancel Appointment">
+                                                                <i class="fas fa-times text-sm"></i>
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+
+                                                {% elif appointment.status == 'Ongoing' %}
+
+                                                    <!-- Diagnosis -->
+                                                    <button onclick="openCheckInModal(
+                                                                {{ appointment.appointment_id }},
+                                                                {{ appointment.doctor_id }},
+                                                                {{ appointment.patient_data.patient_id }},
+                                                                '{{ appointment.patient_data.firstname }} {{ appointment.patient_data.lastname }}'
+                                                            )"
+                                                            class="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition shadow-sm"
+                                                            title="Diagnosis">
+                                                        <i class="fas fa-stethoscope text-sm"></i>
+                                                    </button>
+                                                    <!-- Mark as Done -->
+                                                    <form method="POST"
+                                                          action="{{ url_for('doctor.update_appointment_status', appointment_id=appointment.appointment_id, action='done') }}">
+                                                        <button type="submit"
+                                                                class="p-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition shadow-sm"
+                                                                title="Mark as Done">
+                                                            <i class="fas fa-check text-sm"></i>
+                                                        </button>
+                                                    </form>
+
+                                                {% elif appointment.status == 'Done' %}
+
+                                                    <!-- Process Payment -->
+                                                    <button onclick="openPaymentModal(
+                                                                {{ appointment.appointment_id }},
+                                                                '{{ appointment.patient_data.firstname }} {{ appointment.patient_data.lastname }}',
+                                                                'P-00{{ appointment.patient_data.patient_id }}',
+                                                                '{{ appointment.appointment_time }}'
+                                                            )"
+                                                            class="p-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition shadow-sm"
+                                                            title="Process Payment">
+                                                        <i class="fas fa-credit-card text-sm"></i>
+                                                    </button>
+
+                                                {% elif appointment.status == 'Paid' %}
+
+                                                    <button class="p-2 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed" title="Payment Completed">
+                                                        <i class="fas fa-check-double text-sm"></i>
+                                                    </button>
+
+                                                {% elif appointment.status == 'Pending' %}
+
+                                                    <!-- Accept -->
+                                                    <form action="{{ url_for('doctor.accept_appointment', appointment_id=appointment.appointment_id) }}" method="POST">
+                                                        <button type="submit"
+                                                                class="p-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition shadow-sm"
+                                                                title="Accept">
+                                                            <i class="fas fa-check text-sm"></i>
+                                                        </button>
+                                                    </form>
+                                                    <!-- Reject -->
+                                                    <form action="{{ url_for('doctor.reject_appointment', appointment_id=appointment.appointment_id) }}" method="POST">
+                                                        <button type="submit"
+                                                                class="p-2 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition"
+                                                                title="Reject">
+                                                            <i class="fas fa-times text-sm"></i>
+                                                        </button>
+                                                    </form>
+
+                                                {% endif %}
+
+                                                <!-- Always: View Records -->
+                                                <a href="{{ url_for('patient.viewProfile', patient_id=appointment.patient_data.patient_id) }}"
+                                                   target="_blank"
+                                                   class="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
+                                                   title="View Patient Records">
+                                                    <i class="fas fa-folder-open text-sm"></i>
+                                                </a>
+
+                                            </div>
+                                        </div>
+
+                                    {% endif %}
+                                {% endfor %}
+
+                            </div>
+                        </div>
+
+                        <!-- Half Hour Slot -->
+                        <div class="grid grid-cols-[100px_1fr] border-b border-dashed border-gray-100 min-h-[70px] hover:bg-blue-50/10 transition time-slot"
+                             data-time="{{ hour_str_30 }}">
+                            <div class="px-4 py-3 border-r border-dashed border-gray-100 flex items-start pt-3">
+                                <span class="text-xs text-gray-300 whitespace-nowrap">{{ display_hour_12 }}:30</span>
+                            </div>
+                            <div class="px-4 py-2 flex flex-col gap-2">
+
+                                {% for appointment in appointments %}
+                                    {% set appt_hour = appointment.appointment_time[:2]|int %}
+                                    {% set appt_min = appointment.appointment_time[3:5]|int %}
+                                    {% if appt_hour == hour and appt_min >= 30 %}
+
+                                        <div class="appointment-entry flex items-center gap-3 bg-white border rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition
+                                            {% if appointment.status == 'Booked' %} border-green-200 bg-green-50/50
+                                            {% elif appointment.status == 'Ongoing' %} border-orange-200 bg-orange-50/50
+                                            {% elif appointment.status == 'Done' %} border-blue-200 bg-blue-50/50
+                                            {% elif appointment.status == 'Paid' %} border-emerald-200 bg-emerald-50/50
+                                            {% elif appointment.status == 'Pending' %} border-amber-200 bg-amber-50/50
+                                            {% elif appointment.status == 'Cancelled' %} border-gray-200 bg-gray-50/50
+                                            {% elif appointment.status == 'Rejected' %} border-red-200 bg-red-50/50
+                                            {% else %} border-gray-200
+                                            {% endif %}"
+                                            data-status="{{ appointment.status }}"
+                                            data-patient="{{ appointment.patient_data.firstname }} {{ appointment.patient_data.lastname }}">
+
+                                            <div class="w-1 self-stretch rounded-full flex-shrink-0
+                                                {% if appointment.status == 'Booked' %} bg-green-500
+                                                {% elif appointment.status == 'Ongoing' %} bg-orange-500
+                                                {% elif appointment.status == 'Done' %} bg-blue-500
+                                                {% elif appointment.status == 'Paid' %} bg-emerald-500
+                                                {% elif appointment.status == 'Pending' %} bg-amber-500
+                                                {% elif appointment.status == 'Cancelled' %} bg-gray-400
+                                                {% elif appointment.status == 'Rejected' %} bg-red-500
+                                                {% else %} bg-gray-300
+                                                {% endif %}">
+                                            </div>
+
+                                            <div class="flex-shrink-0 text-center">
+                                                <p class="text-xs font-bold text-gray-700">{{ appointment.appointment_time }}</p>
+                                            </div>
+
+                                            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                                                {{ appointment.patient_data.firstname[0] }}{{ appointment.patient_data.lastname[0] }}
+                                            </div>
+
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-center gap-2">
+                                                    <p class="text-sm font-bold text-gray-900 truncate">
+                                                        {{ appointment.patient_data.firstname }} {{ appointment.patient_data.lastname }}
+                                                    </p>
+                                                    {% if appointment.status == 'Booked' %}
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-700"><i class="fas fa-check-circle text-[10px]"></i> Booked</span>
+                                                    {% elif appointment.status == 'Pending' %}
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-100 text-amber-700"><i class="fas fa-clock text-[10px]"></i> Pending</span>
+                                                    {% elif appointment.status == 'Ongoing' %}
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-800"><i class="fas fa-spinner text-[10px]"></i> Ongoing</span>
+                                                    {% elif appointment.status == 'Done' %}
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-700"><i class="fas fa-check-double text-[10px]"></i> Done</span>
+                                                    {% elif appointment.status == 'Paid' %}
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-700"><i class="fas fa-money-bill-wave text-[10px]"></i> Paid</span>
+                                                    {% elif appointment.status == 'Cancelled' %}
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-600"><i class="fas fa-ban text-[10px]"></i> Cancelled</span>
+                                                    {% elif appointment.status == 'Rejected' %}
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-700"><i class="fas fa-times-circle text-[10px]"></i> Rejected</span>
+                                                    {% endif %}
+                                                </div>
+                                                <p class="text-xs text-gray-500 truncate mt-0.5">
+                                                    <i class="fas fa-stethoscope mr-1 text-gray-400"></i>
+                                                    {{ appointment.reason|default('General consultation') }}
+                                                </p>
+                                                <p class="text-xs text-gray-400 mt-0.5">
+                                                    <i class="fas fa-id-card mr-1"></i> P-00{{ appointment.patient_data.patient_id }}
+                                                </p>
+                                            </div>
+
+                                            <div class="flex items-center gap-2 flex-shrink-0">
+                                                {% if appointment.status == 'Booked' %}
+                                                    {% if ongoing_appointment and ongoing_appointment.appointment_id != appointment.appointment_id %}
+                                                        <button class="p-2 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed" title="Unavailable">
+                                                            <i class="fas fa-ban text-sm"></i>
+                                                        </button>
+                                                    {% else %}
+                                                        <form method="POST" action="{{ url_for('doctor.update_appointment_status', appointment_id=appointment.appointment_id, action='checkin') }}">
+                                                            <button type="submit" class="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition shadow-sm" title="Check In">
+                                                                <i class="fas fa-sign-in-alt text-sm"></i>
+                                                            </button>
+                                                        </form>
+                                                        <form action="{{ url_for('doctor.cancel_appointment', appointment_id=appointment.appointment_id) }}" method="POST">
+                                                            <button type="submit" class="p-2 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition" title="Cancel">
+                                                                <i class="fas fa-times text-sm"></i>
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+                                                {% elif appointment.status == 'Ongoing' %}
+                                                    <button onclick="openCheckInModal({{ appointment.appointment_id }}, {{ appointment.doctor_id }}, {{ appointment.patient_data.patient_id }}, '{{ appointment.patient_data.firstname }} {{ appointment.patient_data.lastname }}')"
+                                                            class="p-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition shadow-sm" title="Diagnosis">
+                                                        <i class="fas fa-stethoscope text-sm"></i>
+                                                    </button>
+                                                    <form method="POST" action="{{ url_for('doctor.update_appointment_status', appointment_id=appointment.appointment_id, action='done') }}">
+                                                        <button type="submit" class="p-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition shadow-sm" title="Mark as Done">
+                                                            <i class="fas fa-check text-sm"></i>
+                                                        </button>
+                                                    </form>
+                                                {% elif appointment.status == 'Done' %}
+                                                    <button onclick="openPaymentModal({{ appointment.appointment_id }}, '{{ appointment.patient_data.firstname }} {{ appointment.patient_data.lastname }}', 'P-00{{ appointment.patient_data.patient_id }}', '{{ appointment.appointment_time }}')"
+                                                            class="p-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition shadow-sm" title="Process Payment">
+                                                        <i class="fas fa-credit-card text-sm"></i>
+                                                    </button>
+                                                {% elif appointment.status == 'Paid' %}
+                                                    <button class="p-2 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed" title="Payment Completed">
+                                                        <i class="fas fa-check-double text-sm"></i>
+                                                    </button>
+                                                {% elif appointment.status == 'Pending' %}
+                                                    <form action="{{ url_for('doctor.accept_appointment', appointment_id=appointment.appointment_id) }}" method="POST">
+                                                        <button type="submit" class="p-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition shadow-sm" title="Accept">
+                                                            <i class="fas fa-check text-sm"></i>
+                                                        </button>
+                                                    </form>
+                                                    <form action="{{ url_for('doctor.reject_appointment', appointment_id=appointment.appointment_id) }}" method="POST">
+                                                        <button type="submit" class="p-2 rounded-lg bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition" title="Reject">
+                                                            <i class="fas fa-times text-sm"></i>
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                                <a href="{{ url_for('patient.viewProfile', patient_id=appointment.patient_data.patient_id) }}"
+                                                   target="_blank"
+                                                   class="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
+                                                   title="View Patient Records">
+                                                    <i class="fas fa-folder-open text-sm"></i>
+                                                </a>
+                                            </div>
+
+                                        </div>
+
+                                    {% endif %}
+                                {% endfor %}
+
+                            </div>
+                        </div>
+
+                    {% endfor %}
+                </div>
+
+                <!-- Empty State -->
+                {% if not appointments %}
+                <div class="p-16 text-center">
+                    <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-calendar-day text-3xl text-gray-300"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">No Appointments Today</h3>
+                    <p class="text-sm text-gray-500">There are no appointments scheduled for this day.</p>
+                </div>
+                {% endif %}
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ===== Check-In / Diagnosis Modal ===== -->
+    <div id="checkInModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">Patient Diagnosis</h2>
+                        <p class="text-sm text-gray-600 mt-1" id="modalPatientName"></p>
+                    </div>
+                    <button onclick="closeCheckInModal()" class="text-gray-400 hover:text-gray-600 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <form method="POST" id="checkInForm">
+                <div class="p-6 space-y-6">
+                    <input type="hidden" name="appointment_id" id="appointmentId">
+                    <input type="hidden" name="patient_id" id="patientId">
+                    <input type="hidden" name="doctor_id" id="doctorId">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Visit Date <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <i class="fas fa-calendar absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="date" name="visit_date" id="visitDate" required class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Diagnosis <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <i class="fas fa-stethoscope absolute left-4 top-4 text-gray-400"></i>
+                            <textarea name="diagnosis" id="diagnosis" rows="4" required placeholder="Enter primary diagnosis and findings..." class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"></textarea>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Clinical Notes <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <i class="fas fa-notes-medical absolute left-4 top-4 text-gray-400"></i>
+                            <textarea name="notes" id="clinicalNotes" rows="6" required placeholder="Enter clinical observations, treatment plan, medications prescribed, follow-up instructions..." class="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"></textarea>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex gap-3">
+                            <i class="fas fa-info-circle text-blue-600 text-lg mt-0.5"></i>
+                            <div>
+                                <h4 class="text-sm font-semibold text-blue-900 mb-1">Medical Record Information</h4>
+                                <ul class="text-xs text-blue-800 space-y-1">
+                                    <li>• All fields marked with <span class="text-red-500">*</span> are required</li>
+                                    <li>• This record will be permanently saved to the patient's medical history</li>
+                                    <li>• Ensure all information is accurate before submitting</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 rounded-b-2xl">
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="closeCheckInModal()" class="flex-1 px-4 py-3 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                        <button type="submit" class="flex-1 px-4 py-3 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition shadow-sm">
+                            <i class="fas fa-save mr-2"></i>Save Medical Record
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== Payment Modal ===== -->
+    <div id="paymentModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-bold text-gray-900">Process Payment</h2>
+                <button onclick="closePaymentModal()" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <form method="POST" id="paymentForm" class="p-6 space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Patient Name</label>
+                    <input type="text" id="paymentPatientName" readonly class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Patient ID</label>
+                    <input type="text" id="paymentPatientId" readonly class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Appointment Time</label>
+                    <input type="text" id="paymentAppointmentTime" readonly class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 font-medium">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Consultation Fee</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold">₱</span>
+                        <input type="number" name="consultation_fee" id="consultationFee" step="0.01" min="0" placeholder="0.00" required class="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition">
+                    </div>
+                </div>
+            </form>
+            <div class="flex items-center gap-3 px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
+                <button type="button" onclick="closePaymentModal()" class="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                <button type="submit" form="paymentForm" class="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition shadow-sm">Confirm Payment</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// Auto-scroll to current time on load
+document.addEventListener('DOMContentLoaded', function () {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMin = now.getMinutes();
+    const targetTime = `${String(currentHour).padStart(2, '0')}:${currentMin < 30 ? '00' : '30'}`;
+
+    const slots = document.querySelectorAll('.time-slot');
+    slots.forEach(slot => {
+        if (slot.dataset.time === targetTime) {
+            slot.classList.add('ring-2', 'ring-blue-300', 'bg-blue-50/40');
+            setTimeout(() => slot.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+        }
+    });
+});
+
+// Check-In Modal
+function openCheckInModal(appointmentId, doctorId, patientId, patientName) {
+    const form = document.getElementById('checkInForm');
+    form.action = `/doctor/diagnosis_record/${appointmentId}`;
+    document.getElementById('appointmentId').value = appointmentId;
+    document.getElementById('doctorId').value = doctorId;
+    document.getElementById('patientId').value = patientId;
+    document.getElementById('modalPatientName').textContent = patientName;
+    document.getElementById('visitDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('checkInModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+function closeCheckInModal() {
+    document.getElementById('checkInModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    document.getElementById('checkInForm').reset();
+}
+
+// Payment Modal
+function openPaymentModal(appointmentId, patientName, patientId, appointmentTime) {
+    const form = document.getElementById('paymentForm');
+    form.action = `/doctor/pay_appointment/${appointmentId}`;
+    document.getElementById('paymentPatientName').value = patientName;
+    document.getElementById('paymentPatientId').value = patientId;
+    document.getElementById('paymentAppointmentTime').value = appointmentTime;
+    document.getElementById('consultationFee').value = '';
+    document.getElementById('paymentModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('consultationFee').focus(), 100);
+}
+function closePaymentModal() {
+    document.getElementById('paymentModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    document.getElementById('paymentForm').reset();
+}
+
+// Close on backdrop click
+['checkInModal', 'paymentModal'].forEach(id => {
+    document.getElementById(id).addEventListener('click', function (e) {
+        if (e.target === this) {
+            id === 'checkInModal' ? closeCheckInModal() : closePaymentModal();
+        }
+    });
+});
+
+// Close on Escape
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { closeCheckInModal(); closePaymentModal(); }
+});
+</script>
+
+{% endblock %}

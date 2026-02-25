@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from app.models.appointment import Appointment
     from app.models.medical_record import MedicalRecord
     from app.models.doctor_schedule import Doctor_Schedule
+    from app.models.doctor_secretary import Doctor_Secretary
 
 class Doctor(db.Model):
     __tablename__ = "doctor"
@@ -39,3 +40,4 @@ class Doctor(db.Model):
     appointments: Mapped[list["Appointment"]] = relationship(back_populates="doctor")
     records: Mapped[list["MedicalRecord"]] = relationship(back_populates="doctor")
     doctor_schedule: Mapped["Doctor_Schedule"] = relationship(back_populates="doctor")
+    secretary: Mapped["Doctor_Secretary"] = relationship(back_populates="doctor")

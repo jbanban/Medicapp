@@ -1,522 +1,1044 @@
 {% extends 'base/layout.html' %}
-{% block title %}Create Profile{% endblock %}
+{% block title %}Patient Profile{% endblock %}
 {% block content %}
 
-<div class="w-full bg-gray-100 p-6">
-    <div class=" max-w-5xl mx-auto bg-white rounded-xl shadow-md p-8">
-        
-        {% include 'base/notification.html' %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,300&family=DM+Sans:wght@300;400;500&display=swap');
 
+  :root {
+    --ink: #0f1117;
+    --paper: #f7f5f0;
+    --cream: #ede9e1;
+    --accent: #1a56db;
+    --accent-light: #e8effd;
+    --danger: #dc2626;
+    --success: #16a34a;
+    --muted: #6b7280;
+    --border: #d6d0c8;
+    --white: #ffffff;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.13);
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
 
-        <!-- Header -->
-        <div class="mb-8 items-center">
-            <h1 class="text-2xl font-semibold text-gray-800">Patient Profile</h1>
-            <p class="text-sm text-gray-600">Keep your information up to date for accurate medical records.</p>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  .profile-wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  /* ── Page Header ── */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .page-header-icon {
+    width: 52px;
+    height: 52px;
+    background: var(--accent);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(26,86,219,0.25);
+  }
+
+  .page-header-icon svg { color: white; }
+
+  .page-title {
+    font-family: 'Fraunces', serif;
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+
+  .page-subtitle {
+    font-size: 0.875rem;
+    color: var(--muted);
+    margin-top: 5px;
+    font-weight: 400;
+  }
+
+  /* ── Section Cards ── */
+  .section-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s;
+  }
+
+  .section-card:hover { box-shadow: var(--shadow-md); }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--cream);
+  }
+
+  .section-icon {
+    width: 34px;
+    height: 34px;
+    background: var(--accent-light);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  .section-desc {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ── Grid ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+
+  @media (max-width: 640px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .section-card { padding: 20px 18px; }
+  }
+
+  /* ── Form Fields ── */
+  .field { display: flex; flex-direction: column; gap: 5px; }
+
+  .field label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: 0.01em;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(26,86,219,0.12);
+    background: var(--white);
+  }
+
+  .field textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  .field .error-input { border-color: var(--danger) !important; }
+  .field .error-msg {
+    font-size: 0.75rem;
+    color: var(--danger);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* ── Subsection Label ── */
+  .subsection-label {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin: 22px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .subsection-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--cream);
+  }
+
+  /* ── Avatar Upload ── */
+  .avatar-upload-wrap {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 28px;
+    padding: 20px;
+    background: var(--paper);
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .avatar-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--cream);
+    border: 3px solid var(--white);
+    box-shadow: var(--shadow-md);
+    object-fit: cover;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--muted);
+    font-size: 2rem;
+  }
+
+  .avatar-preview img { width: 100%; height: 100%; object-fit: cover; display: none; }
+
+  .avatar-info h4 { font-size: 0.9rem; font-weight: 500; color: var(--ink); }
+  .avatar-info p { font-size: 0.76rem; color: var(--muted); margin-top: 3px; }
+
+  .btn-upload-avatar {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 10px;
+    padding: 8px 16px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .btn-upload-avatar:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+  /* ── File Dropzone ── */
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--paper);
+    position: relative;
+  }
+
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  .dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .dropzone-icon {
+    width: 44px;
+    height: 44px;
+    background: var(--cream);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    color: var(--muted);
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .dropzone:hover .dropzone-icon { background: var(--accent); color: white; }
+
+  .dropzone h4 {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .dropzone p { font-size: 0.76rem; color: var(--muted); }
+
+  .dropzone-hint {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 4px 10px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  /* ── File List ── */
+  .file-list { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    animation: slideIn 0.2s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .file-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+  }
+
+  .file-icon.pdf { background: #fee2e2; color: #dc2626; }
+  .file-icon.img { background: #dbeafe; color: #2563eb; }
+  .file-icon.doc { background: #e0f2fe; color: #0284c7; }
+  .file-icon.other { background: var(--cream); color: var(--muted); }
+
+  .file-meta { flex: 1; min-width: 0; }
+  .file-name { font-size: 0.82rem; font-weight: 500; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-size { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+
+  .file-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 4px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .file-remove:hover { color: var(--danger); background: #fee2e2; }
+
+  /* ── Toggle Switch ── */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--cream);
+  }
+
+  .toggle-row:last-child { border-bottom: none; }
+
+  .toggle-label h4 { font-size: 0.9rem; font-weight: 500; color: var(--ink); }
+  .toggle-label p { font-size: 0.76rem; color: var(--muted); margin-top: 2px; }
+
+  .switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+
+  .switch-track {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 24px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .switch-track::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .switch input:checked + .switch-track { background: var(--accent); }
+  .switch input:checked + .switch-track::after { transform: translateX(20px); }
+
+  /* ── Submit ── */
+  .btn-submit {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.1s, box-shadow 0.18s;
+    box-shadow: 0 4px 14px rgba(26,86,219,0.3);
+    letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-submit:hover {
+    background: #1648c0;
+    box-shadow: 0 6px 20px rgba(26,86,219,0.38);
+    transform: translateY(-1px);
+  }
+
+  .btn-submit:active { transform: translateY(0); }
+
+  /* ── Progress Steps ── */
+  .progress-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 32px;
+  }
+
+  .progress-step {
+    flex: 1;
+    height: 4px;
+    background: var(--cream);
+    border-radius: 4px;
+    transition: background 0.3s;
+  }
+
+  .progress-step.active { background: var(--accent); }
+
+</style>
+
+<div class="profile-wrap">
+
+  {% include 'base/notification.html' %}
+
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-header-icon">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+    </div>
+    <div>
+      <h1 class="page-title">Patient Profile</h1>
+      <p class="page-subtitle">Keep your information accurate for precise medical records and appointments.</p>
+    </div>
+  </div>
+
+  <!-- Section Progress -->
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-step active"></div>
+    <div class="progress-step"></div>
+    <div class="progress-step"></div>
+    <div class="progress-step"></div>
+  </div>
+
+  <form method="POST" enctype="multipart/form-data" class="space-form">
+
+    <!-- ═══════════════════ PHOTO UPLOAD ═══════════════════ -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="3"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </div>
+        <div>
+          <div class="section-title">Profile Photo</div>
+          <div class="section-desc">Upload a clear photo for identification.</div>
+        </div>
+      </div>
+
+      <div class="avatar-upload-wrap">
+        <div class="avatar-preview" id="avatarPreview">
+          <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          <img id="avatarImg" src="" alt="Profile Photo">
+        </div>
+        <div class="avatar-info">
+          <h4>Profile Photo</h4>
+           <p>JPG, PNG or WEBP. Max 5MB.</p>
+          <label class="btn-upload-avatar" for="avatarInput">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Upload Photo
+          </label>
+          <input type="file" id="avatarInput" name="profile_photo" accept="image/*" style="display:none">
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ PERSONAL INFO ═══════════════════ -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="section-title">Personal Information</div>
+          <div class="section-desc">Basic details for your medical record.</div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="field">
+          <label>First Name</label>
+          <input type="text" name="firstname" value="{{ data.firstname if data else '' }}"
+                 placeholder="Juan"
+                 class="{{ 'error-input' if errors and errors.firstname }}">
+          {% if errors and errors.firstname %}
+            <span class="error-msg">⚠ {{ errors.firstname }}</span>
+          {% endif %}
+        </div>
+        <div class="field">
+          <label>Middle Name</label>
+          <input type="text" name="middlename" value="{{ data.middlename if data else '' }}"
+                 placeholder="Santos">
+        </div>
+        <div class="field">
+          <label>Last Name</label>
+          <input type="text" name="lastname" value="{{ data.lastname if data else '' }}"
+                 placeholder="dela Cruz"
+                 class="{{ 'error-input' if errors and errors.lastname }}">
+          {% if errors and errors.lastname %}
+            <span class="error-msg">⚠ {{ errors.lastname }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-top:18px">
+        <div class="field">
+          <label>Gender</label>
+          <select name="gender">
+            <option disabled selected>-- Select --</option>
+            <option value="male" {% if data and data.gender == 'male' %}selected{% endif %}>Male</option>
+            <option value="female" {% if data and data.gender == 'female' %}selected{% endif %}>Female</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Birthdate</label>
+          <input type="date" id="birthdate" name="birthdate"
+                 value="{{ data.birthdate if data and data.birthdate else '' }}"
+                 class="{{ 'error-input' if errors and errors.birthdate }}">
+          {% if errors and errors.birthdate %}
+            <span class="error-msg">⚠ {{ errors.birthdate }}</span>
+          {% endif %}
+        </div>
+        <div class="field">
+          <label>Age</label>
+          <input type="number" name="age" id="age" value="{{ data.age if data else '' }}"
+                 placeholder="0" min="0" max="150">
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:18px">
+        <div class="field">
+          <label>Blood Type</label>
+          <select name="blood_type" class="{{ 'error-input' if errors and errors.blood_type }}">
+            <option disabled {% if not data or not data.blood_type %}selected{% endif %}>-- Select --</option>
+            {% for bt in ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'] %}
+              <option value="{{ bt }}" {% if data and data.blood_type == bt %}selected{% endif %}>{{ bt }}</option>
+            {% endfor %}
+          </select>
+          {% if errors and errors.blood_type %}
+            <span class="error-msg">⚠ {{ errors.blood_type }}</span>
+          {% endif %}
+        </div>
+        <div class="field">
+          <label>Civil Status</label>
+          <select name="civil_status">
+            <option disabled selected>-- Select --</option>
+            <option value="Single" {% if data and data.civil_status == 'Single' %}selected{% endif %}>Single</option>
+            <option value="Married" {% if data and data.civil_status == 'Married' %}selected{% endif %}>Married</option>
+            <option value="Widowed" {% if data and data.civil_status == 'Widowed' %}selected{% endif %}>Widowed</option>
+            <option value="Separated" {% if data and data.civil_status == 'Separated' %}selected{% endif %}>Separated</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ CONTACT & ADDRESS ═══════════════════ -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+        </div>
+        <div>
+          <div class="section-title">Contact & Address</div>
+          <div class="section-desc">Residential and contact details for official records.</div>
+        </div>
+      </div>
+
+      <div class="subsection-label">Current Residential Address</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>House / Unit / Lot No.</label>
+          <input type="text" name="current_house_no" placeholder="e.g. Lot 12, Unit 3"
+                 value="{{ data.current_house_no if data else '' }}"
+                 class="{{ 'error-input' if errors and errors.current_house_no }}">
+          {% if errors and errors.current_house_no %}<span class="error-msg">⚠ {{ errors.current_house_no }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label>Street Name</label>
+          <input type="text" name="current_street" placeholder="e.g. Rizal Street"
+                 class="{{ 'error-input' if errors and errors.current_street }}">
+          {% if errors and errors.current_street %}<span class="error-msg">⚠ {{ errors.current_street }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label>Barangay</label>
+          <input type="text" name="current_barangay" placeholder="e.g. Barangay San Isidro"
+                 class="{{ 'error-input' if errors and errors.current_barangay }}">
+          {% if errors and errors.current_barangay %}<span class="error-msg">⚠ {{ errors.current_barangay }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label>City / Municipality</label>
+          <input type="text" name="current_city" placeholder="e.g. Davao City"
+                 class="{{ 'error-input' if errors and errors.current_city }}">
+          {% if errors and errors.current_city %}<span class="error-msg">⚠ {{ errors.current_city }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label>Province</label>
+          <input type="text" name="current_province" placeholder="e.g. Davao del Sur"
+                 class="{{ 'error-input' if errors and errors.current_province }}">
+          {% if errors and errors.current_province %}<span class="error-msg">⚠ {{ errors.current_province }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label>Zip Code</label>
+          <input type="text" name="current_zipcode" placeholder="e.g. 8000"
+                 class="{{ 'error-input' if errors and errors.current_zipcode }}">
+          {% if errors and errors.current_zipcode %}<span class="error-msg">⚠ {{ errors.current_zipcode }}</span>{% endif %}
+        </div>
+      </div>
+
+      <div class="subsection-label">Permanent Address</div>
+      <div style="margin-bottom:10px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:0.82rem;cursor:pointer;color:var(--accent)">
+          <input type="checkbox" id="sameAsCurrentChk" style="width:auto;accent-color:var(--accent)">
+          Same as current address
+        </label>
+      </div>
+      <div class="grid-2" id="permanentFields">
+        <div class="field">
+          <label>House / Unit / Lot No.</label>
+          <input type="text" name="permanent_house_no"
+                 class="{{ 'error-input' if errors and errors.permanent_house_no }}">
+          {% if errors and errors.permanent_house_no %}<span class="error-msg">⚠ {{ errors.permanent_house_no }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label>Street Name</label>
+          <input type="text" name="permanent_street"
+                 class="{{ 'error-input' if errors and errors.permanent_street }}">
+          {% if errors and errors.permanent_street %}<span class="error-msg">⚠ {{ errors.permanent_street }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label>Barangay</label>
+          <input type="text" name="permanent_barangay"
+                 class="{{ 'error-input' if errors and errors.permanent_barangay }}">
+          {% if errors and errors.permanent_barangay %}<span class="error-msg">⚠ {{ errors.permanent_barangay }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label>City / Municipality</label>
+          <input type="text" name="permanent_city"
+                 class="{{ 'error-input' if errors and errors.permanent_city }}">
+          {% if errors and errors.permanent_city %}<span class="error-msg">⚠ {{ errors.permanent_city }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label>Province</label>
+          <input type="text" name="permanent_province"
+                 class="{{ 'error-input' if errors and errors.permanent_province }}">
+          {% if errors and errors.permanent_province %}<span class="error-msg">⚠ {{ errors.permanent_province }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label>Zip Code</label>
+          <input type="text" name="permanent_zipcode"
+                 class="{{ 'error-input' if errors and errors.permanent_zipcode }}">
+          {% if errors and errors.permanent_zipcode %}<span class="error-msg">⚠ {{ errors.permanent_zipcode }}</span>{% endif %}
+        </div>
+      </div>
+
+      <div class="subsection-label">Contact Details</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Mobile Number</label>
+          <input type="text" name="phone" placeholder="09123456789" inputmode="numeric"
+                 pattern="[0-9]{11}" maxlength="11"
+                 value="{{ data.phone if data else '' }}"
+                 class="{{ 'error-input' if errors and errors.phone }}"
+                 oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,11)">
+          {% if errors and errors.phone %}<span class="error-msg">⚠ {{ errors.phone }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" name="email" placeholder="juan.delacruz@email.com"
+                 class="{{ 'error-input' if errors and errors.email }}">
+          {% if errors and errors.email %}<span class="error-msg">⚠ {{ errors.email }}</span>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ EMERGENCY CONTACT ═══════════════════ -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.6 1.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6 6l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16a2 2 0 0 1 .27.92z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="section-title">Emergency Contact</div>
+          <div class="section-desc">Who should we contact in case of emergency?</div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="field">
+          <label>Contact Name</label>
+          <input type="text" name="ec_name" placeholder="Jane Doe"
+                 class="{{ 'error-input' if errors and errors.ec_name }}">
+          {% if errors and errors.ec_name %}<span class="error-msg">⚠ {{ errors.ec_name }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label>Relationship</label>
+          <input type="text" name="ec_relation" placeholder="Sister"
+                 class="{{ 'error-input' if errors and errors.ec_relation }}">
+          {% if errors and errors.ec_relation %}<span class="error-msg">⚠ {{ errors.ec_relation }}</span>{% endif %}
+        </div>
+        <div class="field">
+          <label>Phone Number</label>
+          <input type="text" name="ec_phone" placeholder="09129876543"
+                 inputmode="numeric" pattern="[0-9]{11}" maxlength="11"
+                 value="{{ data.ec_phone if data else '' }}"
+                 class="{{ 'error-input' if errors and errors.ec_phone }}"
+                 oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,11)">
+          {% if errors and errors.ec_phone %}<span class="error-msg">⚠ {{ errors.ec_phone }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="field" style="margin-top:18px">
+        <label>Complete Address</label>
+        <input type="text" name="ec_address" placeholder="123 Main St, City, Province"
+               class="{{ 'error-input' if errors and errors.ec_address }}">
+        {% if errors and errors.ec_address %}<span class="error-msg">⚠ {{ errors.ec_address }}</span>{% endif %}
+      </div>
+    </div>
+
+    <!-- ═══════════════════ MEDICAL HISTORY ═══════════════════ -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <div>
+          <div class="section-title">Medical History</div>
+          <div class="section-desc">Relevant medical background and current health status.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div class="field">
+          <label>Past Medical History</label>
+          <textarea name="pastMedicalHistory" rows="3" placeholder="List any prior illnesses, diagnoses, or conditions..."></textarea>
         </div>
 
-        <form method="POST" class="space-y-10">
+        <div class="grid-2">
+          <div class="field">
+            <label>Ever been hospitalized?</label>
+            <select name="beenHospitalized">
+              <option value="" disabled selected>-- Select --</option>
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Had any surgery?</label>
+            <select name="hadSurgery">
+              <option value="" disabled selected>-- Select --</option>
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </div>
+        </div>
 
-            <!-- Personal Information -->
-            <section>
-                <h2 class="text-lg font-semibold text-gray-800 mb-2">Personal Information</h2>
-                <p class="text-sm text-gray-600 mb-4">Enter your basic personal details.</p>
+        <div class="field">
+          <label>Allergies</label>
+          <textarea name="allergies" rows="2" placeholder="Food, medication, environmental allergies..."></textarea>
+        </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div class="field">
+          <label>Ongoing Medications</label>
+          <textarea name="ongoingMedications" rows="2" placeholder="Name, dosage, frequency..."></textarea>
+        </div>
 
-                    <!-- First Name -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">First Name</label>
-                        <input type="text" name="firstname"
-                                value="{{ data.firstname if data else '' }}"
-                                class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                                {{ 'border-red-500' if errors and errors.firstname }}">
-                                {% if errors and errors.firstname %}
-                                    <p class="text-red-600 text-xs mt-1">
-                                        {{ errors.firstname }} <span class="text-red-600">*</span>
-                                    </p>
-                                {% endif %}
-                    </div>
-
-                    <!-- Middle Name -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Middle Name</label>
-                        <input type="text" name="middlename"
-                            value="{{ data.middlename if data else '' }}"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.middlename }}">
-                            {% if errors and errors.middlename %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.middlename }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                    <!-- Last Name -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Last Name</label>
-                        <input type="text" name="lastname"
-                            value="{{ data.lastname if data else '' }}"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.lastname }}">
-                            {% if errors and errors.lastname %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.lastname }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-                </div>
-
-                <!-- Gender, Birthdate, Age -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-4">
-
-                    <!-- Gender -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Gender</label>
-                        <select name="gender"
-                                class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
-                            <option disabled selected>-- Select gender --</option>
-                            <option value="male"
-                                {% if data and data.gender == 'male' %}selected{% endif %}>
-                                Male</option>
-                            <option value="female"
-                                {% if data and data.gender == 'female' %}selected{% endif %}>
-                                Female</option>
-                        </select>
-                    </div>
-
-                    <!-- Birthdate -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Birthdate</label>
-                        <input type="date" name="birthdate"
-                            value="{{ data.birthdate if data else '' }}"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.birthdate }}">
-                            {% if errors and errors.birthdate %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.birthdate }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                    <!-- Age -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Age</label>
-                        <input type="number" name="age"
-                            value="{{ data.age if data else '' }}"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.age }}">
-                            {% if errors and errors.age %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.age }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                </div>
-
-                <!-- Blood Type & Civil Status -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
-
-                    <!-- Blood Type -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Blood Type</label>
-                        <input type="text" name="blood_type" placeholder="O+, A-, B+, AB+"
-                            value="{{ data.blood_type if data else '' }}"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.blood_type }}">
-                            {% if errors and errors.blood_type %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.blood_type }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                    <!-- Civil Status -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Civil Status</label>
-                        <select name="civil_status"
-                                class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400">
-                            <option disabled selected>-- Select status --</option>
-                            <option value="Single"
-                                {if data and data.civil_status == 'Single'} selected {endif}>
-                                    Single</option>
-                            <option value="Married"
-                                {if data and data.civil_status == 'Married'} selected {endif}> 
-                                    Married</option>
-                            <option value="Widowed"
-                                {if data and data.civil_status == 'Widowed'} selected {endif}>
-                                    Widowed</option>
-                            <option value="Separated"
-                                {if data and data.civil_status == 'Separated'} selected {endif}>
-                                    Separated</option>
-                        </select>
-                    </div>
-
-                </div>
-
-            </section>
-
-            <section class="pt-6 border-t">
-            <h2 class="text-lg font-semibold text-gray-800 mb-2">Contact and Address Information</h2>
-            <p class="text-sm text-gray-600 mb-4">
-                Please provide complete and accurate contact and residential address details for official records.
-            </p>
-
-            <!-- Current Address -->
-            <div class="mb-6">
-                <h3 class="text-md font-medium text-gray-700 mb-3">Current Residential Address</h3>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <!-- House / Unit No -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">House / Unit / Lot No.</label>
-                        <input type="text" name="current_house_no" placeholder="e.g. Lot 12, Unit 3"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.current_house_no }}">
-                            {% if errors and errors.current_house_no %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.current_house_no }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                    <!-- Street -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Street Name</label>
-                        <input type="text" name="current_street" placeholder="e.g. Rizal Street"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.current_street }}">
-                            {% if errors and errors.current_street %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.current_street }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                    <!-- Barangay -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Barangay</label>
-                        <input type="text" name="current_barangay" placeholder="e.g. Barangay San Isidro"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.current_barangay }}">
-                            {% if errors and errors.current_barangay %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.current_barangay }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                    <!-- City / Municipality -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">City / Municipality</label>
-                        <input type="text" name="current_city" placeholder="e.g. Davao City"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.current_city }}">
-                            {% if errors and errors.current_city %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.current_city }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                    <!-- Province -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Province</label>
-                        <input type="text" name="current_province" placeholder="e.g. Davao del Sur"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.current_province }}">
-                            {% if errors and errors.current_province %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.current_province }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                    <!-- Zip Code -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Zip Code</label>
-                        <input type="text" name="current_zipcode" placeholder="e.g. 8000"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.current_zipcode }}">
-                            {% if errors and errors.current_zipcode %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.current_zipcode }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Permanent Address -->
-            <div class="mb-6">
-                <h3 class="text-md font-medium text-gray-700 mb-3">Permanent Address</h3>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">House / Unit / Lot No.</label>
-                        <input type="text" name="permanent_house_no"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.permanent_house_no }}">
-                            {% if errors and errors.permanent_house_no %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.permanent_house_no }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Street Name</label>
-                        <input type="text" name="permanent_street"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.permanent_street }}">
-                            {% if errors and errors.permanent_street %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.permanent_street }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Barangay</label>
-                        <input type="text" name="permanent_barangay"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.permanent_barangay }}">
-                            {% if errors and errors.permanent_barangay %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.permanent_barangay }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">City / Municipality</label>
-                        <input type="text" name="permanent_city"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.permanent_city }}">
-                            {% if errors and errors.permanent_city %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.permanent_city }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Province</label>
-                        <input type="text" name="permanent_province"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.permanent_province }}">
-                            {% if errors and errors.permanent_province %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.permanent_province }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Zip Code</label>
-                        <input type="text" name="permanent_zipcode"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.permanent_zipcode }}">
-                            {% if errors and errors.permanent_zipcode %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.permanent_zipcode }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Contact Details -->
-            <div class="mb-6">
-                <h3 class="text-md font-medium text-gray-700 mb-3">Contact Details</h3>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <!-- Phone -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Mobile Number</label>
-                        <input type="text" name="phone" placeholder="e.g. 09123456789"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.phone }}">
-                            {% if errors and errors.phone %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.phone }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                    <!-- Email -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Email Address</label>
-                        <input type="email" name="email" placeholder="e.g. juan.dela.cruz@email.com"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.email }}">
-                            {% if errors and errors.email %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.email }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-                </div>
-            </div>
-        </section>
-
-
-            <!-- Emergency Contact -->
-            <section class="pt-6 border-t">
-                <h2 class="text-lg font-semibold text-gray-800 mb-2">Emergency Contact</h2>
-                <p class="text-sm text-gray-600 mb-4">Who should we call in case of emergency?</p>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-
-                    <!-- Emergency Contact Name -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Contact Name</label>
-                        <input type="text" name="ec_name" placeholder="Jane Doe"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.ec_name }}">
-                            {% if errors and errors.ec_name %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.ec_name }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                    <!-- Emergency Contact Relation -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Relation</label>
-                        <input type="text" name="ec_relation" placeholder="Sister"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.ec_relation }}">
-                            {% if errors and errors.ec_relation %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.ec_relation }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-
-                    <!-- Emergency Contact Phone -->
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Phone Number</label>
-                        <input type="text" name="ec_phone" placeholder="09129876543"
-                            class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                            {{ 'border-red-500' if errors and errors.ec_phone }}">
-                            {% if errors and errors.ec_phone %}
-                                <p class="text-red-600 text-xs mt-1">
-                                    {{ errors.ec_phone }} <span class="text-red-600">*</span>
-                                </p>
-                            {% endif %}
-                    </div>
-                </div>
-
-                <!-- Full Address -->
-                <div>
-                    <label class="block text-sm text-gray-700 mb-1 mt-4">Complete Address</label>
-                    <input type="text" name="ec_address" placeholder="123 Main St, City, Province"
-                        class="w-full p-2 border rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-400
-                        {{ 'border-red-500' if errors and errors.ec_address }}">
-                        {% if errors and errors.ec_address %}
-                            <p class="text-red-600 text-xs mt-1">
-                                {{ errors.ec_address }} <span class="text-red-600">*</span>
-                            </p>
-                        {% endif %}
-                </div>
-            </section>
-
-            <!-- MEDICAL HISTORY SECTION -->
-            <section class="pt-6 border-t">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Medical History</h2>
-
-                <div class="space-y-5">
-
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Past Medical History</label>
-                        <textarea name="pastMedicalHistory" rows="3" class="w-full p-2 border rounded-lg bg-gray-50"></textarea>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Have you ever been hospitalized?</label>
-                        <select name="beenHospitalized" class="w-full p-2 border rounded-lg bg-gray-50">
-                            <option value="" disabled selected>-- Select an option --</option>
-                            <option value="No">No</option>
-                            <option value="Yes">Yes</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Have you had any surgery?</label>
-                        <select name="hadSurgery" class="w-full p-2 border rounded-lg bg-gray-50">
-                            <option value="" disabled selected>-- Select an option --</option>
-                            <option value="No">No</option>
-                            <option value="Yes">Yes</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Allergies</label>
-                        <textarea name="allergies" rows="2" class="w-full p-2 border rounded-lg bg-gray-50"></textarea>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Ongoing Medications</label>
-                        <textarea name="ongoingMedications" rows="2" class="w-full p-2 border rounded-lg bg-gray-50"></textarea>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Family Medical History</label>
-                        <textarea name="familyHistory" rows="3" class="w-full p-2 border rounded-lg bg-gray-50"></textarea>
-                    </div>
-
-                </div>
-            </section>
-
-            <!-- Contact Preferences -->
-            <section class="pt-6 border-t">
-                <h2 class="text-lg font-semibold text-gray-800 mb-2">Contact Preferences</h2>
-                <p class="text-sm text-gray-600 mb-4">Choose how you want to be contacted.</p>
-
-                <!-- Email Notifications -->
-                <div class="flex justify-between items-center py-4 border-b">
-                    <div>
-                        <h4 class="font-medium text-gray-800">Email Notifications</h4>
-                        <p class="text-xs text-gray-500">Appointment updates and medical alerts.</p>
-                    </div>
-
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="toggle1" checked class="sr-only peer">
-                        <div
-                            class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-500 transition-colors"></div>
-                        <span
-                            class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transform transition-all peer-checked:translate-x-5"></span>
-                    </label>
-                </div>
-
-                <!-- SMS Notifications -->
-                <div class="flex justify-between items-center py-4 border-b">
-                    <div>
-                        <h4 class="font-medium text-gray-800">SMS Notifications</h4>
-                        <p class="text-xs text-gray-500">Text reminders for upcoming appointments.</p>
-                    </div>
-
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="toggle2" checked class="sr-only peer">
-                        <div
-                            class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:bg-blue-500 transition-colors"></div>
-                        <span
-                            class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transform transition-all peer-checked:translate-x-5"></span>
-                    </label>
-                </div>
-
-            </section>
-
-            <!-- Submit Button -->
-            <button type="submit"
-                class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-sm font-medium shadow-md transition">
-                Save Profile
-            </button>
-
-        </form>
-
+        <div class="field">
+          <label>Family Medical History</label>
+          <textarea name="familyHistory" rows="3" placeholder="Hereditary conditions, chronic illnesses in immediate family..."></textarea>
+        </div>
+      </div>
     </div>
-</div>
 
+    <!-- ═══════════════════ DOCUMENT UPLOADS ═══════════════════ -->
+    <div class="section-card">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+          </svg>
+        </div>
+        <div>
+          <div class="section-title">Medical Documents</div>
+          <div class="section-desc">Upload lab results, prescriptions, or any relevant medical files.</div>
+        </div>
+      </div>
+
+      <div class="dropzone" id="dropzone">
+        <input type="file" name="medical_docs" id="docsInput"
+               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.heic"
+               multiple>
+        <div class="dropzone-icon">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <h4>Drag & drop files here</h4>
+        <p>or click to browse from your device</p>
+        <span class="dropzone-hint">PDF · JPG · PNG · DOC · DOCX · Max 10MB each</span>
+      </div>
+
+      <div class="file-list" id="fileList"></div>
+    </div>
+
+    <!-- Submit -->
+    <button type="submit" class="btn-submit">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+        <polyline points="17 21 17 13 7 13"/>
+        <polyline points="7 3 7 8 15 8"/>
+      </svg>
+      Save Profile
+    </button>
+
+  </form>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+  /* ── Avatar Preview ── */
+  const avatarInput = document.getElementById('avatarInput');
+  const avatarPreview = document.getElementById('avatarPreview');
+  const avatarImg = document.getElementById('avatarImg');
+
+  if (avatarInput) {
+    avatarInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        avatarImg.src = e.target.result;
+        avatarImg.style.display = 'block';
+        avatarPreview.querySelector('svg').style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /* ── Birthdate → Auto Age ── */
+  const birthdateEl = document.getElementById('birthdate');
+  if (birthdateEl) {
+    birthdateEl.addEventListener('change', function () {
+      const bd = new Date(this.value);
+      if (isNaN(bd)) return;
+      const today = new Date();
+      let age = today.getFullYear() - bd.getFullYear();
+      const m = today.getMonth() - bd.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) age--;
+      document.getElementById('age').value = age;
+    });
+  }
+
+  /* ── Same as Current Address ── */
+  const sameChk = document.getElementById('sameAsCurrentChk');
+  if (sameChk) {
+    sameChk.addEventListener('change', function () {
+      const srcNames = ['current_house_no','current_street','current_barangay','current_city','current_province','current_zipcode'];
+      const dstNames = ['permanent_house_no','permanent_street','permanent_barangay','permanent_city','permanent_province','permanent_zipcode'];
+      const pFields = document.getElementById('permanentFields');
+      if (this.checked) {
+        srcNames.forEach((name, i) => {
+          const src = document.querySelector(`[name="${name}"]`);
+          const dst = document.querySelector(`[name="${dstNames[i]}"]`);
+          if (src && dst) dst.value = src.value;
+        });
+        pFields.style.opacity = '0.5';
+        pFields.style.pointerEvents = 'none';
+      } else {
+        pFields.style.opacity = '1';
+        pFields.style.pointerEvents = '';
+      }
+    });
+  }
+
+  /* ── File Upload / Dropzone ── */
+  const docsInput = document.getElementById('docsInput');
+  const dropzone = document.getElementById('dropzone');
+  const fileList = document.getElementById('fileList');
+  let uploadedFiles = [];
+
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+  }
+
+  function getFileType(name) {
+    const ext = name.split('.').pop().toLowerCase();
+    if (['jpg','jpeg','png','webp','heic'].includes(ext)) return 'img';
+    if (ext === 'pdf') return 'pdf';
+    if (['doc','docx'].includes(ext)) return 'doc';
+    return 'other';
+  }
+
+  function getFileLabel(name) {
+    const ext = name.split('.').pop().toLowerCase();
+    if (['jpg','jpeg','png','webp','heic'].includes(ext)) return 'IMG';
+    return ext.toUpperCase().slice(0, 3);
+  }
+
+  function renderFiles() {
+    fileList.innerHTML = '';
+    uploadedFiles.forEach((f, i) => {
+      const type = getFileType(f.name);
+      const item = document.createElement('div');
+      item.className = 'file-item';
+      item.innerHTML = `
+        <div class="file-icon ${type}">${getFileLabel(f.name)}</div>
+        <div class="file-meta">
+          <div class="file-name">${f.name}</div>
+          <div class="file-size">${formatSize(f.size)}</div>
+        </div>
+        <button type="button" class="file-remove" data-index="${i}" title="Remove">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>`;
+      fileList.appendChild(item);
+    });
+    fileList.querySelectorAll('.file-remove').forEach(btn => {
+      btn.addEventListener('click', function () {
+        uploadedFiles.splice(parseInt(this.dataset.index), 1);
+        renderFiles();
+      });
+    });
+  }
+
+  if (docsInput) {
+    docsInput.addEventListener('change', function () {
+      Array.from(this.files).forEach(f => uploadedFiles.push(f));
+      renderFiles();
+    });
+  }
+
+  if (dropzone) {
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      Array.from(e.dataTransfer.files).forEach(f => uploadedFiles.push(f));
+      renderFiles();
+    });
+  }
+
+  /* ── Progress Bar ── */
+  const steps = document.querySelectorAll('.progress-step');
+  const sections = document.querySelectorAll('.section-card');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const idx = Array.from(sections).indexOf(entry.target);
+        steps.forEach((s, i) => s.classList.toggle('active', i <= idx));
+      }
+    });
+  }, { threshold: 0.4 });
+  sections.forEach(s => obs.observe(s));
+
+});
+</script>
 {% endblock %}

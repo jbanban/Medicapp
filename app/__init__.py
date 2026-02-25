@@ -25,12 +25,4 @@ def create_app():
 
     register_blueprints(app)
 
-    # with app.app_context():
-    #     from app.utils.admin_seed import ensure_admin_user
-    #     try:
-    #         ensure_admin_user()
-    #     except Exception as e:
-    #         app.logger.warning(f"Could not create admin user: {e}")
-
-
     return app

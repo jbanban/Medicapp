@@ -26,23 +26,85 @@
         <div class="flex items-center gap-2 sm:gap-4">
             
             <!-- Notifications -->
-            <button class="relative p-2 rounded-xl text-gray-600 hover:bg-gray-100 transition-all group"
-                    aria-label="Notifications">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                </svg>
-                <!-- Notification Badge -->
-                <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
-            </button>
+            <div class="relative" id="notificationWrapper">
+                <button class="relative p-2 rounded-xl text-gray-600 hover:bg-gray-100 transition-all"
+                        id="notificationBtn"
+                        aria-label="Notifications">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                    <!-- Badge (hidden when no notifications) -->
+                    {% if notifications %}
+                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white" id="notifBadge"></span>
+                    {% endif %}
+                </button>
 
-            <!-- Settings/Help -->
-            <button class="hidden sm:flex p-2 rounded-xl text-gray-600 hover:bg-gray-100 transition-all"
-                    aria-label="Settings">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
-            </button>
+                <!-- Dropdown -->
+                <div id="notificationDropdown"
+                    class="hidden absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                    
+                    <!-- Header -->
+                    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                        <h3 class="font-semibold text-gray-800">Notifications</h3>
+                        {% if notifications %}
+                        <span class="text-xs bg-red-100 text-red-600 font-semibold px-2 py-0.5 rounded-full">
+                            {{ notifications|length }} new
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Notification List -->
+                    <div class="max-h-80 overflow-y-auto divide-y divide-gray-50">
+                        {% if notifications %}
+                            {% for notif in notifications %}
+                            <div class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition cursor-pointer {% if not notif.is_read %}bg-blue-50{% endif %}">
+                                <!-- Icon -->
+                                <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0
+                                    {% if notif.type == 'appointment' %}bg-blue-100{% elif notif.type == 'payment' %}bg-green-100{% else %}bg-gray-100{% endif %}">
+                                    {% if notif.type == 'appointment' %}
+                                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                    {% elif notif.type == 'payment' %}
+                                        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    {% else %}
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    {% endif %}
+                                </div>
+                                <!-- Content -->
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-800">{{ notif.title }}</p>
+                                    <p class="text-xs text-gray-500 mt-0.5 truncate">{{ notif.message }}</p>
+                                    <p class="text-xs text-gray-400 mt-1">{{ notif.created_at.strftime('%b %d, %I:%M %p') }}</p>
+                                </div>
+                                <!-- Unread dot -->
+                                {% if not notif.is_read %}
+                                <span class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1"></span>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="flex flex-col items-center justify-center py-10 text-gray-400">
+                                <svg class="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                </svg>
+                                <p class="text-sm">No notifications yet</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Footer -->
+                    {% if notifications %}
+                    <div class="px-4 py-3 border-t border-gray-100 bg-gray-50">
+                        <a href="#" class="text-xs text-blue-600 hover:underline font-medium">Mark all as read</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
 
             <!-- Divider -->
             <div class="hidden sm:block w-px h-8 bg-gray-200"></div>
@@ -108,19 +170,11 @@
                         My Appointments
                     </a>
 
-                    <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                    <a href="{{ url_for('patient.patient_profile')}}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                         <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                         Medical Records
-                    </a>
-
-                    <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        Settings
                     </a>
 
                     <div class="border-t border-gray-100 my-2"></div>
@@ -196,6 +250,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+const appointmentsUrl = "{{ url_for('patient.view_doctorAvailableTime') }}";
 
 const specialties = [
 {
@@ -467,6 +523,90 @@ const specialties = [
       "Problema sa pagpatindog sa lagay"
   ]
  }
+},
+{
+ id:"ophthalmology", icon:"👁️",
+ name:{en:"Ophthalmology",tl:"Ophthalmolohiya",bi:"Ophthalmolohiya"},
+ description:{
+  en:"Ophthalmology specializes in the diagnosis and treatment of eye disorders. Our ophthalmologists treat cataracts, glaucoma, retinal diseases, and other vision conditions, and perform eye surgeries.",
+  tl:"Ang Ophthalmolohiya ay espesyalista sa diagnosis at paggamot ng mga karamdaman ng mata. Ang aming mga ophthalmologist ay gumagamot ng cataracts, glaucoma, retinal diseases, at iba pang kondisyon ng paningin.",
+  bi:"Ang Ophthalmolohiya espesyalisasyon sa pag-diagnose ug pagtambal sa mga sakit sa mata."
+ },
+ symptoms:{
+  en:["Blurry vision","Eye pain","Redness","Sensitivity to light","Double vision","Loss of vision"],
+  tl:["Malabong paningin","Sakit sa mata","Pamumula","Sensitivity sa liwanag","Doble ang nakikita","Pagkawala ng paningin"],
+  bi:["Mabug-at ang panan-aw","Sakit sa mata","Pula ang mata","Sensitibo sa suga","Doble ang makita","Mawala ang panan-aw"]
+ }
+},
+{
+ id:"gynecology", icon:"🌸",
+ name:{en:"Gynecology",tl:"Gynecology",bi:"Gynecology"},
+ description:{
+  en:"Gynecology focuses on the health of the female reproductive system. Our gynecologists provide routine checkups, treat menstrual disorders, hormonal imbalances, infections, and manage reproductive health.",
+  tl:"Ang Gynecology ay nakatuon sa kalusugan ng female reproductive system. Ang aming mga gynecologist ay nagbibigay ng routine checkups, gumagamot ng menstrual disorders, hormonal imbalances, impeksyon, at namamahala ng reproductive health.",
+  bi:"Ang Gynecology nagtutok sa kahimsog sa reproductive system sa babaye."
+ },
+ symptoms:{
+  en:["Irregular periods","Pelvic pain","Abnormal discharge","Hormonal imbalance","Painful menstruation","Fertility concerns"],
+  tl:["Hindi regular na regla","Sakit sa puson","Abnormal na discharge","Hormonal imbalance","Masakit na regla","Mga alalahanin sa fertility"],
+  bi:["Dili regular nga regla","Sakit sa tiyan","Abnormal nga discharge","Hormonal imbalance","Masakit nga pagregla","Problema sa pagmabdos"]
+ }
+},
+{
+ id:"neurosurgery", icon:"🧬",
+ name:{en:"Neurosurgery",tl:"Neurosurheriya",bi:"Neurosurheriya"},
+ description:{
+  en:"Neurosurgery specializes in surgical treatment of disorders affecting the brain, spine, and nervous system. Our neurosurgeons treat brain tumors, spinal injuries, herniated discs, and cerebrovascular conditions.",
+  tl:"Ang Neurosurheriya ay espesyalista sa surgical na paggamot ng mga karamdaman ng utak, gulugod, at nervous system. Ang aming mga neurosurgeon ay gumagamot ng brain tumors, spinal injuries, herniated discs, at cerebrovascular conditions.",
+  bi:"Ang Neurosurheriya espesyalisasyon sa operasyon sa utok, gulod, ug sistema sa nerbiyo."
+ },
+ symptoms:{
+  en:["Severe headaches","Weakness in limbs","Spinal pain","Numbness","Loss of coordination","Seizures"],
+  tl:["Matinding sakit ng ulo","Kahinaan ng mga paa at kamay","Sakit sa gulugod","Pamamanhid","Pagkawala ng koordinasyon","Mga kejerkul"],
+  bi:["Grabe nga labad sa ulo","Kahuyang sa mga kamot ug tiil","Sakit sa gulod","Binhod","Dili makontrol ang lihok","Kombulsyon"]
+ }
+},
+{
+ id:"hepatology", icon:"🫀",
+ name:{en:"Hepatology",tl:"Hepatolohiya",bi:"Hepatolohiya"},
+ description:{
+  en:"Hepatology focuses on the liver, gallbladder, and bile ducts. Our hepatologists diagnose and treat hepatitis, cirrhosis, fatty liver disease, gallstones, and other liver-related conditions.",
+  tl:"Ang Hepatolohiya ay nakatuon sa atay, gallbladder, at bile ducts. Ang aming mga hepatologist ay nag-diagnose at nag-treat ng hepatitis, cirrhosis, fatty liver disease, gallstones, at iba pang kondisyon ng atay.",
+  bi:"Ang Hepatolohiya nagtutok sa atay, apdo, ug mga kanal niini."
+ },
+ symptoms:{
+  en:["Jaundice","Abdominal pain","Fatigue","Nausea","Dark urine","Swollen abdomen"],
+  tl:["Paninilaw ng balat","Sakit ng tiyan","Pagod","Pagduduwal","Maitim na ihi","Namumugto ang tiyan"],
+  bi:["Pag-ilaw sa panit","Sakit sa tiyan","Kakapoy","Gikabuhi","Itom nga ihi","Naghubag nga tiyan"]
+ }
+},
+{
+ id:"otology", icon:"👂",
+ name:{en:"Otology / ENT",tl:"Otolohiya / ENT",bi:"Otolohiya / ENT"},
+ description:{
+  en:"Otology and ENT (Ear, Nose, and Throat) specializes in disorders of the ear, nose, throat, and related structures. Our specialists treat hearing loss, sinusitis, tonsillitis, and balance disorders.",
+  tl:"Ang Otolohiya at ENT ay espesyalista sa mga karamdaman ng tainga, ilong, lalamunan, at mga kaugnay na istruktura. Ang aming mga espesyalista ay gumagamot ng pagkawala ng pandinig, sinusitis, tonsillitis, at balance disorders.",
+  bi:"Ang Otolohiya ug ENT espesyalisasyon sa mga sakit sa dalunggan, ilong, ug tutunlan."
+ },
+ symptoms:{
+  en:["Hearing loss","Ear pain","Ringing in ears","Sore throat","Nasal congestion","Dizziness"],
+  tl:["Pagkawala ng pandinig","Sakit sa tainga","Ingay sa tainga","Masakit na lalamunan","Baradong ilong","Hilo"],
+  bi:["Pagkabungol","Sakit sa dalunggan","Pag-ingog sa dalunggan","Sakit ang tutunlan","Sipon","Pagkalipong"]
+ }
+},
+{
+ id:"plasticsurgery", icon:"✨",
+ name:{en:"Plastic Surgery",tl:"Plastic Surgery",bi:"Plastic Surgery"},
+ description:{
+  en:"Plastic surgery encompasses reconstructive and cosmetic procedures. Our plastic surgeons perform reconstructive surgery for injuries and defects, as well as cosmetic enhancements to improve appearance and confidence.",
+  tl:"Ang Plastic Surgery ay sumasaklaw sa reconstructive at cosmetic procedures. Ang aming mga plastic surgeon ay nagsasagawa ng reconstructive surgery para sa mga pinsala at depekto, pati na rin cosmetic enhancements.",
+  bi:"Ang Plastic Surgery naglakip sa reconstructive ug cosmetic nga operasyon."
+ },
+ symptoms:{
+  en:["Scarring","Birth defects","Burn injuries","Post-surgery reconstruction","Cosmetic concerns","Skin abnormalities"],
+  tl:["Peklat","Mga depekto sa kapanganakan","Mga sugat sa sunog","Post-surgery reconstruction","Mga alalahanin sa aesthetics","Abnormalidad ng balat"],
+  bi:["Peklat","Depekto sa pagkatawo","Sunogon","Pag-ayo human sa operasyon","Estetikong kabalaka","Abnormal nga panit"]
+ }
 }
 ]
 
@@ -510,15 +650,19 @@ function renderSpecialties(){
     <span class="${ex?'rotate-180':''}">▼</span>
    </div>
    ${ex?`
-   <div class="mt-4 border-t pt-4 space-y-3">
-    <p>${s.description[language]}</p>
-    <div class="flex flex-wrap gap-2">${s.symptoms[language].map(x=>`<span class="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm">${x}</span>`).join("")}</div>
-    <button class="w-full bg-teal-600 text-white py-2 rounded">${uiText[language].book}</button>
-   </div>`:""}
+    <div class="mt-4 border-t pt-4 space-y-3">
+        <p>${s.description[language]}</p>
+        <div class="flex flex-wrap gap-2">
+            ${s.symptoms[language].map(x=>`<span class="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm">${x}</span>`).join("")}
+        </div>
+        <a href="${appointmentsUrl}?search=${encodeURIComponent(s.name['en'])}"
+            class="block text-center w-full bg-teal-600 text-white py-2 rounded-lg mt-2 hover:bg-teal-700 transition-colors">
+            ${uiText[language].book}
+        </a>
+    </div>`:""}
   </div>`
  })
 }
-
 function toggleExpand(id){expandedId=expandedId===id?null:id;renderSpecialties()}
 renderSpecialties()
 </script>

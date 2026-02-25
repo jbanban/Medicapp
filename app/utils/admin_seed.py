@@ -1,6 +1,9 @@
 import os
 from app import db
 from app.models.account import Account
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def ensure_admin_user():
     admin_username = os.getenv('ADMIN_USERNAME', 'admin')

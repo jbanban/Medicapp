@@ -16,14 +16,14 @@ class Appointment(db.Model):
         nullable=True
     )
     appointment_date: Mapped[str] = mapped_column(String(10))
-    appointment_time: Mapped[str] = mapped_column(String(10))
+    appointment_time: Mapped[str] = mapped_column(String(20))
     reason: Mapped[str] = mapped_column(EncryptedColumn(), nullable=True)
     notes: Mapped[str | None] = mapped_column(EncryptedColumn(), nullable=True)
     status: Mapped[str] = mapped_column(String(20))
     type: Mapped[str] = mapped_column(String(30))
 
-    reminder_1hr_sent = db.Column(db.Boolean, default=False)
-    reminder_ontime_sent = db.Column(db.Boolean, default=False)
+    reminder_1hr_sent: Mapped[bool] = mapped_column(db.Boolean, default=False)
+    reminder_ontime_sent: Mapped[bool] = mapped_column(db.Boolean, default=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

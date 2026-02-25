@@ -1,6 +1,6 @@
 from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Integer, DateTime, ForeignKey
+from sqlalchemy import Integer, DateTime, ForeignKey, JSON
 from app.extensions import db
 from app.security.encrypted_column import EncryptedColumn
 
@@ -25,9 +25,20 @@ class PatientHistoryBackground(db.Model):
     ongoingMedications: Mapped[str] = mapped_column(EncryptedColumn(), nullable=True)
     familyHistory: Mapped[str] = mapped_column(EncryptedColumn(), nullable=True)
 
+    attachments: Mapped[list] = mapped_column(
+        JSON,
+        nullable=True,
+        default=list
+    )
     # ---------------- METADATA ----------------
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
     )
 
     # ---------------- RELATIONSHIPS ----------------

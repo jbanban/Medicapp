@@ -1,0 +1,128 @@
+{% extends "base/layout.html" %}
+{% block title %}Appointments | MEDICAPP{% endblock %}
+
+{% block content %}
+    <style>
+        body { font-family: 'DM Sans', sans-serif; }
+
+        .grid-bg {
+            background-image:
+                linear-gradient(rgba(239,68,68,.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(239,68,68,.06) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .glow {
+            position: absolute;
+            width: 420px; height: 420px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(239,68,68,.12) 0%, transparent 70%);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse-ring {
+            0%   { transform: scale(.9); opacity: .6; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        .float  { animation: float 4s ease-in-out infinite; }
+
+        .ring {
+            position: absolute; inset: -16px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(239,68,68,.3);
+            animation: pulse-ring 2.4s ease-out infinite;
+        }
+        .ring-2 { animation-delay: .8s; }
+        .ring-3 { animation-delay: 1.6s; }
+
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up { animation: fade-up .6s ease both; }
+        .delay-1 { animation-delay: .1s; }
+        .delay-2 { animation-delay: .2s; }
+        .delay-3 { animation-delay: .35s; }
+        .delay-4 { animation-delay: .5s; }
+    </style>
+</head>
+<div class="w-full flex items-center justify-center bg-gray-50 grid-bg overflow-hidden relative">
+
+    <div class="glow"></div>
+
+    <div class="relative z-10 text-center px-6 max-w-lg w-full">
+
+        <!-- Icon -->
+        <div class="flex justify-center mb-8 fade-up">
+            <div class="relative float">
+                <div class="ring"></div>
+                <div class="ring ring-2"></div>
+                <div class="ring ring-3"></div>
+                <div class="w-28 h-28 rounded-full bg-red-50 border-2 border-red-200 flex items-center justify-center shadow-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-14 h-14 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.25-8.25-3.286zm0 13.036h.008v.008H12v-.008z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- 403 -->
+        <div class="fade-up delay-1">
+            <span class="text-8xl font-bold tracking-tighter"
+                  style="background: linear-gradient(135deg, #ef4444, #dc2626); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                403
+            </span>
+        </div>
+
+        <!-- Text -->
+        <div class="mt-3 mb-2 fade-up delay-2">
+            <h1 class="text-2xl font-semibold text-gray-800">Access Forbidden</h1>
+        </div>
+
+        <p class="text-gray-500 text-sm leading-relaxed mb-8 fade-up delay-3">
+            You don't have permission to view this page.<br>
+            Please contact your administrator if you believe this is a mistake.
+        </p>
+
+        <!-- Divider -->
+        <div class="flex items-center gap-3 mb-8 fade-up delay-3">
+            <div class="flex-1 h-px bg-gray-200"></div>
+            <span class="text-xs text-gray-400 uppercase tracking-widest">What now?</span>
+            <div class="flex-1 h-px bg-gray-200"></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-center gap-3 fade-up delay-4">
+            <a href="{{ url_for('doctor.doctor_dashboard') }}"
+               class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-white text-sm font-semibold shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-red-300"
+               style="background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 4px 14px rgba(239,68,68,.35);">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/>
+                </svg>
+                Go Home
+            </a>
+            <button onclick="history.back()"
+                    class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-600 text-sm font-semibold shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+                </svg>
+                Go Back
+            </button>
+        </div>
+
+        <!-- Footer note -->
+        <p class="mt-10 text-xs text-gray-400 fade-up delay-4">
+            Error code <span class="font-mono text-red-400">403</span> · Forbidden · MEDICAPP
+        </p>
+
+    </div>
+</div>
+{% endblock %}

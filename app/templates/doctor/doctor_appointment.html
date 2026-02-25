@@ -25,32 +25,34 @@
                     </div>
                 </div>
 
-                <!-- Right -->
                 <div class="flex items-center gap-4">
-                    <!-- Notifications -->
                     <button class="relative p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition">
-                        <i class="fas fa-bell text-lg"></i>
-                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                        <!-- <i class="fas fa-bell text-lg"></i> -->
+                        <!-- <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span> -->
                     </button>
-
-                    <!-- Profile -->
                     <div class="flex items-center gap-3 pl-3 border-l border-gray-200">
                         <div class="hidden sm:block text-right">
                             <p class="text-sm font-semibold text-gray-800">{{ doctor.firstname }} {{ doctor.lastname }}</p>
-                            <p class="text-xs text-gray-500">Medical Doctor</p>
+                            <p class="text-xs text-gray-500 capitalize">{{ doctor.specialization }}</p>
                         </div>
                         <a href="{{ url_for('doctor.doctor_profile', doctor_id=doctor.doctor_id) }}"
-                            class="flex items-center gap-2 group">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-white grid place-items-center font-semibold shadow-md group-hover:shadow-lg transition">
+                            class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center overflow-hidden">
+                            {% if doctor.profile_image %}
+                            <img src="{{ url_for('static', filename='/' ~ doctor.profile_image) }}"
+                                alt="Dr. {{ doctor.firstname }} {{ doctor.lastname }}"
+                                class="w-full h-full object-cover rounded-full">
+                            {% else %}
+                            <div class="text-white grid place-items-center font-semibold shadow-md group-hover:shadow-lg transition">
                                 {{ doctor.firstname[0] }}{{ doctor.lastname[0] }}
                             </div>
+                            {% endif %}
                         </a>
                     </div>
                 </div>
 
             </div>
         </header>
-
+        
         <!-- Content Area -->
         <div class="flex-1 p-6 lg:p-8">
 
@@ -188,8 +190,16 @@
                         </div>
                     </div>
 
-                    <!-- Appointments List -->
+                    <!-- Today Tab: Two-column layout (appointments list + missed panel) -->
+                    {% if tab == 'today' %}
+                    <div class="flex gap-6 items-start">
+
+                        <!-- Left: Appointments List -->
+                        <div class="flex-1 min-w-0 space-y-4" id="appointmentsList">
+                    {% else %}
+                    <!-- Other tabs: full-width list -->
                     <div class="space-y-4" id="appointmentsList">
+                    {% endif %}
 
                         {% for appointment in appointments %}
                         <div class="appointment-card bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition"
@@ -248,6 +258,11 @@
                                                         <i class="fas fa-check-double"></i>
                                                         Done
                                                     </span>
+                                                {% elif appointment.status == 'Missed' %}
+                                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-red-50 text-red-700 border border-red-200">
+                                                        <i class="fas fa-user-times text-red-500 text-xs"></i>
+                                                        Missed
+                                                    </span>
                                                 {% elif appointment.status == 'Paid' %}
                                                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                                                         <i class="fas fa-money-bill-wave"></i>
@@ -296,7 +311,7 @@
                                         {% endif %}
 
                                         <!-- Action Buttons -->
-                                        <div class="flex items-center gap-3 pt-4 border-t border-gray-100">
+                                        <div class="grid grid-cols-3 gap-3 pt-4 border-t border-gray-100">
 
                                             {% if tab == 'today' %}
 
@@ -310,39 +325,38 @@
                                                         <form method="POST"
                                                             action="{{ url_for('doctor.update_appointment_status',
                                                                                 appointment_id=appointment.appointment_id,
-                                                                                action='checkin') }}"
-                                                            class="flex-1">
+                                                                                action='checkin') }}">
                                                             <button class="w-full px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
                                                                 Check In
                                                             </button>
                                                         </form>
+
                                                         <form action="{{ url_for('doctor.cancel_appointment', appointment_id=appointment.appointment_id) }}" method="POST">
                                                             <button
-                                                                class="w-full text-center px-20 py-2.5 text-sm font-semibold text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition"
+                                                                class="w-full px-4 py-2.5 text-sm font-semibold text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition"
                                                             >
-                                                                Cancel Appointment
+                                                                Cancel
                                                             </button>
                                                         </form>
                                                     {% endif %}
 
                                                 {% elif appointment.status == 'Ongoing' %}
 
-                                                    <div class="w-1/3">
+                                                    <div class="w-full">
                                                         <button onclick="openCheckInModal(
                                                             {{ appointment.appointment_id }},
                                                             {{ appointment.doctor_id }},
                                                             {{ appointment.patient_data.patient_id }},
                                                             '{{ appointment.patient_data.firstname }} {{ appointment.patient_data.lastname }}'
                                                             )" 
-                                                            class="w-11/12 px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+                                                            class="px-4 py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
                                                             Diagnosis
                                                         </button>
                                                     </div>
                                                     <form method="POST"
                                                         action="{{ url_for('doctor.update_appointment_status',
                                                                             appointment_id=appointment.appointment_id,
-                                                                            action='done') }}"
-                                                        class="flex-1">
+                                                                            action='done') }}">
                                                         <button class="w-full px-4 py-2.5 text-sm font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition">
                                                             Mark as Done
                                                         </button>
@@ -354,13 +368,13 @@
                                                                 '{{ appointment.patient_data.firstname }} {{ appointment.patient_data.lastname }}',
                                                                 'P-00{{ appointment.patient_data.patient_id }}',
                                                                 '{{ appointment.appointment_time }}');"
-                                                        class="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition">
+                                                        class="col-span-2 w-full px-4 py-2.5 text-sm font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition">
                                                         Process Payment
                                                     </button>
 
                                                 {% elif appointment.status == 'Paid' %}
 
-                                                    <button class="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-500 bg-gray-200 rounded-lg cursor-not-allowed">
+                                                    <button class="w-full px-4 py-2.5 text-sm font-semibold text-gray-500 bg-gray-200 rounded-lg cursor-not-allowed">
                                                         Payment Completed
                                                     </button>
 
@@ -368,7 +382,7 @@
 
                                                 <!-- Always show View Records in Today -->
                                                 <a href="{{ url_for('patient.viewProfile', patient_id=appointment.patient_data.patient_id) }}"
-                                                class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                                                class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                                                 target="_blank">
                                                     View Records
                                                 </a>
@@ -400,13 +414,13 @@
                                                                 '{{ appointment.patient_data.firstname }} {{ appointment.patient_data.lastname }}',
                                                                 'P-00{{ appointment.patient_data.patient_id }}',
                                                                 '{{ appointment.appointment_time }}');"
-                                                        class="flex-1 px-4 py-2.5 text-sm font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition">
+                                                        class="w-full px-4 py-2.5 text-sm font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition">
                                                         Process Payment
                                                     </button>
 
                                                 {% elif appointment.status == 'Paid' %}
 
-                                                    <button class="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-500 bg-gray-200 rounded-lg">
+                                                    <button class="w-full px-4 py-2.5 text-sm font-semibold text-gray-500 bg-gray-200 rounded-lg">
                                                         Paid
                                                     </button>
 
@@ -414,7 +428,7 @@
 
                                                 <!-- Always show View Records -->
                                                 <a href="{{ url_for('patient.viewProfile', patient_id=appointment.patient_data.patient_id) }}"
-                                                class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                                                class="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                                                 target="_blank">
                                                     View Records
                                                 </a>
@@ -480,7 +494,104 @@
                             </div>
                             {% endif %}
                         </div>
+
+                    <!-- Close the appointments list div -->
                     </div>
+
+                    <!-- ============================================================ -->
+                    <!-- MISSED APPOINTMENTS PANEL — Today tab only, right-side column -->
+                    <!-- ============================================================ -->
+                    {% if tab == 'today' %}
+                        <div class="w-80 flex-shrink-0 sticky top-24 self-start">
+                            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col overflow-hidden">
+
+                                <!-- Panel Header -->
+                                <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-red-50">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-full bg-red-100 flex items-center justify-center">
+                                            <i class="fas fa-user-times text-red-500 text-xs"></i>
+                                        </div>
+                                        <h3 class="text-sm font-semibold text-gray-800">Missed Appointments</h3>
+                                    </div>
+                                    <!-- Count badge -->
+                                    <span class="inline-flex items-center justify-center min-w-[22px] h-5 px-1.5 text-xs font-bold text-white bg-red-500 rounded-full">
+                                        {{ missed_appointments | length if missed_appointments else 0 }}
+                                    </span>
+                                </div>
+
+                                <!-- Patient List -->
+                                <ul class="divide-y divide-gray-50 max-h-[520px] overflow-y-auto">
+
+                                    {% if missed_appointments %}
+                                        {% for missed in missed_appointments %}
+                                        <li class="group flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition">
+
+                                            <!-- Avatar -->
+                                            <div class="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-red-400 to-rose-500 text-white flex items-center justify-center font-semibold text-sm uppercase">
+                                                {{ missed.patient.firstname[0] }}{{ missed.patient.lastname[0] }}
+                                            </div>
+
+                                            <!-- Info -->
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-semibold text-gray-800 truncate">
+                                                    {{ missed.patient.firstname }} {{ missed.patient.lastname }}
+                                                </p>
+                                                <p class="text-xs text-gray-400 truncate">
+                                                    {{ missed.appointment_time }}
+                                                    {% if missed.reason %}
+                                                        &middot; {{ missed.reason }}
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+
+                                            <!-- Check-in icon button -->
+                                            <form method="POST"
+                                                  action="{{ url_for('doctor.update_appointment_status',
+                                                                     appointment_id=missed.appointment_id,
+                                                                     action='checkin') }}">
+                                                <button type="submit"
+                                                        title="Check In"
+                                                        class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition opacity-0 group-hover:opacity-100">
+                                                    <i class="fas fa-check text-xs"></i>
+                                                </button>
+                                            </form>
+
+                                        </li>
+                                        {% endfor %}
+
+                                    {% else %}
+                                        <!-- Empty state -->
+                                        <li class="flex flex-col items-center justify-center py-12 px-4 text-center">
+                                            <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                                                <i class="fas fa-calendar-check text-gray-300 text-xl"></i>
+                                            </div>
+                                            <p class="text-sm font-medium text-gray-500">No missed appointments</p>
+                                            <p class="text-xs text-gray-400 mt-1">All patients showed up today!</p>
+                                        </li>
+                                    {% endif %}
+
+                                </ul>
+
+                                <!-- Panel Footer -->
+                                {% if missed_appointments %}
+                                <div class="px-5 py-3 border-t border-gray-100 bg-gray-50">
+                                    <p class="text-xs text-gray-400 text-center">
+                                        Hover a patient to reveal the check-in button
+                                    </p>
+                                </div>
+                                {% endif %}
+
+                            </div>
+                        </div>
+                    {% endif %}
+                    <!-- ============================================================ -->
+                    <!-- END MISSED APPOINTMENTS PANEL                                -->
+                    <!-- ============================================================ -->
+
+                    <!-- Close the today flex wrapper -->
+                    {% if tab == 'today' %}
+                    </div>
+                    {% endif %}
 
                 </div>
             </div>
@@ -819,8 +930,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
 });
-
-
 </script>
 
 {% endblock %}

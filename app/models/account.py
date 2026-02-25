@@ -32,6 +32,12 @@ class Account(db.Model, UserMixin):
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow
     )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
 
     # Relationships
     patient = relationship("Patient", back_populates="account", uselist=False)
