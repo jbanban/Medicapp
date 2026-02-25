@@ -131,7 +131,7 @@
                     <div class="relative">
                         <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-md ring-2 ring-white">
                             {% if patient.profile_image %}
-                            <img src="{{ url_for('static', filename='/' ~ patient.profile_image) }}"
+                            <img src="{{ url_for('static', filename='uploads/' + patient.profile_image) }}" 
                                 alt="Dr. {{ patient.firstname }} {{ patient.lastname }}"
                                 class="w-full h-full object-cover rounded-full">
                             {% else %}
