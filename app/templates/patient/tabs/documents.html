@@ -5,35 +5,41 @@
         Documents
     </h2>
 
-    <div class="space-y-4">
-    {% for q in doctor.backgrounds if q.type == 'qualification' %}
-        <li class="border rounded p-3">
-            <form
-                action="{{ url_for('doctor.update_background', bg_id=q.id, doctor_id=doctor.doctor_id) }}"
-                method="POST"
-                class="space-y-2"
+    <!-- Upload Form -->
+    <form action="{{ url_for('patient.upload_attachment', patient_id=patient.patient_id) }}" method="POST" enctype="multipart/form-data" class="mb-6">
+        <div class="flex items-center gap-3">
+            <input 
+                type="file" 
+                name="attachment" 
+                multiple
+                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             >
-                <input name="title" value="{{ q.title }}" class="w-full p-2 border rounded">
-                <input name="organization" value="{{ q.organization }}" class="w-full p-2 border rounded">
-                <input name="year" value="{{ q.year }}" class="w-full p-2 border rounded">
-
-                <div class="flex gap-2">
-                <button class="px-3 py-1 bg-blue-600 text-white rounded text-sm">Save</button>
-                </div>
-            </form>
-
-            <form
-                action="{{ url_for('doctor.delete_background', bg_id=q.id, doctor_id=doctor.doctor_id) }}"
-                method="POST"
-                class="mt-2"
-                onsubmit="return confirm('Delete this qualification?')"
+            <button 
+                type="submit" 
+                class="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 whitespace-nowrap"
             >
-                <button class="text-sm text-red-600">Delete</button>
-            </form>
+                Upload
+            </button>
+        </div>
+    </form>
+
+    <!-- Attachment List -->
+    <ul class="space-y-4">
+    {% for a in attachment %}
+        <li class="border rounded p-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                </svg>
+                <span class="text-sm text-gray-800">{{ a.split('/')[-1] }}</span>
+            </div>
+            <a href="{{ url_for('static', filename='uploads/patients/docs/' + a.split('/')[-1]) }}" target="_blank" class="text-xs text-blue-600 hover:underline">
+                View
+            </a>
         </li>
-            {% else %}
-        <li class="text-sm text-gray-500">No qualifications added.</li>
-            {% endfor %}
-        </li>
-    </div>
+    {% else %}
+        <li class="text-sm text-gray-500">No Attachment Found.</li>
+    {% endfor %}
+    </ul>
+
 </div>

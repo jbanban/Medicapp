@@ -134,6 +134,7 @@ def book_appointment():
     appointment_date = schedule.vacant_date.strftime("%Y-%m-%d")
     existing_appointment = Appointment.query.filter_by(
         patient_id=patient.patient_id,
+        doctor_id=schedule.doctor_id,
         appointment_date=appointment_date
     ).filter(Appointment.status != 'Cancelled').first()
 

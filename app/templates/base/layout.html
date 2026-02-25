@@ -121,16 +121,18 @@
     const notifBtn = document.getElementById('notificationBtn');
     const notifDropdown = document.getElementById('notificationDropdown');
 
-    notifBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        notifDropdown.classList.toggle('hidden');
-    });
+    if (notifBtn && notifDropdown) {
+        notifBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notifDropdown.classList.toggle('hidden');
+        });
 
-    document.addEventListener('click', (e) => {
-        if (!document.getElementById('notificationWrapper').contains(e.target)) {
-            notifDropdown.classList.add('hidden');
-        }
-    });
+        document.addEventListener('click', (e) => {
+            if (!document.getElementById('notificationWrapper').contains(e.target)) {
+                notifDropdown.classList.add('hidden');
+            }
+        });
+    }
 
     </script>
     

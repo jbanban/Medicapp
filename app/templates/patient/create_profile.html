@@ -520,7 +520,7 @@
         </div>
         <div class="avatar-info">
           <h4>Profile Photo</h4>
-          <p>JPG, PNG or WEBP. Max 5MB.</p>
+           <p>JPG, PNG or WEBP. Max 5MB.</p>
           <label class="btn-upload-avatar" for="avatarInput">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -587,7 +587,7 @@
         <div class="field">
           <label>Birthdate</label>
           <input type="date" id="birthdate" name="birthdate"
-                 value="{{ data.birthdate.strftime('%Y-%m-%d') if data and data.birthdate else '' }}"
+                 value="{{ data.birthdate if data and data.birthdate else '' }}"
                  class="{{ 'error-input' if errors and errors.birthdate }}">
           {% if errors and errors.birthdate %}
             <span class="error-msg">⚠ {{ errors.birthdate }}</span>
@@ -897,55 +897,63 @@
 
   </form>
 </div>
-
 <script>
+document.addEventListener('DOMContentLoaded', function () {
+
   /* ── Avatar Preview ── */
   const avatarInput = document.getElementById('avatarInput');
   const avatarPreview = document.getElementById('avatarPreview');
   const avatarImg = document.getElementById('avatarImg');
 
-  avatarInput.addEventListener('change', function () {
-    const file = this.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      avatarImg.src = e.target.result;
-      avatarImg.style.display = 'block';
-      avatarPreview.querySelector('svg').style.display = 'none';
-    };
-    reader.readAsDataURL(file);
-  });
+  if (avatarInput) {
+    avatarInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        avatarImg.src = e.target.result;
+        avatarImg.style.display = 'block';
+        avatarPreview.querySelector('svg').style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    });
+  }
 
   /* ── Birthdate → Auto Age ── */
-  document.getElementById('birthdate').addEventListener('change', function () {
-    const bd = new Date(this.value);
-    if (isNaN(bd)) return;
-    const today = new Date();
-    let age = today.getFullYear() - bd.getFullYear();
-    const m = today.getMonth() - bd.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) age--;
-    document.getElementById('age').value = age;
-  });
+  const birthdateEl = document.getElementById('birthdate');
+  if (birthdateEl) {
+    birthdateEl.addEventListener('change', function () {
+      const bd = new Date(this.value);
+      if (isNaN(bd)) return;
+      const today = new Date();
+      let age = today.getFullYear() - bd.getFullYear();
+      const m = today.getMonth() - bd.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) age--;
+      document.getElementById('age').value = age;
+    });
+  }
 
   /* ── Same as Current Address ── */
   const sameChk = document.getElementById('sameAsCurrentChk');
-  sameChk.addEventListener('change', function () {
-    const srcNames = ['current_house_no','current_street','current_barangay','current_city','current_province','current_zipcode'];
-    const dstNames = ['permanent_house_no','permanent_street','permanent_barangay','permanent_city','permanent_province','permanent_zipcode'];
-    const pFields = document.getElementById('permanentFields');
-    if (this.checked) {
-      srcNames.forEach((name, i) => {
-        const src = document.querySelector(`[name="${name}"]`);
-        const dst = document.querySelector(`[name="${dstNames[i]}"]`);
-        if (src && dst) dst.value = src.value;
-      });
-      pFields.style.opacity = '0.5';
-      pFields.style.pointerEvents = 'none';
-    } else {
-      pFields.style.opacity = '1';
-      pFields.style.pointerEvents = '';
-    }
-  });
+  if (sameChk) {
+    sameChk.addEventListener('change', function () {
+      const srcNames = ['current_house_no','current_street','current_barangay','current_city','current_province','current_zipcode'];
+      const dstNames = ['permanent_house_no','permanent_street','permanent_barangay','permanent_city','permanent_province','permanent_zipcode'];
+      const pFields = document.getElementById('permanentFields');
+      if (this.checked) {
+        srcNames.forEach((name, i) => {
+          const src = document.querySelector(`[name="${name}"]`);
+          const dst = document.querySelector(`[name="${dstNames[i]}"]`);
+          if (src && dst) dst.value = src.value;
+        });
+        pFields.style.opacity = '0.5';
+        pFields.style.pointerEvents = 'none';
+      } else {
+        pFields.style.opacity = '1';
+        pFields.style.pointerEvents = '';
+      }
+    });
+  }
 
   /* ── File Upload / Dropzone ── */
   const docsInput = document.getElementById('docsInput');
@@ -1000,19 +1008,23 @@
     });
   }
 
-  docsInput.addEventListener('change', function () {
-    Array.from(this.files).forEach(f => uploadedFiles.push(f));
-    renderFiles();
-  });
+  if (docsInput) {
+    docsInput.addEventListener('change', function () {
+      Array.from(this.files).forEach(f => uploadedFiles.push(f));
+      renderFiles();
+    });
+  }
 
-  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
-  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
-  dropzone.addEventListener('drop', e => {
-    e.preventDefault();
-    dropzone.classList.remove('dragover');
-    Array.from(e.dataTransfer.files).forEach(f => uploadedFiles.push(f));
-    renderFiles();
-  });
+  if (dropzone) {
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      Array.from(e.dataTransfer.files).forEach(f => uploadedFiles.push(f));
+      renderFiles();
+    });
+  }
 
   /* ── Progress Bar ── */
   const steps = document.querySelectorAll('.progress-step');
@@ -1026,6 +1038,7 @@
     });
   }, { threshold: 0.4 });
   sections.forEach(s => obs.observe(s));
-</script>
 
+});
+</script>
 {% endblock %}

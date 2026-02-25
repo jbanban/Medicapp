@@ -9,6 +9,7 @@ from app.models.appointment_visibility import AppointmentVisibility
 from app.services.file_uploads import allowed_image
 from app.services.patient_cache import get_patient_cache 
 from app.services.empty_to_none import empty_to_none
+from sqlalchemy.orm.attributes import flag_modified
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from app import db
@@ -76,6 +77,7 @@ def patient_profile():
         }
 
     decrypted_history = None
+    attachment = []
     if history:
         decrypted_history = {
             "pastMedicalHistory": history.pastMedicalHistory,
@@ -85,6 +87,7 @@ def patient_profile():
             "ongoingMedications": history.ongoingMedications,
             "familyHistory": history.familyHistory,
         }
+        attachment = history.attachments or []
 
     M_visibility = MedicalVisibility.query.filter_by(
         patient_id=patient.patient_id
@@ -130,7 +133,8 @@ def patient_profile():
         visibility_M=M_visibility,
         visibility_A=A_visibility,
         appointments=result,
-        patient=patient
+        patient=patient,
+        attachment=attachment
     )
 
 
@@ -139,9 +143,21 @@ def patient_profile():
 @login_required
 def create_profile():
 
+    IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "heic"}
+    DOC_EXTENSIONS = {"pdf", "jpg", "jpeg", "png", "webp", "heic", "doc", "docx"}
+
+    def allowed_image(filename):
+        return "." in filename and filename.rsplit(".", 1)[1].lower() in IMAGE_EXTENSIONS
+
+    def allowed_doc(filename):
+        return "." in filename and filename.rsplit(".", 1)[1].lower() in DOC_EXTENSIONS
+
+    # Ensure upload folder exists
+    os.makedirs(current_app.config['UPLOAD_FOLDER'], exist_ok=True)
+
     # Prevent duplicate profile creation
-    existing = Patient.query.filter_by(account_id=current_user.account_id).first()
-    if existing:
+    existing_patient  = Patient.query.filter_by(account_id=current_user.account_id).first()
+    if existing_patient :
         return redirect(url_for('patient.patient_Dashboard'))
 
     errors = {}
@@ -158,7 +174,7 @@ def create_profile():
         blood_type = form.get('blood_type', '').strip()
         civil_status = form.get('civil_status', '').strip()
 
-        # ---------------- CURRENT ADDRESS ------------------
+        # ---------------- CURRENT ADDRESS ----------------
         current_house_no = empty_to_none(form.get('current_house_no', '').strip())
         current_street = empty_to_none(form.get('current_street', '').strip())
         current_barangay = form.get('current_barangay', '').strip()
@@ -166,8 +182,7 @@ def create_profile():
         current_province = form.get('current_province', '').strip()
         current_zipcode = form.get('current_zipcode', '').strip()
 
-
-        # ----------------- PERMANENT ADDRESS ----------------
+        # ---------------- PERMANENT ADDRESS ----------------
         permanent_house_no = empty_to_none(form.get('permanent_house_no', '').strip())
         permanent_street = empty_to_none(form.get('permanent_street', '').strip())
         permanent_barangay = form.get('permanent_barangay', '').strip()
@@ -175,9 +190,13 @@ def create_profile():
         permanent_province = form.get('permanent_province', '').strip()
         permanent_zipcode = form.get('permanent_zipcode', '').strip()
 
-
+        # ---------------- CONTACT ----------------
         phone = form.get('phone', '').strip()
         email = form.get('email', '').strip()
+
+        # ---------------- FILES ----------------
+        profile_photo = request.files.get('profile_photo')
+        medical_docs = request.files.getlist('medical_docs')
 
         # ---------------- EMERGENCY CONTACT ----------------
         ec_name = form.get('ec_name', '').strip()
@@ -194,16 +213,14 @@ def create_profile():
         familyHistory = form.get('familyHistory', '').strip()
 
         # ---------------- VALIDATION ----------------
-
         if not firstname:
             errors['firstname'] = "First name is required"
-
         if not lastname:
             errors['lastname'] = "Last name is required"
-
         if not gender:
             errors['gender'] = "Gender is required"
-
+        if not blood_type:
+            errors['blood_type'] = "Blood type is required"
         if not email:
             errors['email'] = "Email is required"
 
@@ -214,29 +231,24 @@ def create_profile():
         elif len(phone) > 13:
             errors['phone'] = "Phone number is too long"
 
-        # Permanent address validation
+        # Permanent address required
         if not permanent_house_no:
             errors['permanent_house_no'] = "House / Unit No. is required"
-
         if not permanent_barangay:
             errors['permanent_barangay'] = "Barangay is required"
-
         if not permanent_city:
             errors['permanent_city'] = "City / Municipality is required"
-
         if not permanent_province:
             errors['permanent_province'] = "Province is required"
-
         if not permanent_zipcode:
             errors['permanent_zipcode'] = "Zip code is required"
 
         if current_zipcode and not current_zipcode.isdigit():
             errors['current_zipcode'] = "Zip code must be numeric"
-
         if permanent_zipcode and not permanent_zipcode.isdigit():
             errors['permanent_zipcode'] = "Zip code must be numeric"
 
-        # Birthdate validation
+        # Birthdate
         birthdate = None
         if not birthdate_str:
             errors['birthdate'] = "Birthdate is required"
@@ -246,7 +258,7 @@ def create_profile():
             except ValueError:
                 errors['birthdate'] = "Invalid birthdate format"
 
-        # Medical history required fields
+        # Medical history
         if not pastMedicalHistory:
             errors['pastMedicalHistory'] = "Past medical history is required"
         if not beenHospitalized:
@@ -260,13 +272,71 @@ def create_profile():
         if not familyHistory:
             errors['familyHistory'] = "Family history is required"
 
-        # ---------------- IF ERRORS → RE-RENDER FORM ----------------
+        # Emergency contact (validate if partially filled)
+        if ec_name or ec_relation or ec_phone or ec_address:
+            if not ec_name:
+                errors['ec_name'] = "Contact name is required"
+            if not ec_relation:
+                errors['ec_relation'] = "Relationship is required"
+            if not ec_phone:
+                errors['ec_phone'] = "Phone number is required"
+            if not ec_address:
+                errors['ec_address'] = "Address is required"
+
+        # File validation
+        if profile_photo and profile_photo.filename:
+            if not allowed_image(profile_photo.filename):
+                errors['profile_photo'] = "Profile photo must be an image (JPG, PNG, WEBP)."
+
+        for file in medical_docs:
+            if file and file.filename:
+                if not allowed_doc(file.filename):
+                    errors['medical_docs'] = "One or more documents have an unsupported file type."
+                    break
+
+        # If any errors → re-render
         if errors:
+            print(f"[❌ VALIDATION ERRORS] {errors}")
             return render_template(
                 'patient/create_profile.html',
-                data=form,
+                data=form.to_dict(),
                 errors=errors
             )
+        
+        # ---------------- SAVE FILES ----------------
+        photo_filename = None
+        if profile_photo and profile_photo.filename:
+            try:
+                filename = secure_filename(profile_photo.filename)
+                save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'patients', filename)
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+
+                if os.path.exists(save_path):
+                    name, ext = os.path.splitext(filename)
+                    filename = f"{name}_{int(datetime.utcnow().timestamp())}{ext}"
+                    save_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'patients', filename)
+
+                profile_photo.save(save_path)
+                photo_filename = f"patients/{filename}"
+                print(f"[✅ PHOTO] Saved: {filename}")
+            except Exception as e:
+                print(f"[❌ PHOTO] Failed: {e}")
+
+        saved_attachments = []
+        for file in medical_docs:
+            if file and file.filename:
+                try:
+                    name, ext = os.path.splitext(secure_filename(file.filename))
+                    filename = f"{name}_{int(datetime.utcnow().timestamp() * 1000)}{ext}"
+                    upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'patients', 'docs')
+                    os.makedirs(upload_folder, exist_ok=True)
+
+                    save_path = os.path.join(upload_folder, filename)
+                    file.save(save_path)
+                    saved_attachments.append(filename)
+                    print(f"[✅ DOC] Saved: {filename}")
+                except Exception as e:
+                    print(f"[❌ DOC] Failed ({file.filename}): {e}")
 
         # ---------------- SAVE TO DATABASE ----------------
         try:
@@ -274,10 +344,10 @@ def create_profile():
                 firstname=firstname,
                 middlename=middlename,
                 lastname=lastname,
-                gender=gender, 
+                gender=gender,
                 birthdate=birthdate,
                 age=calculated_age(birthdate),
-                blood_type=blood_type, 
+                blood_type=blood_type,
                 civil_status=civil_status,
 
                 current_house_no=current_house_no,
@@ -302,13 +372,17 @@ def create_profile():
                 ec_phone=ec_phone,
                 ec_address=ec_address,
 
+                profile_image=photo_filename,
                 account_id=current_user.account_id
             )
-
             db.session.add(patient)
-            db.session.flush()
+            print("[✅ DB] Patient object created")
+            flash("✅ Patient object created", "success")
 
-            # ---------------- CREATE DEFAULT VISIBILITY ----------------
+            db.session.flush()
+            print(f"[✅ DB] Patient flushed, ID: {patient.patient_id}")
+            flash(f"✅ Patient flushed, ID: {patient.patient_id}", "success")
+
             visibility = MedicalVisibility(
                 patient_id=patient.patient_id,
                 pastMedicalHistory=False,
@@ -323,8 +397,9 @@ def create_profile():
                 otherRelevantInfo=False,
             )
             db.session.add(visibility)
+            print("[✅ DB] Visibility created")
+            flash("✅ Visibility object created", "success")
 
-            # ----------- CREATE MEDICAL HISTORY ------------
             history = PatientHistoryBackground(
                 patient_id=patient.patient_id,
                 pastMedicalHistory=pastMedicalHistory,
@@ -333,27 +408,30 @@ def create_profile():
                 allergies=allergies,
                 ongoingMedications=ongoingMedications,
                 familyHistory=familyHistory,
+                attachments=saved_attachments
             )
-
             db.session.add(history)
-            db.session.commit()
+            print("[✅ DB] History created")
+            flash("✅ History object created", "success")
 
-            flash("Profile successfully created!", "success")
+            db.session.commit()
+            print("[✅ DB] Commit successful")
+
+            flash("✅ Profile successfully created!", "success")
             return redirect(url_for('patient.patient_profile'))
 
         except Exception as e:
             db.session.rollback()
+            print(f"[❌ DB ERROR] {e}")
             flash("An unexpected error occurred. Please try again.", "danger")
-            print("CREATE PROFILE ERROR:", e)
+            return redirect(url_for('patient.create_profile'))
 
-
-    # ---------------- GET REQUEST ----------------
+    # ---------------- GET ----------------
     return render_template(
         'patient/create_profile.html',
         data={},
         errors={}
-    )
-
+    )   
 
 @patient_bp.route("/image/upload/<int:patient_id>", methods=["POST"])
 @login_required
@@ -503,3 +581,31 @@ def update_profile_details(patient_id):
 
     return redirect(url_for("patient.patient_profile"))
 
+
+
+@patient_bp.route('/patient/<int:patient_id>/upload-attachment', methods=['POST'])
+def upload_attachment(patient_id):
+    files = request.files.getlist('attachment')
+    history = PatientHistoryBackground.query.filter_by(patient_id=patient_id).first()
+
+    if not history:
+        history = PatientHistoryBackground(patient_id=patient_id, attachments=[])
+        db.session.add(history)
+
+    existing = list(history.attachments or [])
+
+    upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'patients', 'docs')
+    os.makedirs(upload_folder, exist_ok=True)
+
+    for file in files:
+        if file and file.filename:
+            name, ext = os.path.splitext(secure_filename(file.filename))
+            filename = f"{name}_{int(datetime.utcnow().timestamp() * 1000)}{ext}"
+            file.save(os.path.join(upload_folder, filename))
+            existing.append(f"patients/docs/{filename}")
+
+    history.attachments = existing
+    flag_modified(history, "attachments")
+    db.session.commit()
+    flash('Document successfully Uploaded.','success')
+    return redirect(request.referrer)
