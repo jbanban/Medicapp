@@ -15,6 +15,9 @@ def get_patient_cache(patient_id):
         "firstname": decrypt_value(patient.firstname),
         "lastname": decrypt_value(patient.lastname),
 
+        "email":patient.email,
+        "phone":patient.phone,
+
         "full_name": " ".join(filter(None, [
             decrypt_value(patient.firstname),
             safe_decrypt(patient.middlename),

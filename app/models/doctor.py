@@ -34,6 +34,7 @@ class Doctor(db.Model):
     phone: Mapped[str] = mapped_column(String(20), nullable=False)
     email: Mapped[str] = mapped_column(String(100), nullable=False)
     profile_image: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default='active')
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     account: Mapped["Account"] = relationship(back_populates="doctor")
