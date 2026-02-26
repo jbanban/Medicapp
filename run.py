@@ -3,6 +3,7 @@ load_dotenv()
 
 
 from app import create_app
+from app.models.account import Account
 from app.services.scheduler import (
     scheduler,
     check_appointments,
@@ -30,6 +31,11 @@ scheduler.add_job(
     trigger="interval",
     minutes=5,
     args=[app]
+)
+scheduler.add_job(
+    func=lambda: Account.deactivate_inactive_accounts(),
+    trigger="interval",
+    hours=24
 )
 scheduler.start()
 

@@ -1,7 +1,7 @@
-from flask import render_template, request, redirect, url_for, jsonify
+from flask import render_template, request, redirect, url_for, jsonify, flash
 from flask_login import current_user, login_user
 from app.extensions import login_manager
-from app.models import Account, Patient
+from app.models import Account, Patient, Doctor
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
@@ -62,6 +62,10 @@ def me_jwt():
 def redirect_based_on_role(user):
 
     if user.role in ('doctor', 'secretary'):
+        doctor = Doctor.query.filter_by(account_id=user.account_id).first()
+        if doctor.status == "Deactivated":
+            flash('Unable to login due to account is Deactivated.','error')
+            return redirect(url_for('auth.login'))
         return redirect(url_for('doctor.doctor_dashboard'))
     
     elif user.role == 'patient':
