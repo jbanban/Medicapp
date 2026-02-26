@@ -223,10 +223,9 @@ def deactivate_doctor(doctor_id):
 
     # 🔒 Ownership check
     if doctor.account_id != current_user.account_id:
-        return redirect(url_for('unauthorized'))
+        return redirect(url_for('misc.unauthorized'))
 
-    account = doctor.account
-    account.active = False
+    doctor.status = "Deactivated"
 
     db.session.commit()
 

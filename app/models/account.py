@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -39,29 +39,34 @@ class Account(db.Model, UserMixin):
         nullable=False
     )
 
+    last_login_at: Mapped[datetime] = mapped_column(           # ← NEW: tracks last login
+        DateTime, default=datetime.utcnow, nullable=False
+    )
+
     # Relationships
     patient = relationship("Patient", back_populates="account", uselist=False)
     doctor = relationship("Doctor", back_populates="account", uselist=False)
 
     def get_id(self):
         return str(self.account_id)
-    
+
     @property
     def id(self):
         return self.account_id
-    
+
     @property
     def is_active(self):
+        self._auto_deactivate_if_inactive()                    # ← checks on every access
         return self.active
-    
+
     @property
     def is_authenticated(self):
         return True
-    
+
     @property
     def is_anonymous(self):
         return False
-    
+
     # Auth helpers
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
@@ -71,3 +76,32 @@ class Account(db.Model, UserMixin):
 
     def is_admin(self) -> bool:
         return self.role == "admin"
+
+    def record_login(self) -> None:
+        """Call this on every successful login to update the last login timestamp."""
+        self.last_login_at = datetime.utcnow()
+        db.session.commit()
+
+    def _auto_deactivate_if_inactive(self) -> None:
+        """Deactivates the account if it hasn't logged in for more than 30 days."""
+        if self.active:
+            cutoff = datetime.utcnow() - timedelta(days=30)
+            if self.last_login_at < cutoff:
+                self.active = False
+                db.session.commit()
+
+    @classmethod
+    def deactivate_inactive_accounts(cls) -> int:
+        """
+        Bulk deactivate all accounts inactive for more than 30 days.
+        Returns the number of accounts deactivated.
+        Intended for use in a scheduled job (e.g. APScheduler, Celery beat, cron).
+        """
+        cutoff = datetime.utcnow() - timedelta(days=30)
+        updated = (
+            db.session.query(cls)
+            .filter(cls.active == True, cls.last_login_at < cutoff)
+            .update({"active": False}, synchronize_session="fetch")
+        )
+        db.session.commit()
+        return updated
