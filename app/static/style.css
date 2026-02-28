@@ -97,17 +97,7 @@
     }
 }
 
-/* Improved date/time input styling */
-/* input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator {
-    opacity: 0;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-} */
-
 /* Focus ring for better accessibility */
 input:focus-visible {
     outline: none;
 }
-
