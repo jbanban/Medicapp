@@ -3,6 +3,7 @@ from datetime import date, datetime, timedelta
 
 from flask_login import current_user
 from app.models.doctor_schedule import Doctor_Schedule
+from app.models.doctor_secretary import Doctor_Secretary
 from app.models.doctor import Doctor
 from app import db
 from . import api_bp
@@ -51,7 +52,24 @@ def get_doctor_month_schedule():
     else:
         end_date = date(year, month + 1, 1)
 
-    doctor = Doctor.query.filter_by(account_id=current_user.account_id).first() 
+    doctor = None
+
+    if current_user.role == "doctor":
+        doctor = Doctor.query.filter_by(
+            account_id=current_user.account_id
+        ).first()
+
+    elif current_user.role == "secretary":
+        secretary = Doctor_Secretary.query.filter_by(
+            account_id=current_user.account_id
+        ).first()
+
+        if secretary:
+            doctor = Doctor.query.get(secretary.doctor_id)
+
+    if not doctor:
+        return jsonify({"error": "Unauthorized"}), 403
+
 
     rows = (
         db.session.query(
@@ -62,7 +80,7 @@ def get_doctor_month_schedule():
             Doctor_Schedule.doctor_id == doctor.doctor_id,
             Doctor_Schedule.vacant_date >= start_date,
             Doctor_Schedule.vacant_date < end_date,
-            Doctor_Schedule.status == "available"
+            Doctor_Schedule.status.in_(["available", "Booked"])
         )
         .group_by(Doctor_Schedule.vacant_date)
         .order_by(Doctor_Schedule.vacant_date)
