@@ -1076,14 +1076,23 @@ function formatDate(dateString) {
 
 function formatTime(timeString) {
     if (!timeString) return timeString;
-    // If already contains AM/PM, strip it and re-parse cleanly
-    const cleaned = timeString.trim().replace(/\s*(AM|PM)\s*/i, '').trim();
-    const parts = cleaned.split(':');
-    const hour = parseInt(parts[0]);
+    const str = timeString.trim();
+
+    // If already in 12-hour format (contains AM/PM), normalize and return
+    if (/AM|PM/i.test(str)) {
+        const match = str.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
+        if (match) return `${parseInt(match[1])}:${match[2]} ${match[3].toUpperCase()}`;
+        return str;
+    }
+
+    // 24-hour format: HH:MM or HH:MM:SS
+    const parts = str.split(':');
+    const hour24 = parseInt(parts[0]);
     const minutes = parts[1] ? parts[1].padStart(2, '0') : '00';
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
+    if (isNaN(hour24)) return timeString;
+    const ampm = hour24 >= 12 ? 'PM' : 'AM';
+    const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+    return `${hour12}:${minutes} ${ampm}`;
 }
 
 // Close modal when clicking outside
