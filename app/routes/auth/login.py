@@ -62,10 +62,16 @@ def me_jwt():
 def redirect_based_on_role(user):
 
     if user.role in ('doctor', 'secretary'):
-        doctor = Doctor.query.filter_by(account_id=user.account_id).first()
-        if doctor.status == "Deactivated":
-            flash('Unable to login due to account is Deactivated.','error')
-            return redirect(url_for('auth.login'))
+        if user.role == 'doctor':
+            doctor = Doctor.query.filter_by(account_id=user.account_id).first()
+            if not doctor:
+                flash('Doctor profile not found. Contact admin.', 'error')
+                return redirect(url_for('auth.login'))
+
+            if doctor.status == "Deactivated":
+                flash('Unable to login due to account being Deactivated.', 'error')
+                return redirect(url_for('auth.login'))
+            
         return redirect(url_for('doctor.doctor_dashboard'))
     
     elif user.role == 'patient':
